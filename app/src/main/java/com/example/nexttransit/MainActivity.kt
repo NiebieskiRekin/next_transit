@@ -13,6 +13,7 @@ import com.example.nexttransit.ui.theme.NextTransitTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        TransitDataReader.mapRead()
         super.onCreate(savedInstanceState)
         setContent {
             NextTransitTheme {
@@ -27,6 +28,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
 
 @Composable
 fun DisplayText(text: String){
