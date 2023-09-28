@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    kotlin("plugin.serialization") version embeddedKotlinVersion
+//    kotlin("plugin.serialization") version embeddedKotlinVersion
 }
 
 
@@ -71,4 +71,13 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    val ktor_version = "2.3.4"
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-android:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
+    implementation("io.ktor:ktor-client-okhttp:$ktor_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
 }
