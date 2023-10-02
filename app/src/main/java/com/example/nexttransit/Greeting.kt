@@ -1,21 +1,32 @@
 package com.example.nexttransit
 
 import io.ktor.client.*
+import io.ktor.client.call.body
+import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.URLProtocol
 import io.ktor.http.path
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.Json
 
 class Greeting {
-    private val client = HttpClient()
-
-
-    //https://maps.googleapis.com/maps/api/directions/json?destination=place_id:ChIJC0kwPxJbBEcRaulLN8Dqppc&origin=place_id:ChIJLcfSImn7BEcRa3MR7sqwJsw&mode=transit&language=pl&key=AIzaSyBSzgbK6yjBEkTjQjiQKOCVg_4lRm07sAs
+    private val client = HttpClient(Android) {
+        install(Logging)
+        install(ContentNegotiation) {
+            json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                }
+            )
+        }
+    }
     suspend fun greeting(): String {
         val destination = "ChIJC0kwPxJbBEcRaulLN8Dqppc"
         val origin  = "ChIJLcfSImn7BEcRa3MR7sqwJsw"
         val apiKey = ""
-        val response = client.get {
+        val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.HTTPS
                 host = "maps.googleapis.com"
@@ -26,7 +37,7 @@ class Greeting {
                 parameters.append("language","pl")
                 parameters.append("key", apiKey)
             }
-        }
-        return response.bodyAsText()
+        }.body()
+        return response.toString()
     }
 }
