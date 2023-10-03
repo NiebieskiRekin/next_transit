@@ -88,10 +88,10 @@ data class Step(
     val duration: Duration,
     val start_location: CoordinatesPoint,
     val end_location: CoordinatesPoint,
-    val html_instructions: String,
-    val transit_details: TransitDetails,
+    val html_instructions: String="",
+    val transit_details: TransitDetails?=null,
     val polyline: OverviewPolyline,
-    val maneuver: String,
+    val maneuver: String="",
     val travel_mode: String,
 )
 
@@ -103,10 +103,10 @@ data class BigStep(
     val end_location: CoordinatesPoint,
     val html_instructions: String,
     val polyline: OverviewPolyline,
-    val transit_details: TransitDetails,
+    val transit_details: TransitDetails?=null,
     val travel_mode: String,
-    val maneuver: String,
-    val steps: List<Step>?
+    val maneuver: String="",
+    val steps: List<Step> = emptyList()
 )
 
 @Serializable
@@ -116,7 +116,7 @@ data class TransitDetails(
     val departure_stop: Stop,
     val departure_time: TimePoint,
     val headsign: String,
-    val line: Line,
+    val line: Line?=null,
     val num_stops: Int,
     val trip_short_name: String,
 )
@@ -130,10 +130,11 @@ data class Stop(
 @Serializable
 data class Line(
     val agencies: List<Agency>,
-    val short_name: String,
+    val short_name: String="",
     val vehicle: Vehicle,
     val color: String,
     val text_color: String,
+
 )
 
 @Serializable
