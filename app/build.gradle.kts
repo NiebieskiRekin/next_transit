@@ -57,7 +57,7 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.activity:activity-compose:1.7.2")
+    implementation("androidx.activity:activity-compose:1.8.0")
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -83,4 +83,17 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
+    // For Glance support
+    implementation("androidx.glance:glance:1.0.0")
+
+    // For AppWidgets support
+    implementation("androidx.glance:glance-appwidget:1.0.0")
+
+    // For interop APIs with Material 2
+    implementation("androidx.glance:glance-material:1.0.0")
+
+    // For interop APIs with Material 3
+    implementation("androidx.glance:glance-material3:1.0.0")
+
 }
