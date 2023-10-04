@@ -12,7 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
-class ApiCaller {
+object ApiCaller {
     private val client = HttpClient(Android) {
         install(Logging)
         install(ContentNegotiation) {
@@ -26,9 +26,7 @@ class ApiCaller {
     }
 
 
-    //val destination = "ChIJC0kwPxJbBEcRaulLN8Dqppc"
-    //val origin  = "ChIJLcfSImn7BEcRa3MR7sqwJsw"
-    suspend fun get_directions( destination: String, origin: String): DirectionsResponse {
+    suspend fun getDirections( destination: String, origin: String): String {
         val apiKey = ""
         val response: DirectionsResponse = client.get {
             url {
@@ -42,6 +40,6 @@ class ApiCaller {
                 parameters.append("key", apiKey)
             }
         }.body()
-        return response
+        return response.toString()
     }
 }
