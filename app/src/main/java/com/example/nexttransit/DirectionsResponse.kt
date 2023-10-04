@@ -118,7 +118,7 @@ data class TransitDetails(
     val headsign: String,
     val line: Line?=null,
     val num_stops: Int,
-    val trip_short_name: String,
+    val trip_short_name: String="",
 )
 
 @Serializable
@@ -132,8 +132,8 @@ data class Line(
     val agencies: List<Agency>,
     val short_name: String="",
     val vehicle: Vehicle,
-    val color: String,
-    val text_color: String,
+    val color: String="",
+    val text_color: String="",
 
 )
 
