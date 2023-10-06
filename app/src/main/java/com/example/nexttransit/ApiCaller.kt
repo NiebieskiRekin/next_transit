@@ -26,7 +26,7 @@ object ApiCaller {
     }
 
 
-    suspend fun getDirections( destination: String, origin: String): String {
+    suspend fun getDirections( destination: String, origin: String): DirectionsResponse {
         val apiKey = ""
         val response: DirectionsResponse = client.get {
             url {
@@ -40,6 +40,6 @@ object ApiCaller {
                 parameters.append("key", apiKey)
             }
         }.body()
-        return response.toString()
+        return response
     }
 }

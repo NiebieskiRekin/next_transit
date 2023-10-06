@@ -1,6 +1,7 @@
 package com.example.nexttransit
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -56,12 +57,13 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(true){
                             scope.launch {
                                 text = try {
-                                    getDirections(destination,origin)
+                                    getDirections(destination,origin).toString()
                                 } catch (e: Exception) {
                                     e.localizedMessage ?: "error"
                                 }
                             }
                         }
+                        Log.e("ApiResponse", text)
                         Text(text=text)
                     }
                 }
@@ -69,31 +71,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-//
-//@Preview(showBackground=true)
-//@Composable
-//fun SimpleDisplay(){
-//    NextTransitTheme {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(Color.DarkGray),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ){
-//            Row(verticalAlignment = Alignment.CenterVertically){
-//                Text(text="A", style= TextStyle(color = Color.White))
-//                Text(text=" > ", style= TextStyle(color = Color.White))
-//                Text(text="B", style= TextStyle(color = Color.White))
-//                Spacer(Modifier.size(16.dp))
-//                Text(text="16 min")
-//            }
-//            Text(
-//                text="Departure: 21:37",
-//                style= TextStyle(
-//                    color = Color.White,
-//                    fontWeight = FontWeight.Bold,
-//                    fontSize=14.sp
-//                ))
-//        }
-//    }
-//}
+
+@Preview(showBackground=true)
+@Composable
+fun SimpleDisplay(){
+    NextTransitTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.DarkGray),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            Row(verticalAlignment = Alignment.CenterVertically){
+                Text(text="A", style= TextStyle(color = Color.White))
+                Text(text=" > ", style= TextStyle(color = Color.White))
+                Text(text="B", style= TextStyle(color = Color.White))
+                Spacer(Modifier.size(16.dp))
+                Text(text="16 min")
+            }
+            Text(
+                text="Departure: 21:37",
+                style= TextStyle(
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize=14.sp
+                ))
+        }
+    }
+}
