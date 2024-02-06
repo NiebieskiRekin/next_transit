@@ -134,7 +134,7 @@ data class Line(
     val vehicle: Vehicle,
     val color: String="",
     val text_color: String="",
-
+    val name: String="",
 )
 
 @Serializable

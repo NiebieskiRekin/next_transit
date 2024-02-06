@@ -58,6 +58,12 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 
+
+class TransitOptions {
+
+}
+
+
 class TransitWidget : GlanceAppWidget() {
 
     @Composable
