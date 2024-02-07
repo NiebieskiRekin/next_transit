@@ -17,3 +17,4 @@ local.properties
 /app/src/main/java/com/example/nexttransit/APIKEY
 /DirectionsResponseUML.png
 /app/src/main/res/sample_response.json
+/app/build/*

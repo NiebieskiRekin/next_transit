@@ -11,9 +11,7 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.path
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import java.io.File
 
 object ApiCaller {
     private val client = HttpClient(Android) {
@@ -30,7 +28,6 @@ object ApiCaller {
 
 
     suspend fun getDirections( destination: String, origin: String): DirectionsResponse {
-        val apiKey = "AIzaSyBSzgbK6yjBEkTjQjiQKOCVg_4lRm07sAs" //TODO()
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.HTTPS
@@ -40,7 +37,7 @@ object ApiCaller {
                 parameters.append("origin","place_id:$origin")
                 parameters.append("mode","transit")
                 parameters.append("language","pl")
-                parameters.append("key", apiKey)
+                parameters.append("key", BuildConfig.API_KEY)
             }
         }.body()
         return response
