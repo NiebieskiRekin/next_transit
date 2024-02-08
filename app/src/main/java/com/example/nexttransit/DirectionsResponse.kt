@@ -146,7 +146,7 @@ data class Vehicle(
 
 @Serializable
 data class Agency(
-    val phone: String,
-    val url: String,
+    val phone: String?=null,
+    val url: String?=null,
     val name: String
 )

@@ -24,8 +24,23 @@ object ApiCaller {
         }
     }
 
+    suspend fun getDirectionsByName(origin: String, destination: String) : DirectionsResponse{
+        val response: DirectionsResponse = client.get {
+            url {
+                protocol = URLProtocol.HTTPS
+                host = "maps.googleapis.com"
+                path("/maps/api/directions/json")
+                parameters.append("destination",destination)
+                parameters.append("origin",origin)
+                parameters.append("mode","transit")
+                parameters.append("language","pl")
+                parameters.append("key", BuildConfig.API_KEY)
+            }
+        }.body()
+        return response
+    }
 
-    suspend fun getDirections( destination: String, origin: String): DirectionsResponse {
+    suspend fun getDirectionsByPlaceId(origin: String, destination: String,): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.HTTPS
