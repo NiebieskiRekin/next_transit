@@ -2,19 +2,19 @@ package com.example.nexttransit
 
 import kotlinx.serialization.Serializable
 
+typealias PlaceId = String
+
 @Serializable
 data class DirectionsResponse(
     val geocoded_waypoints: List<GeocodedWaypoint> = emptyList(),
     val routes: List<Route> = emptyList(),
     val status: String = "",
-){
-
-}
+)
 
 @Serializable
 data class GeocodedWaypoint(
     val geocoder_status: String,
-    val place_id: String,
+    val place_id: PlaceId,
     val types: List<String>,
 )
 

@@ -35,6 +35,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -84,6 +85,10 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.activity:activity-compose:1.8.2")
 
+    // DataStore to save user preferences
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
 
 
 //    ┌─────────────────────────────────────────┐

@@ -1,11 +1,11 @@
 package com.example.nexttransit
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,20 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
-import androidx.compose.material.icons.rounded.DirectionsBike
 import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.DirectionsBus
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.DirectionsRailway
-import androidx.compose.material.icons.rounded.DirectionsSubway
 import androidx.compose.material.icons.rounded.DirectionsTransit
-import androidx.compose.material.icons.rounded.DirectionsWalk
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.material.icons.rounded.Tram
 import androidx.compose.material3.Button
@@ -36,7 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,13 +43,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.dataStore
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ApiCaller.getSampleDirections
+import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Locale
 
+
+val Context.dataStore by dataStore("app-settings.json", AppSettingsSerializer)
 
 class MainActivity : ComponentActivity() {
 
@@ -64,115 +64,197 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-
             NextTransitTheme {
+
+                val appSettings = dataStore.data.collectAsState(initial = AppSettings()).value
+                val scope = rememberCoroutineScope()
+
+                var directions by remember {mutableStateOf(DirectionsResponse(status="Empty"))}
+                var source by remember { mutableStateOf(TextFieldValue(appSettings.source.name)) }
+                var destination by remember { mutableStateOf(TextFieldValue(appSettings.destination.name)) }
+
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                            SimpleDisplay()
-
-                            val scope = rememberCoroutineScope()
-                            var text by remember { mutableStateOf("Loading") }
-                            var source by remember { mutableStateOf(TextFieldValue("")) }
-                            var destination by remember { mutableStateOf(TextFieldValue("")) }
-                            TextField(
-                                value = source,
-                                onValueChange = { source = it },
-                                label = { Text("Origin") }
-
-                            )
-                            TextField(
-                                value = destination,
-                                onValueChange = { destination = it},
-                                label = { Text("Destination") }
-                            )
-                            Button(onClick = {
-                                scope.launch {
-                                    text = try {
-                                        ApiCaller.getDirectionsByName(source.text,destination.text).toString()
-                                    } catch (e: Exception) {
-                                        e.localizedMessage ?: "error"
-                                    }
+                    Column {
+                        TextField(
+                            value = source,
+                            onValueChange = { source = it },
+                            label = { Text("Origin") }
+                        )
+                        TextField(
+                            value = destination,
+                            onValueChange = { destination = it},
+                            label = { Text("Destination") }
+                        )
+                        Button(onClick = {
+                            scope.launch {
+                                try {
+                                    directions = ApiCaller.getDirectionsByName(source.text,destination.text)
+//                                    directions = getSampleDirections()
+                                    setSource(
+                                        name = source.text,
+                                        placeId = directions.geocoded_waypoints[0].place_id
+                                    )
+                                    setDestination(
+                                        name = destination.text,
+                                        placeId = directions.geocoded_waypoints[1].place_id
+                                    )
+                                } catch (e: Exception) {
+                                    DirectionsResponse(status="Error")
                                 }
-                            }){
-                                Text("Show directions!")
+
                             }
-                            Log.e("ApiResponse", text)
-                            Text(text = text)
+                        }){
+                            Text("Show directions!")
                         }
+                        Log.e("ApiResponse", directions.toString())
+                        SimpleDisplay(directions)
+                        Text(text = directions.toString())
                     }
                 }
             }
         }
     }
+
+    private suspend fun setSource(name: String, placeId: PlaceId){
+        dataStore.updateData {
+            it.copy(
+                source = Location(name,placeId,Calendar.getInstance(Locale.getDefault()).timeInMillis),
+                knownLocations = it.knownLocations.mutate { mutable ->
+                    mutable.add(it.source)
+                }
+            )
+        }
+    }
+
+    private suspend fun setDestination(name: String, placeId: PlaceId){
+        dataStore.updateData {
+            it.copy(
+                destination = Location(name,placeId,Calendar.getInstance(Locale.getDefault()).timeInMillis),
+                knownLocations = it.knownLocations.mutate { mutable ->
+                    mutable.add(it.destination)
+                }
+            )
+        }
+    }
+
+
 }
 
-@Preview(showBackground=true)
 @Composable
-fun SimpleDisplay(){
+fun SimpleDisplay(directions: DirectionsResponse){
     NextTransitTheme {
-        val directions by remember { mutableStateOf(getSampleDirections()) }
-        if (directions.status == "OK") {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.DarkGray),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (directions.routes.isNotEmpty()) {
-                    for (route: Route in directions.routes) {
+        when (directions.status){
+            "OK" -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .background(Color.DarkGray),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (directions.routes.isEmpty()) {
+                        item {
+                            Text(text = "Error: no route found.")
+                        }
+                    }
+                    items(directions.routes) { route: Route ->
                         for (leg: Leg in route.legs) {
-                            Text(
-                                text = leg.departure_time.text,
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            )
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Departure: ",
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
+                                    )
+                                )
+                                Text(
+                                    text = leg.departure_time.text,
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                )
+                                Spacer(Modifier.size(16.dp))
+                                Text(
+                                    text = "Planned Arrival: ",
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
+                                    )
+                                )
+                                Text(
+                                    text = leg.arrival_time.text,
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                )
+                            }
+                            LazyRow(verticalAlignment = Alignment.CenterVertically) {
                                 for ((i, bigStep: BigStep) in leg.steps.withIndex()) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally){
-                                        val travelModeText = getTravelModeText(bigStep)
-                                        Text(
-                                            text = travelModeText,
-                                            style = TextStyle(color = Color.White)
-                                        )
-                                        Icon(imageVector=getTravelModeIcon(travelModeText),travelModeText)
-                                    }
-                                    if (i < leg.steps.lastIndex) {
-                                        Text(text = " > ", style = TextStyle(color = Color.White))
+                                    item {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            val travelModeText = getTravelModeText(bigStep)
+//                                        Text(
+//                                            text = travelModeText,
+//                                            style = TextStyle(color = Color.White)
+//                                        )
+                                            Icon(
+                                                imageVector = getTravelModeIcon(travelModeText),
+                                                travelModeText
+                                            )
+                                            Text(
+                                                text = getTravelTime(bigStep),
+                                                style = TextStyle(color = Color.White)
+                                            )
+                                        }
+                                        if (i < leg.steps.lastIndex) {
+                                            Text(
+                                                text = " > ",
+                                                style = TextStyle(color = Color.White)
+                                            )
 //                                        Spacer(Modifier.size(16.dp))
+                                        }
                                     }
                                 }
                             }
-                            Text(
-                                text = leg.arrival_time.text,
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            )
                         }
                     }
-                } else {
-                    Text(text="Error: no route found.")
                 }
             }
-        } else {
-            Text(text="Error: directions data not available.")
+
+            "Error" -> Text(text="Error: directions data not available.")
+            "Empty" -> Text(text="")
+            else -> {}
         }
     }
 }
 
+fun getShortDate(ts:Long?):String{
+    if(ts == null) return ""
+    //Get instance of calendar
+    val calendar = Calendar.getInstance(Locale.getDefault())
+    //get current date from ts
+    calendar.timeInMillis = ts
+    //return formatted date
+    return android.text.format.DateFormat.format("E, dd MMM yyyy", calendar).toString()
+}
+
+fun getLocalTime(ts:Long?):String{
+    if(ts == null) return ""
+    //Get instance of calendar
+    val calendar = Calendar.getInstance(Locale.getDefault())
+    //get current date from ts
+    calendar.timeInMillis = ts
+    //return formatted date
+    return android.text.format.DateFormat.format("E", calendar).toString()
+}
 
 fun getTravelModeText(bigStep: BigStep): String {
     return if (bigStep.travel_mode == "TRANSIT") {
@@ -182,13 +264,14 @@ fun getTravelModeText(bigStep: BigStep): String {
     }
 }
 
-//fun getTravelModeText(step: Step): String {
-//    return if (step.travel_mode == "TRANSIT") {
-//        step.transit_details?.line?.vehicle?.type ?: "TRANSIT"
-//    } else {
-//        step.travel_mode
-//    }
-//}
+fun getTravelTime(bigStep: BigStep): String {
+    return if (bigStep.travel_mode == "TRANSIT") {
+        (bigStep.transit_details?.departure_time?.text + "-" + bigStep.transit_details?.arrival_time?.text)
+    } else {
+        bigStep.duration.text
+    }
+}
+
 
 fun getTravelModeIcon(travelMode: String) = when (travelMode) {
     "TRANSIT" -> Icons.Rounded.DirectionsTransit
