@@ -8,12 +8,11 @@ import kotlinx.serialization.Serializable
 data class AppSettings (
     val source: Location = Location(),
     val destination: Location = Location(),
-    val knownLocations: PersistentSet<Location> = persistentSetOf()
+    val lastDirectionsResponse: DirectionsResponse = DirectionsResponse(),
 )
 
 @Serializable
 data class Location(
     val name: String = "",
     val placeId: PlaceId = "",
-    val timeModified: Long = 0,
 )
