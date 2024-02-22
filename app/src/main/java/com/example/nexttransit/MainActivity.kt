@@ -6,10 +6,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,9 +30,9 @@ import androidx.compose.material.icons.rounded.Tram
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,15 +42,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.dataStore
-import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ApiCaller.getSampleDirections
+import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -56,10 +61,12 @@ import java.util.Locale
 
 val Context.dataStore by dataStore("app-settings.json", AppSettingsSerializer)
 
+
 class MainActivity : ComponentActivity() {
 
 //    private val destination = "ChIJC0kwPxJbBEcRaulLN8Dqppc"
 //    private val origin  = "ChIJLcfSImn7BEcRa3MR7sqwJsw"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,21 +86,23 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column {
-                        TextField(
+                        OutlinedTextField(
                             value = source,
                             onValueChange = { source = it },
-                            label = { Text("Origin") }
+                            label = { Text("Origin") },
+                            modifier = Modifier.fillMaxWidth().padding(10.dp,0.dp)
                         )
-                        TextField(
+                        OutlinedTextField(
                             value = destination,
                             onValueChange = { destination = it},
-                            label = { Text("Destination") }
+                            label = { Text("Destination") },
+                            modifier = Modifier.fillMaxWidth().padding(10.dp,0.dp)
                         )
                         Button(onClick = {
                             scope.launch {
                                 try {
-                                    directions = ApiCaller.getDirectionsByName(source.text,destination.text)
-//                                    directions = getSampleDirections()
+                                    //directions = ApiCaller.getDirectionsByName(source.text,destination.text)
+                                    directions = getSampleDirections()
                                     setSource(
                                         name = source.text,
                                         placeId = directions.geocoded_waypoints[0].place_id
@@ -112,7 +121,11 @@ class MainActivity : ComponentActivity() {
                         }
                         Log.e("ApiResponse", directions.toString())
                         SimpleDisplay(directions)
-                        Text(text = directions.toString())
+                        Spacer(Modifier.size(0.dp,10.dp).fillMaxWidth())
+                        Text(text = "Debug output")
+                        LazyColumn(modifier = Modifier.border(2.dp,Color.LightGray)){
+                            item {Text(text = directions.toString(), modifier = Modifier.padding(5.dp))   }
+                        }
                     }
                 }
             }
@@ -140,23 +153,30 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
-
 }
 
+
+
+@Preview(showBackground=true)
 @Composable
-fun SimpleDisplay(directions: DirectionsResponse){
+fun SimpleDisplay(directions: DirectionsResponse = getSampleDirections()){
     NextTransitTheme {
         when (directions.status){
             "OK" -> {
                 LazyColumn(
                     modifier = Modifier
-                        .background(Color.DarkGray),
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.large)
+                        .background(MaterialTheme.colorScheme.secondary)
+                        .padding(10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (directions.routes.isEmpty()) {
                         item {
-                            Text(text = "Error: no route found.")
+                            Text(
+                                text = "Error: no route found.",
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                )
                         }
                     }
                     items(directions.routes) { route: Route ->
@@ -165,7 +185,7 @@ fun SimpleDisplay(directions: DirectionsResponse){
                                 Text(
                                     text = "Departure: ",
                                     style = TextStyle(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.onSecondary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp
                                     )
@@ -173,7 +193,7 @@ fun SimpleDisplay(directions: DirectionsResponse){
                                 Text(
                                     text = leg.departure_time.text,
                                     style = TextStyle(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.onSecondary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
                                     )
@@ -182,7 +202,7 @@ fun SimpleDisplay(directions: DirectionsResponse){
                                 Text(
                                     text = "Planned Arrival: ",
                                     style = TextStyle(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.onSecondary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp
                                     )
@@ -190,7 +210,7 @@ fun SimpleDisplay(directions: DirectionsResponse){
                                 Text(
                                     text = leg.arrival_time.text,
                                     style = TextStyle(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.onSecondary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
                                     )
@@ -201,23 +221,20 @@ fun SimpleDisplay(directions: DirectionsResponse){
                                     item {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             val travelModeText = getTravelModeText(bigStep)
-//                                        Text(
-//                                            text = travelModeText,
-//                                            style = TextStyle(color = Color.White)
-//                                        )
                                             Icon(
                                                 imageVector = getTravelModeIcon(travelModeText),
-                                                travelModeText
+                                                travelModeText,
+                                                tint = MaterialTheme.colorScheme.onSecondary,
                                             )
                                             Text(
                                                 text = getTravelTime(bigStep),
-                                                style = TextStyle(color = Color.White)
+                                                style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
                                             )
                                         }
                                         if (i < leg.steps.lastIndex) {
                                             Text(
                                                 text = " > ",
-                                                style = TextStyle(color = Color.White)
+                                                style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
                                             )
 //                                        Spacer(Modifier.size(16.dp))
                                         }
@@ -273,7 +290,7 @@ fun getTravelTime(bigStep: BigStep): String {
 }
 
 
-fun getTravelModeIcon(travelMode: String) = when (travelMode) {
+private fun getTravelModeIcon(travelMode: String) = when (travelMode) {
     "TRANSIT" -> Icons.Rounded.DirectionsTransit
     "WALKING" -> Icons.AutoMirrored.Rounded.DirectionsWalk
     "BICYCLING" -> Icons.AutoMirrored.Rounded.DirectionsBike
