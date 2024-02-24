@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.datastore.dataStore
 import com.example.nexttransit.ApiCaller.getSampleDirections
 import com.example.nexttransit.ui.theme.NextTransitTheme
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
@@ -74,7 +75,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             NextTransitTheme {
 
-                val appSettings = dataStore.data.collectAsState(initial = AppSettings()).value
+                var appSettings = dataStore.data.collectAsState(initial = AppSettings()).value
                 val scope = rememberCoroutineScope()
 
                 var directions by remember {mutableStateOf(DirectionsResponse(status="Empty"))}
@@ -99,22 +100,26 @@ class MainActivity : ComponentActivity() {
                         OutlinedTextField(
                             value = source,
                             onValueChange = {
-                                source = it;
-                                prefsButtonColor = tertiary;
-                                prefsButtonText="Update preferences";
+                                source = it
+                                prefsButtonColor = tertiary
+                                prefsButtonText="Update preferences"
                                 directionsGenerated = false},
                             label = { Text("Origin") },
-                            modifier = Modifier.fillMaxWidth().padding(10.dp,0.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp, 0.dp)
                         )
                         OutlinedTextField(
                             value = destination,
                             onValueChange = {
-                                destination = it;
-                                prefsButtonColor=tertiary;
-                                prefsButtonText="Update preferences";
+                                destination = it
+                                prefsButtonColor=tertiary
+                                prefsButtonText="Update preferences"
                                 directionsGenerated = false},
                             label = { Text("Destination") },
-                            modifier = Modifier.fillMaxWidth().padding(10.dp,0.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp, 0.dp)
                         )
 
                         Row (horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()){
@@ -137,6 +142,7 @@ class MainActivity : ComponentActivity() {
                                         setSettings(source.text,destination.text,directions)
                                         prefsButtonText = "Updated"
                                         prefsButtonColor = secondary
+                                        appSettings = getSettings()
 
                                     } catch (e: Exception){
                                         prefsButtonText = "Error!"
@@ -153,16 +159,40 @@ class MainActivity : ComponentActivity() {
                         Log.e("ApiResponse", directions.toString())
                         SimpleDisplay(directions)
 
-
-
-                        Spacer(Modifier.size(0.dp,10.dp).fillMaxWidth())
-                        Text(text = "Debug output")
-                        LazyColumn(modifier = Modifier.border(2.dp,Color.LightGray)){
-                            item {Text(text = directions.toString(), modifier = Modifier.padding(5.dp))   }
+                        Spacer(
+                            Modifier
+                                .size(0.dp, 10.dp)
+                                .fillMaxWidth())
+                        Text(text = "Debug output", modifier=Modifier.padding(5.dp,0.dp))
+                        LazyColumn(modifier = Modifier
+                            .padding(5.dp)
+                            .border(2.dp, Color.LightGray)
+                            .padding(5.dp)){
+                            item {
+                                Text(text="AppSettings:", style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp))
+                                Text(text=appSettings.toString())
+                            }
+                            item{Spacer(
+                                Modifier
+                                    .size(0.dp, 10.dp)
+                                    .fillMaxWidth())}
+                            item {
+                                Text(text="Directions:", style = TextStyle(fontWeight = FontWeight.Bold, fontSize=20.sp))
+                                Text(text = directions.toString())
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun getSettings() : AppSettings {
+        return try {
+            dataStore.data.first()
+        } catch (e: Exception) {
+            Log.e("DataStore",dataStore.data.toString())
+            AppSettings()
         }
     }
 
@@ -171,6 +201,7 @@ class MainActivity : ComponentActivity() {
             it.copy(
                 source = Location(sourceName,directions.geocoded_waypoints[0].place_id),
                 destination = Location(destinationName,directions.geocoded_waypoints[1].place_id),
+                lastDirectionsResponse = directions
             )
         }
     }
