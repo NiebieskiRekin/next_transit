@@ -109,12 +109,16 @@ dependencies {
 //    ┌─────────────────────────────────────┐
 //    │ Home screen widget library - Glance │
 //    └─────────────────────────────────────┘
-    val glanceVersion = "1.0.0"
+    val glanceVersionPreview = "1.0.0-alpha06"
+    val glanceVersion = "1.1.0-alpha01"
     // For Glance support
     implementation("androidx.glance:glance:$glanceVersion")
     // For AppWidgets support
     implementation("androidx.glance:glance-appwidget:$glanceVersion")
     // For interop APIs with Material 3
     implementation("androidx.glance:glance-material3:$glanceVersion")
+
+    implementation("androidx.glance:glance-preview:$glanceVersionPreview")
+    implementation("androidx.glance:glance-appwidget-preview:$glanceVersionPreview")
 
 }

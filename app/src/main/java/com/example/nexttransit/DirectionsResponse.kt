@@ -65,7 +65,7 @@ data class OverviewPolyline(
 data class TimePoint(
     val text: String,
     val time_zone: String,
-    val value: Int
+    val value: Long,
 )
 
 
@@ -78,7 +78,7 @@ data class Distance(
 @Serializable
 data class Duration(
     val text: String,
-    val value: Int
+    val value: Long
 )
 
 

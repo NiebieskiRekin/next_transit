@@ -2,6 +2,7 @@ package com.example.nexttransit
 
 import android.content.Context
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -57,11 +58,9 @@ import com.example.nexttransit.ApiCaller.getSampleDirections
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.format.FormatStyle
 import java.util.Calendar
 import java.util.Locale
-
-
-val Context.dataStore by dataStore("app-settings.json", AppSettingsSerializer)
 
 
 class MainActivity : ComponentActivity() {
@@ -69,6 +68,8 @@ class MainActivity : ComponentActivity() {
 //    private val destination = "ChIJC0kwPxJbBEcRaulLN8Dqppc"
 //    private val origin  = "ChIJLcfSImn7BEcRa3MR7sqwJsw"
 
+
+    val Context.dataStore by dataStore("app-settings.json", AppSettingsSerializer)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -187,7 +188,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun getSettings() : AppSettings {
+    suspend fun getSettings() : AppSettings {
         return try {
             dataStore.data.first()
         } catch (e: Exception) {
@@ -196,7 +197,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun setSettings(sourceName: String, destinationName: String, directions: DirectionsResponse){
+    suspend fun setSettings(sourceName: String, destinationName: String, directions: DirectionsResponse){
         dataStore.updateData {
             it.copy(
                 source = Location(sourceName,directions.geocoded_waypoints[0].place_id),
@@ -312,7 +313,7 @@ fun getShortDate(ts:Long?):String{
     //get current date from ts
     calendar.timeInMillis = ts
     //return formatted date
-    return android.text.format.DateFormat.format("E, dd MMM yyyy", calendar).toString()
+    return DateFormat.format("E, HH:mm dd MMM yyyy", calendar).toString()
 }
 
 fun getLocalTime(ts:Long?):String{
@@ -320,9 +321,9 @@ fun getLocalTime(ts:Long?):String{
     //Get instance of calendar
     val calendar = Calendar.getInstance(Locale.getDefault())
     //get current date from ts
-    calendar.timeInMillis = ts
+    calendar.timeInMillis = ts*1000
     //return formatted date
-    return android.text.format.DateFormat.format("E", calendar).toString()
+    return DateFormat.format("HH:mm", calendar).toString()
 }
 
 fun getTravelModeText(bigStep: BigStep): String {
@@ -335,7 +336,7 @@ fun getTravelModeText(bigStep: BigStep): String {
 
 fun getTravelTime(bigStep: BigStep): String {
     return if (bigStep.travel_mode == "TRANSIT") {
-        (bigStep.transit_details?.departure_time?.text + "-" + bigStep.transit_details?.arrival_time?.text)
+        (getLocalTime(bigStep.transit_details?.departure_time?.value) + "-" + getLocalTime(bigStep.transit_details?.arrival_time?.value))
     } else {
         bigStep.duration.text
     }

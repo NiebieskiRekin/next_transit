@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 data class AppSettings (
     val source: Location = Location(),
     val destination: Location = Location(),
-    val lastDirectionsResponse: DirectionsResponse = DirectionsResponse(),
+    var lastDirectionsResponse: DirectionsResponse = DirectionsResponse(),
 )
 
 @Serializable
