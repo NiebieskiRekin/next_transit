@@ -1,11 +1,14 @@
 package com.example.nexttransit
 
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -45,6 +48,7 @@ import androidx.glance.text.FontWeight.Companion.Bold
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
+import kotlinx.coroutines.runBlocking
 
 
 class TransitWidget : GlanceAppWidget() {
@@ -275,6 +279,21 @@ class RefreshAction : ActionCallback {
 
 class TransitWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TransitWidget()
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        runBlocking{
+        context.appSettingsDataStore.updateData {
+            it.copy(
+                lastDirectionsResponse=ApiCaller.getDirectionsByPlaceId(
+                    it.source.placeId,it.destination.placeId)
+            )
+        }}
+    }
 }
 
 //private fun getTravelModeEmoji(travelMode: String) = when (travelMode) {
