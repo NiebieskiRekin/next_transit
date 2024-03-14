@@ -5,6 +5,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version embeddedKotlinVersion
+    kotlin("kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 val localProperties = Properties()
@@ -63,7 +65,10 @@ android {
 
 dependencies {
 
-//    ┌───────────────────────────────────┐
+implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    //    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
     val composeBom = platform("androidx.compose:compose-bom:2024.02.01")
@@ -71,13 +76,13 @@ dependencies {
     androidTestImplementation(composeBom)
     // Choose one of the following:
     // Material Design 3
-    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.compose.material3:material3:1.2.1")
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.2")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.3")
     // Optional - Add full set of material icons
     implementation("androidx.compose.material:material-icons-extended")
     // Optional - Add window size utils
@@ -86,7 +91,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.8.2")
 
     // DataStore to save user preferences
-    implementation("androidx.datastore:datastore:1.0.0")
+    implementation("androidx.datastore:datastore:1.1.0-beta02")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
@@ -109,7 +114,6 @@ dependencies {
 //    ┌─────────────────────────────────────┐
 //    │ Home screen widget library - Glance │
 //    └─────────────────────────────────────┘
-    val glanceVersionPreview = "1.0.0-alpha06"
     val glanceVersion = "1.1.0-alpha01"
     // For Glance support
     implementation("androidx.glance:glance:$glanceVersion")
@@ -118,7 +122,13 @@ dependencies {
     // For interop APIs with Material 3
     implementation("androidx.glance:glance-material3:$glanceVersion")
 
-    implementation("androidx.glance:glance-preview:$glanceVersionPreview")
-    implementation("androidx.glance:glance-appwidget-preview:$glanceVersionPreview")
 
+    // dagger hilt
+    implementation("com.google.dagger:hilt-android:2.44")
+    kapt("com.google.dagger:hilt-android-compiler:2.44")
+
+}
+
+kapt {
+    correctErrorTypes = true
 }

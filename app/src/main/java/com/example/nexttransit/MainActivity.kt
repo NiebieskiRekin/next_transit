@@ -1,6 +1,9 @@
 package com.example.nexttransit
 
+import android.app.Activity
+import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
@@ -53,35 +56,42 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.example.nexttransit.ApiCaller.getSampleDirections
 import com.example.nexttransit.ui.theme.NextTransitTheme
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.format.FormatStyle
 import java.util.Calendar
 import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
 
-//    private val destination = "ChIJC0kwPxJbBEcRaulLN8Dqppc"
-//    private val origin  = "ChIJLcfSImn7BEcRa3MR7sqwJsw"
+    companion object {
+        val Context.appSettingsDataStore: DataStore<AppSettings> by dataStore(
+            "app-settings.json",
+            serializer = AppSettingsSerializer,
+        )
+    }
 
+    val appWidgetId = intent?.extras?.getInt(
+        AppWidgetManager.EXTRA_APPWIDGET_ID,
+        AppWidgetManager.INVALID_APPWIDGET_ID
+    ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
-    val Context.dataStore by dataStore("app-settings.json", AppSettingsSerializer)
+    var resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setResult(Activity.RESULT_CANCELED, resultValue)
         setContent {
             NextTransitTheme {
-
-                var appSettings = dataStore.data.collectAsState(initial = AppSettings()).value
+                val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
                 val scope = rememberCoroutineScope()
-
-                var directions by remember {mutableStateOf(DirectionsResponse(status="Empty"))}
-                var source by remember { mutableStateOf(TextFieldValue(appSettings.source.name)) }
-                var destination by remember { mutableStateOf(TextFieldValue(appSettings.destination.name)) }
+                var source by remember { mutableStateOf(TextFieldValue(appSettings.source.name))}
+                var destination by remember { mutableStateOf(TextFieldValue(appSettings.destination.name))}
+                var directions by remember { mutableStateOf(appSettings.lastDirectionsResponse)}
                 var prefsButtonText by remember { mutableStateOf("Update preferences")}
 
                 // super weird
@@ -127,8 +137,8 @@ class MainActivity : ComponentActivity() {
                             Button(onClick = {
                                 scope.launch {
                                     try {
-                                        //directions = ApiCaller.getDirectionsByName(source.text,destination.text)
-                                        directions =  getSampleDirections()
+                                        directions = ApiCaller.getDirectionsByName(source.text,destination.text)
+//                                        directions =  getSampleDirections()
                                         directionsGenerated = true
                                     } catch (e: Exception) {
                                         directions = DirectionsResponse(status = "Error")
@@ -140,10 +150,12 @@ class MainActivity : ComponentActivity() {
                             }
                             Button(onClick = { scope.launch {
                                     try {
-                                        setSettings(source.text,destination.text,directions)
+                                        updateSettings(source.text,destination.text,directions)
                                         prefsButtonText = "Updated"
                                         prefsButtonColor = secondary
-                                        appSettings = getSettings()
+//                                        onWidgetClicked(
+//                                            source.text,destination.text,
+//                                            directions.toString())
 
                                     } catch (e: Exception){
                                         prefsButtonText = "Error!"
@@ -188,17 +200,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    suspend fun getSettings() : AppSettings {
-        return try {
-            dataStore.data.first()
-        } catch (e: Exception) {
-            Log.e("DataStore",dataStore.data.toString())
-            AppSettings()
-        }
-    }
+//    private fun onWidgetClicked(source: String, destination: String, directions: String){
+//        resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+//        resultValue.putExtra("source",source)
+//        resultValue.putExtra("destination",destination)
+//        resultValue.putExtra("directions",directions)
+//        actionRunCallback<RefreshAction>()
+//        setResult(Activity.RESULT_OK, resultValue)
+//        finish()
+//    }
 
-    suspend fun setSettings(sourceName: String, destinationName: String, directions: DirectionsResponse){
-        dataStore.updateData {
+
+    private suspend fun updateSettings(sourceName: String, destinationName: String, directions: DirectionsResponse){
+        appSettingsDataStore.updateData {
             it.copy(
                 source = Location(sourceName,directions.geocoded_waypoints[0].place_id),
                 destination = Location(destinationName,directions.geocoded_waypoints[1].place_id),
@@ -212,7 +226,7 @@ class MainActivity : ComponentActivity() {
 
 @Preview(showBackground=true)
 @Composable
-fun SimpleDisplay(directions: DirectionsResponse = getSampleDirections()){
+private fun SimpleDisplay(directions: DirectionsResponse = getSampleDirections()){
     NextTransitTheme {
         when (directions.status){
             "OK" -> {

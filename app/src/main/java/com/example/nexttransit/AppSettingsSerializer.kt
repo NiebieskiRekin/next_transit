@@ -1,5 +1,7 @@
 package com.example.nexttransit
 import androidx.datastore.core.Serializer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import java.io.InputStream
@@ -19,14 +21,17 @@ object AppSettingsSerializer : Serializer<AppSettings> {
             e.printStackTrace()
             defaultValue
         }
-    }
+
+}
 
     override suspend fun writeTo(t: AppSettings, output: OutputStream) {
-        output.write(
-            Json.encodeToString(
-                serializer = AppSettings.serializer(),
-                value = t,
-            ).encodeToByteArray()
-        )
+        withContext(Dispatchers.IO) {
+            output.write(
+                Json.encodeToString(
+                    serializer = AppSettings.serializer(),
+                    value = t,
+                ).encodeToByteArray()
+            )
+        }
     }
 }
