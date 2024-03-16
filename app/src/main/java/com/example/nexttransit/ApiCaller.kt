@@ -40,22 +40,47 @@ object ApiCaller {
         return response
     }
 
-    suspend fun getDirectionsByPlaceId(origin: String, destination: String,): DirectionsResponse {
+    suspend fun getDirectionsByPlaceId(origin: String, destination: String): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.HTTPS
                 host = "maps.googleapis.com"
                 path("/maps/api/directions/json")
-                parameters.append("destination","place_id:$destination")
-                parameters.append("origin","place_id:$origin")
-                parameters.append("mode","transit")
-                parameters.append("language","pl")
+                parameters.append("destination", "place_id:$destination")
+                parameters.append("origin", "place_id:$origin")
+                parameters.append("mode", "transit")
+                parameters.append("language", "pl")
                 parameters.append("key", BuildConfig.API_KEY)
             }
         }.body()
+
         return response
     }
 
+    fun trimPolyline(directionsResponse: DirectionsResponse) : DirectionsResponse {
+        // This is as bad as it gets
+        return directionsResponse.copy(
+            routes=directionsResponse.routes.map { route ->
+                route.copy(
+                    overview_polyline = OverviewPolyline("..."),
+                    legs = route.legs.map {leg ->
+                        leg.copy(
+                            steps=leg.steps.map {bigStep ->
+                                bigStep.copy(
+                                    polyline = OverviewPolyline("..."),
+                                    steps=bigStep.steps.map { step ->
+                                        step.copy(
+                                            polyline = OverviewPolyline("...")
+                                        )
+                                    }
+                                )
+                            }
+                        )
+                    }
+                )
+            }
+        )
+    }
 
     fun getSampleDirections() : DirectionsResponse {
         val response = """{

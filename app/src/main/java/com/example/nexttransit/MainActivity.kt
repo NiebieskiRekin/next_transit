@@ -4,6 +4,8 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color.parseColor
+import android.net.Uri
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
@@ -11,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.DirectionsBus
 import androidx.compose.material.icons.rounded.DirectionsCar
@@ -56,9 +60,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.example.nexttransit.ApiCaller.getSampleDirections
+import com.example.nexttransit.ApiCaller.trimPolyline
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -74,12 +80,12 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    val appWidgetId = intent?.extras?.getInt(
+    private val appWidgetId = intent?.extras?.getInt(
         AppWidgetManager.EXTRA_APPWIDGET_ID,
         AppWidgetManager.INVALID_APPWIDGET_ID
     ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
-    var resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+    private var resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -170,7 +176,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         Log.e("ApiResponse", directions.toString())
-                        SimpleDisplay(directions)
+                        SimpleDisplay(directions,source.text,destination.text)
 
                         Spacer(
                             Modifier
@@ -180,10 +186,13 @@ class MainActivity : ComponentActivity() {
                         LazyColumn(modifier = Modifier
                             .padding(5.dp)
                             .border(2.dp, Color.LightGray)
-                            .padding(5.dp)){
+                            .padding(5.dp)
+                        ){
                             item {
                                 Text(text="AppSettings:", style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp))
-                                Text(text=appSettings.toString())
+                                Text(text=appSettings.source.toString())
+                                Text(text=appSettings.destination.toString())
+                                Text(text= trimPolyline(appSettings.lastDirectionsResponse).toString())
                             }
                             item{Spacer(
                                 Modifier
@@ -191,7 +200,7 @@ class MainActivity : ComponentActivity() {
                                     .fillMaxWidth())}
                             item {
                                 Text(text="Directions:", style = TextStyle(fontWeight = FontWeight.Bold, fontSize=20.sp))
-                                Text(text = directions.toString())
+                                Text(text = trimPolyline(directions).toString())
                             }
                         }
                     }
@@ -220,90 +229,136 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-}
 
 
-
-@Preview(showBackground=true)
-@Composable
-private fun SimpleDisplay(directions: DirectionsResponse = getSampleDirections()){
-    NextTransitTheme {
-        when (directions.status){
-            "OK" -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.large)
-                        .background(MaterialTheme.colorScheme.secondary)
-                        .padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (directions.routes.isEmpty()) {
-                        item {
-                            Text(
-                                text = "Error: no route found.",
-                                color = MaterialTheme.colorScheme.onSecondary,
-                                )
-                        }
-                    }
-                    items(directions.routes) { route: Route ->
-                        for (leg: Leg in route.legs) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+    @Preview(showBackground=true)
+    @Composable
+    private fun SimpleDisplay(
+        directions: DirectionsResponse = getSampleDirections(),
+        source: String = "Poznań",
+        destination: String = "Kraków"){
+        NextTransitTheme {
+            when (directions.status){
+                "OK" -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.large)
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .padding(10.dp)
+                            .clickable(true, "Open Google Maps", null, onClick =
+                            {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(
+                                        "https://www.google.com/maps/dir/?api=1" +
+                                                "&origin=${source}"+
+                                                "&destination=${destination}" +
+                                                "&travelmode=transit"
+                                    ))
+                                startActivity(this@MainActivity,intent,null)
+                            }),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (directions.routes.isEmpty()) {
+                            item {
                                 Text(
-                                    text = "Departure: ",
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
-                                )
-                                Text(
-                                    text = leg.departure_time.text,
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                )
-                                Spacer(Modifier.size(16.dp))
-                                Text(
-                                    text = "Planned Arrival: ",
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
-                                )
-                                Text(
-                                    text = leg.arrival_time.text,
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
+                                    text = "Error: no route found.",
+                                    color = MaterialTheme.colorScheme.onSecondary,
                                 )
                             }
-                            LazyRow(verticalAlignment = Alignment.CenterVertically) {
-                                for ((i, bigStep: BigStep) in leg.steps.withIndex()) {
-                                    item {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            val travelModeText = getTravelModeText(bigStep)
-                                            Icon(
-                                                imageVector = getTravelModeIcon(travelModeText),
-                                                travelModeText,
-                                                tint = MaterialTheme.colorScheme.onSecondary,
-                                            )
-                                            Text(
-                                                text = getTravelTime(bigStep),
-                                                style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
-                                            )
-                                        }
-                                        if (i < leg.steps.lastIndex) {
-                                            Text(
-                                                text = " > ",
-                                                style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
-                                            )
+                        }
+                        items(directions.routes) { route: Route ->
+                            for (leg: Leg in route.legs) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Departure: ",
+                                        style = TextStyle(
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
+                                        )
+                                    )
+                                    Text(
+                                        text = leg.departure_time.text,
+                                        style = TextStyle(
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp
+                                        )
+                                    )
+                                    Spacer(Modifier.size(16.dp))
+                                    Text(
+                                        text = "Planned Arrival: ",
+                                        style = TextStyle(
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
+                                        )
+                                    )
+                                    Text(
+                                        text = leg.arrival_time.text,
+                                        style = TextStyle(
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp
+                                        )
+                                    )
+                                }
+                                LazyRow(
+                                    verticalAlignment = Alignment.Top,
+                                ) {
+                                    for ((i, bigStep: BigStep) in leg.steps.withIndex()) {
+                                        item {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                val travelModeText = getTravelModeText(bigStep)
+                                                Row (horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom){
+                                                    Icon(
+                                                        imageVector = getTravelModeIcon(travelModeText),
+                                                        travelModeText,
+                                                        tint = MaterialTheme.colorScheme.onSecondary,
+                                                    )
+                                                    if (bigStep.transit_details?.line != null) {
+                                                        val text = if (bigStep.transit_details.line.short_name.isNotBlank()){
+                                                            bigStep.transit_details.line.short_name
+                                                        } else if (bigStep.transit_details.line.name.isNotBlank()){
+                                                            bigStep.transit_details.line.name
+                                                        } else {
+                                                            return@Row
+                                                        }
+                                                        val textColor = if (bigStep.transit_details.line.text_color.isNotBlank()) {
+                                                            Color(parseColor(bigStep.transit_details.line.text_color))
+                                                        } else {
+                                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                                        }
+                                                        val backgroundTextColor =if (bigStep.transit_details.line.color.isNotBlank()) {
+                                                            Color(parseColor(bigStep.transit_details.line.color))
+                                                        } else  {
+                                                            MaterialTheme.colorScheme.primaryContainer
+                                                        }
+                                                        Text(
+                                                            text=text,
+                                                            style=TextStyle(color=textColor),
+                                                            modifier=Modifier
+                                                                .clip(MaterialTheme.shapes.small)
+                                                                .background(backgroundTextColor)
+                                                                .padding(2.dp)
+                                                        )
+                                                    }
+                                                }
+                                                Text(
+                                                    text = getTravelTime(bigStep),
+                                                    style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
+                                                )
+                                            }
+                                            if (i < leg.steps.lastIndex) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.ChevronRight,
+                                                    ">",
+                                                    tint = MaterialTheme.colorScheme.onSecondary,
+                                                )
 //                                        Spacer(Modifier.size(16.dp))
+                                            }
                                         }
                                     }
                                 }
@@ -311,23 +366,14 @@ private fun SimpleDisplay(directions: DirectionsResponse = getSampleDirections()
                         }
                     }
                 }
-            }
 
-            "Error" -> Text(text="Error: directions data not available.")
-            "Empty" -> Text(text="")
-            else -> {}
+                "Error" -> Text(text="Error: directions data not available.")
+                "Empty" -> Text(text="")
+                else -> {}
+            }
         }
     }
-}
 
-fun getShortDate(ts:Long?):String{
-    if(ts == null) return ""
-    //Get instance of calendar
-    val calendar = Calendar.getInstance(Locale.getDefault())
-    //get current date from ts
-    calendar.timeInMillis = ts
-    //return formatted date
-    return DateFormat.format("E, HH:mm dd MMM yyyy", calendar).toString()
 }
 
 fun getLocalTime(ts:Long?):String{
