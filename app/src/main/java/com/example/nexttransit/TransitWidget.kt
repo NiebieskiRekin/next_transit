@@ -193,7 +193,7 @@ class TransitWidget : GlanceAppWidget() {
                 ) {
                     Column (horizontalAlignment = Alignment.Horizontal.CenterHorizontally){
                         Text(
-                            text = makeElipsis(leg.start_address),
+                            text = makeElipsis(leg.startAddress),
                             maxLines = 1,
                             style = TextStyle(
                                 color = onBackground,
@@ -202,7 +202,7 @@ class TransitWidget : GlanceAppWidget() {
                             )
                         )
                         Text(
-                            text = getLocalTime(leg.departure_time.value),
+                            text = getLocalTime(leg.departureTime.value),
                             style = TextStyle(
                                 color = onBackground,
                                 fontWeight = Bold,
@@ -213,7 +213,7 @@ class TransitWidget : GlanceAppWidget() {
                     Spacer(GlanceModifier.size(16.dp))
                     Column (horizontalAlignment = Alignment.Horizontal.CenterHorizontally){
                         Text(
-                            text = makeElipsis(leg.end_address),
+                            text = makeElipsis(leg.endAddress),
                             maxLines = 1,
                             style = TextStyle(
                                 color = onBackground,
@@ -222,7 +222,7 @@ class TransitWidget : GlanceAppWidget() {
                             )
                         )
                         Text(
-                            text = getLocalTime(leg.arrival_time.value),
+                            text = getLocalTime(leg.arrivalTime.value),
                             style = TextStyle(
                                 color = onBackground,
                                 fontWeight = Bold,
@@ -264,21 +264,21 @@ class TransitWidget : GlanceAppWidget() {
                     contentDescription = travelModeText,
                     colorFilter = ColorFilter.tint(onBackground)
                 )
-                if (bigStep.transit_details?.line != null) {
-                    val text = if (bigStep.transit_details.line.short_name.isNotBlank()){
-                        bigStep.transit_details.line.short_name
-                    } else if (bigStep.transit_details.line.name.isNotBlank()){
-                        bigStep.transit_details.line.name
+                if (bigStep.transitDetails?.line != null) {
+                    val text = if (bigStep.transitDetails.line.shortName.isNotBlank()){
+                        bigStep.transitDetails.line.shortName
+                    } else if (bigStep.transitDetails.line.name.isNotBlank()){
+                        bigStep.transitDetails.line.name
                     } else {
                         return@Row
                     }
-                    val textColor = if (bigStep.transit_details.line.text_color.isNotBlank()) {
-                        ColorProvider(Color(parseColor(bigStep.transit_details.line.text_color)))
+                    val textColor = if (bigStep.transitDetails.line.textColor.isNotBlank()) {
+                        ColorProvider(Color(parseColor(bigStep.transitDetails.line.textColor)))
                     } else {
                         onPrimaryContainer
                     }
-                    val backgroundTextColor =if (bigStep.transit_details.line.color.isNotBlank()) {
-                        ColorProvider(Color(parseColor(bigStep.transit_details.line.color)))
+                    val backgroundTextColor =if (bigStep.transitDetails.line.color.isNotBlank()) {
+                        ColorProvider(Color(parseColor(bigStep.transitDetails.line.color)))
                     } else  {
                         primaryContainer
                     }

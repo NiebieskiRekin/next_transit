@@ -62,7 +62,7 @@ object ApiCaller {
         return directionsResponse.copy(
             routes=directionsResponse.routes.map { route ->
                 route.copy(
-                    overview_polyline = OverviewPolyline("..."),
+                    overviewPolyline = OverviewPolyline("..."),
                     legs = route.legs.map {leg ->
                         leg.copy(
                             steps=leg.steps.map {bigStep ->

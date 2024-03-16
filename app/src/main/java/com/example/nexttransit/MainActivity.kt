@@ -223,8 +223,8 @@ class MainActivity : ComponentActivity() {
     private suspend fun updateSettings(sourceName: String, destinationName: String, directions: DirectionsResponse){
         appSettingsDataStore.updateData {
             it.copy(
-                source = Location(sourceName,directions.geocoded_waypoints[0].place_id),
-                destination = Location(destinationName,directions.geocoded_waypoints[1].place_id),
+                source = Location(sourceName,directions.geocodedWaypoints[0].placeId),
+                destination = Location(destinationName,directions.geocodedWaypoints[1].placeId),
                 lastDirectionsResponse = directions
             )
         }
@@ -280,7 +280,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                     Text(
-                                        text = leg.departure_time.text,
+                                        text = leg.departureTime.text,
                                         style = TextStyle(
                                             color = MaterialTheme.colorScheme.onSecondary,
                                             fontWeight = FontWeight.Bold,
@@ -297,7 +297,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                     Text(
-                                        text = leg.arrival_time.text,
+                                        text = leg.arrivalTime.text,
                                         style = TextStyle(
                                             color = MaterialTheme.colorScheme.onSecondary,
                                             fontWeight = FontWeight.Bold,
@@ -318,21 +318,21 @@ class MainActivity : ComponentActivity() {
                                                         travelModeText,
                                                         tint = MaterialTheme.colorScheme.onSecondary,
                                                     )
-                                                    if (bigStep.transit_details?.line != null) {
-                                                        val text = if (bigStep.transit_details.line.short_name.isNotBlank()){
-                                                            bigStep.transit_details.line.short_name
-                                                        } else if (bigStep.transit_details.line.name.isNotBlank()){
-                                                            bigStep.transit_details.line.name
+                                                    if (bigStep.transitDetails?.line != null) {
+                                                        val text = if (bigStep.transitDetails.line.shortName.isNotBlank()){
+                                                            bigStep.transitDetails.line.shortName
+                                                        } else if (bigStep.transitDetails.line.name.isNotBlank()){
+                                                            bigStep.transitDetails.line.name
                                                         } else {
                                                             return@Row
                                                         }
-                                                        val textColor = if (bigStep.transit_details.line.text_color.isNotBlank()) {
-                                                            Color(parseColor(bigStep.transit_details.line.text_color))
+                                                        val textColor = if (bigStep.transitDetails.line.textColor.isNotBlank()) {
+                                                            Color(parseColor(bigStep.transitDetails.line.textColor))
                                                         } else {
                                                             MaterialTheme.colorScheme.onPrimaryContainer
                                                         }
-                                                        val backgroundTextColor =if (bigStep.transit_details.line.color.isNotBlank()) {
-                                                            Color(parseColor(bigStep.transit_details.line.color))
+                                                        val backgroundTextColor =if (bigStep.transitDetails.line.color.isNotBlank()) {
+                                                            Color(parseColor(bigStep.transitDetails.line.color))
                                                         } else  {
                                                             MaterialTheme.colorScheme.primaryContainer
                                                         }
@@ -387,16 +387,16 @@ fun getLocalTime(ts:Long?):String{
 }
 
 fun getTravelModeText(bigStep: BigStep): String {
-    return if (bigStep.travel_mode == "TRANSIT") {
-        bigStep.transit_details?.line?.vehicle?.type ?: "TRANSIT"
+    return if (bigStep.travelMode == "TRANSIT") {
+        bigStep.transitDetails?.line?.vehicle?.type ?: "TRANSIT"
     } else {
-        bigStep.travel_mode
+        bigStep.travelMode
     }
 }
 
 fun getTravelTime(bigStep: BigStep): String {
-    return if (bigStep.travel_mode == "TRANSIT") {
-        (getLocalTime(bigStep.transit_details?.departure_time?.value) + "-" + getLocalTime(bigStep.transit_details?.arrival_time?.value))
+    return if (bigStep.travelMode == "TRANSIT") {
+        (getLocalTime(bigStep.transitDetails?.departureTime?.value) + "-" + getLocalTime(bigStep.transitDetails?.arrivalTime?.value))
     } else {
         bigStep.duration.text
     }
