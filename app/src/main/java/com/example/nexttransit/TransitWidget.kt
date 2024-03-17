@@ -27,14 +27,13 @@ import androidx.glance.appwidget.components.CircleIconButton
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.color.DynamicThemeColorProviders
 import androidx.glance.color.DynamicThemeColorProviders.background
 import androidx.glance.color.DynamicThemeColorProviders.onBackground
 import androidx.glance.color.DynamicThemeColorProviders.onPrimaryContainer
 import androidx.glance.color.DynamicThemeColorProviders.onSecondaryContainer
-import androidx.glance.color.DynamicThemeColorProviders.primaryContainer
 import androidx.glance.color.DynamicThemeColorProviders.secondaryContainer
 import androidx.glance.layout.Alignment
-import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -46,6 +45,7 @@ import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight.Companion.Bold
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
@@ -77,56 +77,8 @@ class TransitWidget : GlanceAppWidget() {
 //                )
 //            }
 //    }
-
     @Composable
-    fun Content(appSettings: AppSettings, context: Context){
-        Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
-            DisplayDirectionsWidget(appSettings)
-            Row(modifier = GlanceModifier.fillMaxWidth().padding(4.dp), horizontalAlignment = Alignment.Horizontal.End) {
-                CircleIconButton(
-                    imageProvider = ImageProvider(R.drawable.baseline_settings_24),
-                    contentDescription = "Intent launch",
-                    onClick = actionStartActivity(Intent(context,MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)),
-                    backgroundColor = secondaryContainer,
-                    contentColor = onSecondaryContainer,
-                )
-                Spacer(GlanceModifier.size(4.dp))
-//            CircleIconButton(
-//                ImageProvider(
-//                    R.drawable.baseline_map_24
-//                ),
-//                "Open Google Maps",
-//                onClick = actionStartActivity(
-//                    Intent(
-//                        Intent.ACTION_VIEW,
-//                        Uri.parse(
-//                            "https://www.google.com/maps/dir/?api=1"+
-//                                    "&origin=o"+
-//                                    "&origin_place_id=ChIJLcfSImn7BEcRa3MR7sqwJsw"+
-//                                    "&destination=d"+
-//                                    "&destination_place_id=ChIJC0kwPxJbBEcRaulLN8Dqppc"+
-//                                    "&travelmode=transit"
-//                        )
-//                    )
-//                ),
-//                backgroundColor = secondaryContainer,
-//                contentColor = onSecondaryContainer,
-//            )
-//            Spacer(GlanceModifier.size(4.dp))
-                CircleIconButton(
-                    ImageProvider(
-                        R.drawable.baseline_refresh_24_white
-                    ),
-                    "Refresh",
-                    onClick = actionRunCallback<RefreshAction>(),
-                    backgroundColor = primaryContainer,
-                    contentColor = onPrimaryContainer,
-                )
-            }
-        }
-    }
-    @Composable
-    fun DisplayDirectionsWidget(appSettings: AppSettings) {
+    fun Content(appSettings: AppSettings,context: Context) {
         val directions = appSettings.lastDirectionsResponse
         Log.e("GlanceWidget", directions.toString())
         Column(
@@ -134,24 +86,9 @@ class TransitWidget : GlanceAppWidget() {
                 .fillMaxSize()
                 .cornerRadius(20.dp)
                 .background(background)
-                .padding(10.dp)
-                .clickable(
-                    actionStartActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(
-                                "https://www.google.com/maps/dir/?api=1" +
-                                        "&origin=o" +
-                                        "&origin_place_id=${appSettings.source.placeId}" +
-                                        "&destination=d" +
-                                        "&destination_place_id=${appSettings.destination.placeId}" +
-                                        "&travelmode=transit"
-                            )
-                        )
-                    )
-                ),
+                .padding(5.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
             when (directions.status) {
                 "OK" -> {
@@ -161,7 +98,8 @@ class TransitWidget : GlanceAppWidget() {
                             style = TextStyle(color = onBackground),
                         )
                     }
-                    DisplayRoutes(routes = directions.routes)
+                    DisplayRoutes(routes = directions.routes,
+                        appSettings.source.placeId,appSettings.destination.placeId,context)
                 }
 
                 "Error" -> Text(
@@ -182,62 +120,125 @@ class TransitWidget : GlanceAppWidget() {
     }
 
     @Composable
-    fun DisplayRoutes(routes: List<Route>) {
-        for (route: Route in routes) {
-            for (leg: Leg in route.legs) {
+    fun DisplayRoutes(routes: List<Route>, sourcePlaceId: PlaceId, destinationPlaceId: PlaceId,context: Context) {
+        routes.forEachIndexed { i: Int,route: Route ->
+            route.legs.forEachIndexed { j: Int,leg: Leg ->
                 Row(
-                    horizontalAlignment = Alignment.Start,
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Vertical.Top
                 ) {
-                    Column (horizontalAlignment = Alignment.Horizontal.CenterHorizontally){
-                        Text(
-                            text = makeElipsis(leg.startAddress),
-                            maxLines = 1,
-                            style = TextStyle(
-                                color = onBackground,
-                                fontWeight = Bold,
-                                fontSize = 10.sp
+                    Row(modifier=GlanceModifier
+                        .defaultWeight()
+                        .clickable(actionStartActivity(
+                        Intent(context,MainActivity::class.java)
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        )) {
+                        Column(
+                            horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
+                            modifier = GlanceModifier.defaultWeight().padding(4.dp, 0.dp)
+                        ) {
+                            Text(
+                                text = leg.startAddress,
+//                            text = makeEllipsis(leg.startAddress),
+                                maxLines = 2,
+                                style = TextStyle(
+                                    color = onPrimaryContainer,
+                                    fontWeight = Bold,
+                                    fontSize = 10.sp,
+                                    textAlign = TextAlign.Center
+                                ),
                             )
-                        )
-                        Text(
-                            text = getLocalTime(leg.departureTime.value),
-                            style = TextStyle(
-                                color = onBackground,
-                                fontWeight = Bold,
-                                fontSize = 20.sp
+                            Text(
+                                text = getLocalTime(leg.departureTime.value),
+                                style = TextStyle(
+                                    color = onPrimaryContainer,
+                                    fontWeight = Bold,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                ),
                             )
-                        )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
+                            modifier = GlanceModifier.defaultWeight().padding(4.dp, 0.dp)
+                        ) {
+                            Text(
+                                text = leg.endAddress,
+//                            text = makeEllipsis(leg.endAddress),
+                                maxLines = 2,
+                                style = TextStyle(
+                                    color = onPrimaryContainer,
+                                    fontWeight = Bold,
+                                    fontSize = 10.sp,
+                                    textAlign = TextAlign.Center
+                                ),
+                            )
+                            Text(
+                                text = getLocalTime(leg.arrivalTime.value),
+                                style = TextStyle(
+                                    color = onPrimaryContainer,
+                                    fontWeight = Bold,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                ),
+                            )
+                        }
                     }
-                    Spacer(GlanceModifier.size(16.dp))
-                    Column (horizontalAlignment = Alignment.Horizontal.CenterHorizontally){
-                        Text(
-                            text = makeElipsis(leg.endAddress),
-                            maxLines = 1,
-                            style = TextStyle(
-                                color = onBackground,
-                                fontWeight = Bold,
-                                fontSize = 10.sp
+                        if (i==0 && j==0){
+                            CircleIconButton(
+                                ImageProvider(
+                                    R.drawable.baseline_map_24
+                                ),
+                                "Open Google Maps",
+                                onClick =actionStartActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse(
+                                            "https://www.google.com/maps/dir/?api=1" +
+                                                    "&origin=o" +
+                                                    "&origin_place_id=${sourcePlaceId }" +
+                                                    "&destination=d" +
+                                                    "&destination_place_id=${destinationPlaceId}" +
+                                                    "&travelmode=transit"
+                                        )
+                                    )
+                                ),
+                                backgroundColor = secondaryContainer,
+                                contentColor = onSecondaryContainer,
                             )
-                        )
-                        Text(
-                            text = getLocalTime(leg.arrivalTime.value),
-                            style = TextStyle(
-                                color = onBackground,
-                                fontWeight = Bold,
-                                fontSize = 20.sp
+                            Spacer(GlanceModifier.size(4.dp))
+                            CircleIconButton(
+                                ImageProvider(
+                                    R.drawable.baseline_refresh_24_white
+                                ),
+                                "Refresh",
+                                onClick = actionRunCallback<RefreshAction>(),
+                                backgroundColor = DynamicThemeColorProviders.primary,
+                                contentColor = DynamicThemeColorProviders.onPrimary,
                             )
-                        )
-                    }
+                        }
                 }
                 Row(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = GlanceModifier.fillMaxWidth()
+                    modifier = GlanceModifier.fillMaxWidth().clickable(
+                        actionStartActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(
+                                    "https://www.google.com/maps/dir/?api=1" +
+                                            "&origin=o" +
+                                            "&origin_place_id=${sourcePlaceId}" +
+                                            "&destination=d" +
+                                            "&destination_place_id=${destinationPlaceId}" +
+                                            "&travelmode=transit"
+                                )
+                            )
+                        )
+                    )
                 ) {
-                    for ((i, bigStep: Step) in leg.steps.withIndex()) {
+                    for ((k, bigStep: Step) in leg.steps.withIndex()) {
                         DisplayStep(bigStep)
-                        if (i < leg.steps.lastIndex) {
+                        if (k < leg.steps.lastIndex) {
                             Image(
                                 provider = ImageProvider(R.drawable.baseline_chevron_right_24),
                                 contentDescription = ">",
@@ -275,12 +276,12 @@ class TransitWidget : GlanceAppWidget() {
                     val textColor = if (bigStep.transitDetails.line.textColor.isNotBlank()) {
                         ColorProvider(Color(parseColor(bigStep.transitDetails.line.textColor)))
                     } else {
-                        onPrimaryContainer
+                        onSecondaryContainer
                     }
                     val backgroundTextColor =if (bigStep.transitDetails.line.color.isNotBlank()) {
                         ColorProvider(Color(parseColor(bigStep.transitDetails.line.color)))
                     } else  {
-                        primaryContainer
+                        secondaryContainer
                     }
 
                     Text(
@@ -349,9 +350,9 @@ class TransitWidgetReceiver : GlanceAppWidgetReceiver() {
 //    else -> "?"
 //}
 
-private fun makeElipsis(string: String, count: Int = 20) : String {
-    return string.take(count)+if(string.length <= count){""} else {"..."}
-}
+//private fun makeEllipsis(string: String, count: Int = 20) : String {
+//    return string.take(count)+if(string.length <= count){""} else {"..."}
+//}
 
 private fun getTravelModeIconResource(travelMode: String) = when (travelMode) {
         "TRANSIT" -> R.drawable.baseline_directions_transit_24_white
