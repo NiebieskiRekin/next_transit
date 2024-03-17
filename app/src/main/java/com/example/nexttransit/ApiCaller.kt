@@ -68,7 +68,7 @@ object ApiCaller {
                             steps=leg.steps.map {bigStep ->
                                 bigStep.copy(
                                     polyline = OverviewPolyline("..."),
-                                    steps=bigStep.steps.map { step ->
+                                    steps=bigStep.steps?.map { step ->
                                         step.copy(
                                             polyline = OverviewPolyline("...")
                                         )

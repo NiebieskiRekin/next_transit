@@ -63,7 +63,7 @@ data class Leg(
     val startAddress: String,
     @SerialName("start_location")
     val startLocation: CoordinatesPoint,
-    val steps: List<BigStep>,
+    val steps: List<Step>,
     @SerialName("traffic_speed_entry")
     val trafficSpeedEntry: List<String>,
     @SerialName("via_waypoint")
@@ -96,27 +96,8 @@ data class Duration(
     val value: Long
 )
 
-
 @Serializable
 data class Step(
-    val distance: Distance,
-    val duration: Duration,
-    @SerialName("start_location")
-    val startLocation: CoordinatesPoint,
-    @SerialName("end_location")
-    val endLocation: CoordinatesPoint,
-    @SerialName("html_instructions")
-    val htmlInstructions: String="",
-    @SerialName("transit_details")
-    val transitDetails: TransitDetails?=null,
-    val polyline: OverviewPolyline,
-    val maneuver: String="",
-    @SerialName("travel_mode")
-    val travelMode: String,
-)
-
-@Serializable
-data class BigStep(
     val distance: Distance,
     val duration: Duration,
     @SerialName("start_location")
@@ -131,7 +112,7 @@ data class BigStep(
     @SerialName("travel_mode")
     val travelMode: String,
     val maneuver: String="",
-    val steps: List<Step> = emptyList()
+    val steps: List<Step>? = null
 )
 
 @Serializable

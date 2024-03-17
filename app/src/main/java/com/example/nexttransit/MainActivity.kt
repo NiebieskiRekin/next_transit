@@ -308,7 +308,7 @@ class MainActivity : ComponentActivity() {
                                 LazyRow(
                                     verticalAlignment = Alignment.Top,
                                 ) {
-                                    for ((i, bigStep: BigStep) in leg.steps.withIndex()) {
+                                    for ((i, bigStep: Step) in leg.steps.withIndex()) {
                                         item {
                                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                                 val travelModeText = getTravelModeText(bigStep)
@@ -386,7 +386,7 @@ fun getLocalTime(ts:Long?):String{
     return DateFormat.format("HH:mm", calendar).toString()
 }
 
-fun getTravelModeText(bigStep: BigStep): String {
+fun getTravelModeText(bigStep: Step): String {
     return if (bigStep.travelMode == "TRANSIT") {
         bigStep.transitDetails?.line?.vehicle?.type ?: "TRANSIT"
     } else {
@@ -394,7 +394,7 @@ fun getTravelModeText(bigStep: BigStep): String {
     }
 }
 
-fun getTravelTime(bigStep: BigStep): String {
+fun getTravelTime(bigStep: Step): String {
     return if (bigStep.travelMode == "TRANSIT") {
         (getLocalTime(bigStep.transitDetails?.departureTime?.value) + "-" + getLocalTime(bigStep.transitDetails?.arrivalTime?.value))
     } else {

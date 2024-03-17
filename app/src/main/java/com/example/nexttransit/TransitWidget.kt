@@ -235,7 +235,7 @@ class TransitWidget : GlanceAppWidget() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = GlanceModifier.fillMaxWidth()
                 ) {
-                    for ((i, bigStep: BigStep) in leg.steps.withIndex()) {
+                    for ((i, bigStep: Step) in leg.steps.withIndex()) {
                         DisplayStep(bigStep)
                         if (i < leg.steps.lastIndex) {
                             Image(
@@ -252,7 +252,7 @@ class TransitWidget : GlanceAppWidget() {
     }
 
     @Composable
-    fun DisplayStep(bigStep: BigStep){
+    fun DisplayStep(bigStep: Step){
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
