@@ -5,8 +5,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version embeddedKotlinVersion
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+//    kotlin("kapt")
+//    id("com.google.dagger.hilt.android")
 }
 
 val localProperties = Properties()
@@ -33,6 +33,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -123,12 +124,12 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.glance:glance-material3:$glanceVersion")
 
 
-    // dagger hilt
-    implementation("com.google.dagger:hilt-android:2.44")
-    kapt("com.google.dagger:hilt-android-compiler:2.44")
+//    // dagger hilt
+//    implementation("com.google.dagger:hilt-android:2.44")
+//    kapt("com.google.dagger:hilt-android-compiler:2.44")
 
 }
 
-kapt {
-    correctErrorTypes = true
-}
+//kapt {
+//    correctErrorTypes = true
+//}
