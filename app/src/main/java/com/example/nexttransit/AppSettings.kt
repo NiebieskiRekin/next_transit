@@ -1,13 +1,11 @@
 package com.example.nexttransit
 
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class AppSettings (
-    val source: Location = Location(),
-    val destination: Location = Location(),
+    var source: Location = Location(),
+    var destination: Location = Location(),
     var lastDirectionsResponse: DirectionsResponse = DirectionsResponse(),
 )
 
