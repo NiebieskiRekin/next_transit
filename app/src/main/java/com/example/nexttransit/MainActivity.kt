@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.rounded.DirectionsRailway
 import androidx.compose.material.icons.rounded.DirectionsTransit
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.material.icons.rounded.Tram
+import androidx.compose.material.icons.sharp.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -43,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -182,25 +186,97 @@ class MainActivity : ComponentActivity() {
                             Modifier
                                 .size(0.dp, 10.dp)
                                 .fillMaxWidth())
-                        Text(text = "Debug output", modifier=Modifier.padding(5.dp,0.dp))
-                        LazyColumn(modifier = Modifier
-                            .padding(5.dp)
-                            .border(2.dp, Color.LightGray)
-                            .padding(5.dp)
-                        ){
-                            item {
-                                Text(text="AppSettings:", style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp))
-                                Text(text=appSettings.source.toString())
-                                Text(text=appSettings.destination.toString())
-                                Text(text= trimPolyline(appSettings.lastDirectionsResponse).toString())
-                            }
-                            item{Spacer(
-                                Modifier
-                                    .size(0.dp, 10.dp)
-                                    .fillMaxWidth())}
-                            item {
-                                Text(text="Directions:", style = TextStyle(fontWeight = FontWeight.Bold, fontSize=20.sp))
-                                Text(text = trimPolyline(directions).toString())
+                        var showDebugOutput by remember { mutableStateOf(false) }
+                        TextButton(onClick={showDebugOutput=!showDebugOutput}, content={
+                            Text(if (showDebugOutput) {
+                                "Hide Debug Output"
+                            } else {
+                                "Show Debug Output"
+                            })
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(
+                                imageVector = Icons.Sharp.ChevronRight,
+                                contentDescription = ">",
+                                Modifier.rotate(if (showDebugOutput){ 90f} else {0f})
+                            )
+                                                 },
+                            modifier=Modifier.padding(5.dp,0.dp))
+                        if (showDebugOutput) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(5.dp)
+                                    .border(2.dp, Color.LightGray)
+                                    .padding(5.dp)
+                            ) {
+                                item {
+                                    Text(
+                                        text = "Saved origin:",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    )
+                                    SelectionContainer {
+                                        Text(text = appSettings.source.toString())
+                                    }
+                                }
+                                item {
+                                    Spacer(
+                                        Modifier
+                                            .size(0.dp, 5.dp)
+                                            .fillMaxWidth()
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        text = "Saved destination:",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    )
+                                    SelectionContainer {
+                                        Text(text = appSettings.destination.toString())
+                                    }
+                                }
+                                item {
+                                    Spacer(
+                                        Modifier
+                                            .size(0.dp, 5.dp)
+                                            .fillMaxWidth()
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        text = "Saved last directions response:",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    )
+                                    SelectionContainer {
+                                        Text(text = trimPolyline(appSettings.lastDirectionsResponse).toString())
+                                    }
+                                }
+                                item {
+                                    Spacer(
+                                        Modifier
+                                            .size(0.dp, 10.dp)
+                                            .fillMaxWidth()
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        text = "New Directions:",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    )
+                                    SelectionContainer {
+                                        Text(text = trimPolyline(directions).toString())
+                                    }
+                                }
                             }
                         }
                     }
@@ -252,11 +328,12 @@ class MainActivity : ComponentActivity() {
                                     Intent.ACTION_VIEW,
                                     Uri.parse(
                                         "https://www.google.com/maps/dir/?api=1" +
-                                                "&origin=${source}"+
+                                                "&origin=${source}" +
                                                 "&destination=${destination}" +
                                                 "&travelmode=transit"
-                                    ))
-                                startActivity(this@MainActivity,intent,null)
+                                    )
+                                )
+                                startActivity(this@MainActivity, intent, null)
                             }),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -339,7 +416,7 @@ class MainActivity : ComponentActivity() {
                                                         Text(
                                                             text=text,
                                                             style=TextStyle(color=textColor),
-                                                            modifier=Modifier
+                                                            modifier= Modifier
                                                                 .clip(MaterialTheme.shapes.small)
                                                                 .background(backgroundTextColor)
                                                                 .padding(2.dp)

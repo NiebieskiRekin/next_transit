@@ -9,7 +9,7 @@ Click the button in the IDE and hope for the best? No idea for now...
 
 
 # TODO
-- [ ] Collapsable Lazy Column AppSettings View
+- [x] Collapsable Lazy Column AppSettings View
 - [ ] Download AppSettings json file
 - [ ] Create tests
 - [ ] Add build instructions
