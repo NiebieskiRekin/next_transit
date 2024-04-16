@@ -8,10 +8,10 @@
     android:widgetCategory="home_screen"
     android:previewImage="@drawable/widget"
     android:updatePeriodMillis="0"
-    android:widgetFeatures="reconfigurable|configuration_optional">
+    android:widgetFeatures="configuration_optional|reconfigurable"
+    android:configure="com.example.nexttransit.TransitWidgetConfigurationActivity">
 </appwidget-provider>
 
-    <!--    android:configure="com.example.nexttransit.NextTransitConfigurationActivity"-->
 <!--    android:previewLayout="@layout/example_appwidget_preview"-->
 <!--    android:initialLayout="@layout/example_loading_appwidget"-->
 <!--    android:configure="com.example.android.ExampleAppWidgetConfigurationActivity"-->

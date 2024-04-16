@@ -40,7 +40,7 @@ object ApiCaller {
         return response
     }
 
-    suspend fun getDirectionsByPlaceId(origin: String, destination: String): DirectionsResponse {
+    suspend fun getDirectionsByPlaceId(origin: PlaceId, destination: PlaceId): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.HTTPS

@@ -1,4 +1,5 @@
 package com.example.nexttransit
+
 import androidx.datastore.core.Serializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,15 +15,24 @@ object AppSettingsSerializer : Serializer<AppSettings> {
     override suspend fun readFrom(input: InputStream): AppSettings {
         return try {
             Json.decodeFromString(
-                deserializer = AppSettings.serializer(),
-                string = input.readBytes().decodeToString()
+                deserializer = AppSettings.serializer(), string = input.readBytes().decodeToString()
             )
-        } catch (e: SerializationException){
+        } catch (e: SerializationException) {
             e.printStackTrace()
             defaultValue
         }
+    }
 
-}
+    fun readFrom(input: String): AppSettings {
+        return try {
+            Json.decodeFromString(
+                deserializer = AppSettings.serializer(), string = input
+            )
+        } catch (e: SerializationException) {
+            e.printStackTrace()
+            defaultValue
+        }
+    }
 
     override suspend fun writeTo(t: AppSettings, output: OutputStream) {
         withContext(Dispatchers.IO) {
