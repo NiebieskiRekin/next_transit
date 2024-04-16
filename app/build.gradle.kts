@@ -5,6 +5,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version embeddedKotlinVersion
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 //    kotlin("kapt")
 //    id("com.google.dagger.hilt.android")
 }
@@ -69,6 +70,9 @@ dependencies {
 implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     //┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘

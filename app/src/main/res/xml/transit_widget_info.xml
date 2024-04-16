@@ -7,9 +7,7 @@
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:previewImage="@drawable/widget"
-    android:updatePeriodMillis="0"
-    android:widgetFeatures="configuration_optional|reconfigurable"
-    android:configure="com.example.nexttransit.TransitWidgetConfigurationActivity">
+    android:updatePeriodMillis="0">
 </appwidget-provider>
 
 <!--    android:previewLayout="@layout/example_appwidget_preview"-->

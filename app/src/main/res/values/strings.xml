@@ -5,4 +5,9 @@
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">This is an app widget description</string>
     <string name="title_activity_second">SecondActivity</string>
+    <string name="title_activity_maps_transit_widget_configuration">
+        MapsTransitWidgetConfigurationActivity
+    </string>
+    <string name="title_activity_transit_widget_configuration">TransitWidgetConfigurationActivity
+    </string>
 </resources>
