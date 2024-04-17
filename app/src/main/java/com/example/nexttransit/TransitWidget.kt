@@ -1,16 +1,17 @@
 package com.example.nexttransit
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color.parseColor
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -22,11 +23,11 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.ActionCallback
-import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.components.CircleIconButton
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
 import androidx.glance.color.DynamicThemeColorProviders
 import androidx.glance.color.DynamicThemeColorProviders.background
@@ -34,6 +35,7 @@ import androidx.glance.color.DynamicThemeColorProviders.onBackground
 import androidx.glance.color.DynamicThemeColorProviders.onPrimaryContainer
 import androidx.glance.color.DynamicThemeColorProviders.onSecondaryContainer
 import androidx.glance.color.DynamicThemeColorProviders.secondaryContainer
+import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -43,6 +45,7 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.state.GlanceStateDefinition
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight.Companion.Bold
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -51,15 +54,21 @@ import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+
+
+private val sourcePrefsKey = stringPreferencesKey("Source")
+private val sourceParamKey = ActionParameters.Key<String>("Source")
+private val destinationPrefsKey = stringPreferencesKey("Destination")
+private val destinationParamKey = ActionParameters.Key<String>("Destination")
+private val directionsPrefsKey = stringPreferencesKey("Directions")
 
 
 class TransitWidget : GlanceAppWidget() {
 
-    override val stateDefinition: GlanceStateDefinition<*> = TransitWidgetStateDefinition()
+    override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        Log.d("Widget", "provideGlance")
-
         provideContent {
             Content()
         }
@@ -68,11 +77,23 @@ class TransitWidget : GlanceAppWidget() {
     @Composable
     fun Content() {
         val context = LocalContext.current
-        val appSettings by WidgetSettingsRepo.currentSettings.collectAsState()
-        Log.d("TransitWidget", "Content redraw")
-        Log.d("TransitWidget",appSettings.toString())
+        val prefs = currentState<Preferences>()
 
-        val directions = appSettings.lastDirectionsResponse
+        val destination = prefs[destinationPrefsKey] ?: ""
+        val source = prefs[sourcePrefsKey] ?: ""
+
+
+        val directions: DirectionsResponse =
+                try {
+                    Json.decodeFromString(
+                        deserializer = DirectionsResponse.serializer(), string = prefs[directionsPrefsKey] ?: ""
+                    )
+                } catch (e: Exception) {
+                    DirectionsResponse()
+                }
+
+
+
         Log.d("GlanceWidget", directions.toString())
         Column(
             modifier = GlanceModifier
@@ -92,8 +113,7 @@ class TransitWidget : GlanceAppWidget() {
                         )
                     }
                     DisplayRoutes(
-                        routes = directions.routes,
-                        appSettings.source.placeId, appSettings.destination.placeId, context
+                        routes = directions.routes, source, destination, context
                     )
                 }
 
@@ -217,7 +237,7 @@ class TransitWidget : GlanceAppWidget() {
                             ),
                             "Refresh",
                             onClick = {
-                                actionRunCallback<RefreshAction>()
+                                // TODO
                             },
                             backgroundColor = DynamicThemeColorProviders.primary,
                             contentColor = DynamicThemeColorProviders.onPrimary,
@@ -309,107 +329,65 @@ class TransitWidget : GlanceAppWidget() {
 }
 
 
-class RefreshAction : ActionCallback {
+class UpdateState : ActionCallback {
     override suspend fun onAction(
         context: Context,
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        Log.d("TransitWidget", "RefreshAction")
-        WidgetSettingsRepo.update()
-        TransitWidget().update(context, glanceId)
+
+        val source = requireNotNull(parameters[sourceParamKey])
+        val destination = requireNotNull(parameters[destinationParamKey])
+
+        updateAppWidgetState(context, glanceId) { preferences ->
+            preferences.toMutablePreferences().apply {
+                this[sourcePrefsKey] = source
+                this[destinationPrefsKey] = destination
+            }
+        }
+
+        TransitWidget().update(context,glanceId)
     }
 }
+
 
 class TransitWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TransitWidget()
 
-    override fun onEnabled(context: Context?) {
-        super.onEnabled(context)
-        CoroutineScope(Dispatchers.IO).launch {
-            WidgetSettingsRepo.update()
+
+    override fun onReceive(context: Context, intent: Intent) {
+        Log.d("TransitWidget", "Action broadcast: $intent")
+        intent.let {
+            if (it.action == AppWidgetManager.EXTRA_APPWIDGET_ID) {
+                val source = it.getStringExtra("Source")
+                val destination = it.getStringExtra("Destination")
+                Log.d("TransitWidget", "Source: $source")
+                Log.d("TransitWidget", "Destination: $destination")
+                if (!source.isNullOrEmpty() && !destination.isNullOrEmpty()) {
+                    Log.d("TransitWidget", "Source and destination NOT null")
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val directionsResponse = ApiCaller.getDirectionsByName(source, destination)
+//                        (
+//                            context, AppSettings(
+//                                lastDirectionsResponse = directionsResponse,
+//                                source = Location(
+//                                    placeId = directionsResponse.geocodedWaypoints[0].placeId,
+//                                    name = source
+//                                ),
+//                                destination = Location(
+//                                    placeId = directionsResponse.geocodedWaypoints[1].placeId,
+//                                    name = destination
+//                                )
+//                            )
+//                        )
+                    }
+                } else {
+                    Log.d("TransitWidget", "Null values for source or destination")
+                }
+            }
         }
+        super.onReceive(context, intent)
     }
-
-//    override fun onReceive(context: Context, intent: Intent) {
-//        Log.d("TransitWidget", "Action broadcast: $intent")
-//        intent.let {
-//            if (it.action == AppWidgetManager.EXTRA_APPWIDGET_ID){
-//                val source = it.getStringExtra(TransitWidgetExtension().APP_SETTINGS_SOURCE)
-//                val destination = it.getStringExtra(TransitWidgetExtension().APP_SETTINGS_DESTINATION)
-//                Log.d("TransitWidget","Source: $source")
-//                Log.d("TransitWidget","Destination: $destination")
-//                if (!source.isNullOrEmpty() && !destination.isNullOrEmpty())
-//                {
-//                    Log.d("TransitWidget", "Source and destination NOT null")
-//                } else {
-//                    Log.d("TransitWidget","Null values for source or destination")
-//                }
-////                runBlocking {
-////                    val directionsResponse = ApiCaller.getDirectionsByName(source, destination)
-////                    TransitWidget().updateData(context, AppSettings(lastDirectionsResponse = directionsResponse,
-////                        source = Location(
-////                            placeId = directionsResponse.geocodedWaypoints[0].placeId,
-////                            name = source
-////                        ),
-////                        destination = Location(
-////                            placeId = directionsResponse.geocodedWaypoints[1].placeId,
-////                            name = destination
-////                        )))
-////                }
-//            }
-//
-//
-//        }
-//        super.onReceive(context, intent)
-//    }
-
-//    override fun onUpdate(
-//        context: Context,
-//        appWidgetManager: AppWidgetManager,
-//        appWidgetIds: IntArray
-//    ) {
-//        Log.d("TransitWidget", "onUpdate")
-//
-//        for (appWidgetId in appWidgetIds) {
-//            intentAppWidget(context,appWidgetManager, appWidgetId)
-//        }
-////        actionRunCallback<RefreshAction>()
-//        super.onUpdate(context, appWidgetManager, appWidgetIds)
-//    }
-
-
-
-//    private fun intentAppWidget(
-//        context: Context,
-//        appWidgetManager: AppWidgetManager,
-//        appWidgetId: Int
-//    ) {
-//
-//        val optionsBundle = appWidgetManager.getAppWidgetOptions(appWidgetId)
-//        val source = optionsBundle.getString(TransitWidgetExtension().APP_SETTINGS_SOURCE)
-//        val destination = optionsBundle.getString(TransitWidgetExtension().APP_SETTINGS_DESTINATION)
-//        Log.d("TransitWidget","intentAppWidget")
-//        if (source != null && destination != null) {
-//            Log.d("TransitWidget","Source: $source")
-//            Log.d("TransitWidget","Destination: $destination")
-////            runBlocking {
-////                val directionsResponse = ApiCaller.getDirectionsByName(source, destination)
-////                TransitWidget().updateData(context, AppSettings(lastDirectionsResponse = directionsResponse,
-////                    source = Location(
-////                        placeId = directionsResponse.geocodedWaypoints[0].placeId,
-////                        name = source
-////                    ),
-////                    destination = Location(
-////                        placeId = directionsResponse.geocodedWaypoints[1].placeId,
-////                        name = destination
-////                    )))
-////            }
-//        } else {
-//            Log.d("TransitWidget","Null values for source or destination")
-//        }
-//    }
-
 }
 
 private fun getTravelModeIconResource(travelMode: String) = when (travelMode) {
