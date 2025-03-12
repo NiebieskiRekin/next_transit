@@ -4,17 +4,8 @@
     android:description="@string/app_name"
     android:minHeight="60dp"
     android:minWidth="250dp"
-    android:resizeMode="horizontal|vertical"
+    android:resizeMode="vertical"
     android:widgetCategory="home_screen"
     android:previewImage="@drawable/widget"
-    android:updatePeriodMillis="0"
-    android:widgetFeatures="reconfigurable|configuration_optional">
+    android:updatePeriodMillis="0">
 </appwidget-provider>
-
-    <!--    android:configure="com.example.nexttransit.NextTransitConfigurationActivity"-->
-<!--    android:previewLayout="@layout/example_appwidget_preview"-->
-<!--    android:initialLayout="@layout/example_loading_appwidget"-->
-<!--    android:configure="com.example.android.ExampleAppWidgetConfigurationActivity"-->
-
-    <!--    android:previewLayout="" requires xml to display preview-->
-<!--    android:configure="com.example.nexttransit.MainActivity"-->

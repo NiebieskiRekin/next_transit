@@ -83,7 +83,7 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.3")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.5")
     // Optional - Add full set of material icons
     implementation("androidx.compose.material:material-icons-extended")
     // Optional - Add window size utils
@@ -92,7 +92,7 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
 
     // DataStore to save user preferences
-    implementation("androidx.datastore:datastore:1.1.0-beta02")
+    implementation("androidx.datastore:datastore:1.1.0-rc01")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
@@ -115,7 +115,7 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 //    ┌─────────────────────────────────────┐
 //    │ Home screen widget library - Glance │
 //    └─────────────────────────────────────┘
-    val glanceVersion = "1.1.0-alpha01"
+    val glanceVersion = "1.1.0-beta01"
     // For Glance support
     implementation("androidx.glance:glance:$glanceVersion")
     // For AppWidgets support
