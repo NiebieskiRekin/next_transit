@@ -67,13 +67,14 @@ android {
 
 dependencies {
 
-implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
-    implementation("com.google.android.gms:play-services-maps:18.1.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.android.gms:play-services-maps:19.1.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     //┌───────────────────────────────────┐
+//    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
     val composeBom = platform("androidx.compose:compose-bom:2024.02.01")
@@ -81,22 +82,22 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     androidTestImplementation(composeBom)
     // Choose one of the following:
     // Material Design 3
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3:1.3.1")
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     // UI Tests
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.5")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.5")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")
     // Optional - Add full set of material icons
     implementation("androidx.compose.material:material-icons-extended")
     // Optional - Add window size utils
     implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.activity:activity-ktx:1.10.1")
+    implementation("androidx.activity:activity-compose:1.10.1")
 
     // DataStore to save user preferences
-    implementation("androidx.datastore:datastore:1.1.0-rc01")
+    implementation("androidx.datastore:datastore:1.1.3")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
@@ -119,7 +120,7 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 //    ┌─────────────────────────────────────┐
 //    │ Home screen widget library - Glance │
 //    └─────────────────────────────────────┘
-    val glanceVersion = "1.1.0-beta01"
+    val glanceVersion = "1.1.1"
     // For Glance support
     implementation("androidx.glance:glance:$glanceVersion")
     // For AppWidgets support
@@ -127,4 +128,13 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     // For interop APIs with Material 3
     implementation("androidx.glance:glance-material3:$glanceVersion")
 
+
+//    // dagger hilt
+//    implementation("com.google.dagger:hilt-android:2.44")
+//    kapt("com.google.dagger:hilt-android-compiler:2.44")
+
 }
+
+//kapt {
+//    correctErrorTypes = true
+//}

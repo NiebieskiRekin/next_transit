@@ -1,33 +1,34 @@
 package com.example.nexttransit
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color.parseColor
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
-import androidx.glance.LocalContext
+import androidx.glance.LocalGlanceId
+import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.components.CircleIconButton
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
 import androidx.glance.color.DynamicThemeColorProviders
 import androidx.glance.color.DynamicThemeColorProviders.background
@@ -35,7 +36,6 @@ import androidx.glance.color.DynamicThemeColorProviders.onBackground
 import androidx.glance.color.DynamicThemeColorProviders.onPrimaryContainer
 import androidx.glance.color.DynamicThemeColorProviders.onSecondaryContainer
 import androidx.glance.color.DynamicThemeColorProviders.secondaryContainer
-import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -44,60 +44,83 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
-import androidx.glance.state.GlanceStateDefinition
-import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight.Companion.Bold
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
+import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
+import kotlinx.coroutines.coroutineScope
 
 
-private val sourcePrefsKey = stringPreferencesKey("Source")
-private val sourceParamKey = ActionParameters.Key<String>("Source")
-private val destinationPrefsKey = stringPreferencesKey("Destination")
-private val destinationParamKey = ActionParameters.Key<String>("Destination")
-private val directionsPrefsKey = stringPreferencesKey("Directions")
-
+// This is so dumb it's actually good
+//fun GlanceId.toInt(): Int {
+//    Log.d("GlanceWidget", this.toString())
+//    return try {
+//        var str = this.toString().removeRange(0, 24)
+//        str = str.removeRange(str.length - 1, str.length)
+//        str.toInt()
+//    } catch (e: NumberFormatException) {
+//        Log.e("GlanceWidget", "Conversion error")
+//        e.printStackTrace()
+//        0
+//    }
+//}
 
 class TransitWidget : GlanceAppWidget() {
 
-    override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
+    companion object {
+        private val smallMode = DpSize(250.dp, 60.dp)
+        private val largeMode = DpSize(250.dp, 120.dp)
+    }
+
+    override val sizeMode: SizeMode = SizeMode.Responsive(
+        setOf(smallMode, largeMode)
+    )
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
-            Content()
+            val appSettings =
+                context.appSettingsDataStore.data.collectAsState(initial = AppSettings())
+            Log.d("GlanceWidget", LocalGlanceId.current.toString())
+            Column {
+                Content(
+                    appSettings.value.lastDirectionsResponse,
+                    appSettings.value.source.placeId,
+                    appSettings.value.destination.placeId,
+                    context
+                )
+                if (LocalSize.current == largeMode){
+                    Content(
+                        directions = appSettings.value.returnResponse,
+                        sourcePlaceId = appSettings.value.secondSource.placeId,
+                        destinationPlaceId = appSettings.value.secondDestination.placeId,
+                        context = context
+                    )
+                }
+//                Text(
+//                    if (LocalGlanceId.current.toInt() % 2 == 0){
+//                        "even ${LocalGlanceId.current.toInt()}"
+//                    } else {
+//                        "odd ${LocalGlanceId.current.toInt()}"
+//                    }, GlanceModifier.background(background).fillMaxSize(),
+//                    TextStyle(color=onBackground)
+//                )
+            }
+
         }
     }
 
     @Composable
-    fun Content() {
-        val context = LocalContext.current
-        val prefs = currentState<Preferences>()
-
-        val destination = prefs[destinationPrefsKey] ?: ""
-        val source = prefs[sourcePrefsKey] ?: ""
-
-
-        val directions: DirectionsResponse =
-                try {
-                    Json.decodeFromString(
-                        deserializer = DirectionsResponse.serializer(), string = prefs[directionsPrefsKey] ?: ""
-                    )
-                } catch (e: Exception) {
-                    DirectionsResponse()
-                }
-
-
-
-        Log.d("GlanceWidget", directions.toString())
+    fun Content(
+        directions: DirectionsResponse,
+        sourcePlaceId: PlaceId,
+        destinationPlaceId: PlaceId,
+        context: Context
+    ) {
+        Log.e("GlanceWidget", directions.toString())
         Column(
             modifier = GlanceModifier
-                .fillMaxSize()
                 .cornerRadius(20.dp)
                 .background(background)
                 .padding(5.dp),
@@ -107,31 +130,45 @@ class TransitWidget : GlanceAppWidget() {
             when (directions.status) {
                 "OK" -> {
                     if (directions.routes.isEmpty()) {
-                        Text(
-                            text = "Error: no route found.",
-                            style = TextStyle(color = onBackground),
+                        ShowError(text = "No route found.")
+                    } else {
+                        DisplayRoutes(
+                            routes = directions.routes,
+                            sourcePlaceId,
+                            destinationPlaceId,
+                            context
                         )
                     }
-                    DisplayRoutes(
-                        routes = directions.routes, source, destination, context
-                    )
                 }
 
-                "Error" -> Text(
-                    text = "Error: directions data not available.",
-                    style = TextStyle(color = onBackground),
-                    modifier = GlanceModifier.fillMaxSize()
-                )
-
-                "" -> Text(
-                    text = "Empty",
-                    style = TextStyle(color = onBackground),
-                    modifier = GlanceModifier.fillMaxSize()
-                )
-
-                else -> {}
+                "Error" -> ShowError(text = "Directions data not available.")
+                else -> ShowError(text = "Empty Response.")
             }
         }
+    }
+
+    @Composable
+    fun ShowError(text: String) {
+        Row(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = GlanceModifier.fillMaxSize()
+        ) {
+            Column(GlanceModifier.defaultWeight()) {
+                Text(
+                    text = "Error: ",
+                    style = TextStyle(color = onBackground, fontWeight = Bold),
+                    modifier = GlanceModifier
+                )
+                Text(
+                    text = text,
+                    style = TextStyle(color = onBackground),
+                    modifier = GlanceModifier
+                )
+            }
+            RefreshButton()
+        }
+
     }
 
     @Composable
@@ -209,56 +246,19 @@ class TransitWidget : GlanceAppWidget() {
                         }
                     }
                     if (i == 0 && j == 0) {
-                        CircleIconButton(
-                            ImageProvider(
-                                R.drawable.baseline_map_24
-                            ),
-                            "Open Google Maps",
-                            onClick = actionStartActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(
-                                        "https://www.google.com/maps/dir/?api=1" +
-                                                "&origin=o" +
-                                                "&origin_place_id=${sourcePlaceId}" +
-                                                "&destination=d" +
-                                                "&destination_place_id=${destinationPlaceId}" +
-                                                "&travelmode=transit"
-                                    )
-                                )
-                            ),
-                            backgroundColor = secondaryContainer,
-                            contentColor = onSecondaryContainer,
+                        OpenGoogleMapsButton(
+                            sourcePlaceId = sourcePlaceId,
+                            destinationPlaceId = destinationPlaceId
                         )
                         Spacer(GlanceModifier.size(4.dp))
-                        CircleIconButton(
-                            ImageProvider(
-                                R.drawable.baseline_refresh_24_white
-                            ),
-                            "Refresh",
-                            onClick = {
-                                // TODO
-                            },
-                            backgroundColor = DynamicThemeColorProviders.primary,
-                            contentColor = DynamicThemeColorProviders.onPrimary,
-                        )
+                        RefreshButton()
                     }
                 }
                 Row(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = GlanceModifier.fillMaxWidth().clickable(
                         actionStartActivity(
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse(
-                                    "https://www.google.com/maps/dir/?api=1" +
-                                            "&origin=o" +
-                                            "&origin_place_id=${sourcePlaceId}" +
-                                            "&destination=d" +
-                                            "&destination_place_id=${destinationPlaceId}" +
-                                            "&travelmode=transit"
-                                )
-                            )
+                            googleMapsIntent(sourcePlaceId, destinationPlaceId)
                         )
                     )
                 ) {
@@ -276,6 +276,49 @@ class TransitWidget : GlanceAppWidget() {
                 }
             }
         }
+    }
+
+    @Composable
+    fun OpenGoogleMapsButton(sourcePlaceId: PlaceId, destinationPlaceId: PlaceId) {
+        CircleIconButton(
+            ImageProvider(
+                R.drawable.baseline_map_24
+            ),
+            "Open Google Maps",
+            onClick = actionStartActivity(
+                googleMapsIntent(sourcePlaceId, destinationPlaceId)
+            ),
+            backgroundColor = secondaryContainer,
+            contentColor = onSecondaryContainer,
+        )
+    }
+
+    private fun googleMapsIntent(sourcePlaceId: PlaceId, destinationPlaceId: PlaceId) =
+        Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse(
+                "https://www.google.com/maps/dir/?api=1" +
+                        "&origin=o" +
+                        "&origin_place_id=${sourcePlaceId}" +
+                        "&destination=d" +
+                        "&destination_place_id=${destinationPlaceId}" +
+                        "&travelmode=transit"
+            )
+        )
+
+
+    @Composable
+    fun RefreshButton(gl: GlanceModifier = GlanceModifier) {
+        CircleIconButton(
+            ImageProvider(
+                R.drawable.baseline_refresh_24_white
+            ),
+            "Refresh",
+            onClick = actionRunCallback<RefreshAction>(),
+            backgroundColor = DynamicThemeColorProviders.primary,
+            contentColor = DynamicThemeColorProviders.onPrimary,
+            modifier = gl
+        )
     }
 
     @Composable
@@ -328,66 +371,29 @@ class TransitWidget : GlanceAppWidget() {
     }
 }
 
-
-class UpdateState : ActionCallback {
+class RefreshAction : ActionCallback {
     override suspend fun onAction(
         context: Context,
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
+        Log.d("TransitWidget", glanceId.toString())
 
-        val source = requireNotNull(parameters[sourceParamKey])
-        val destination = requireNotNull(parameters[destinationParamKey])
-
-        updateAppWidgetState(context, glanceId) { preferences ->
-            preferences.toMutablePreferences().apply {
-                this[sourcePrefsKey] = source
-                this[destinationPrefsKey] = destination
+        coroutineScope {
+            context.appSettingsDataStore.updateData {
+                it.copy(
+                    lastDirectionsResponse = ApiCaller.getDirectionsByPlaceId(
+                        it.source.placeId, it.destination.placeId
+                    )
+                )
             }
         }
-
-        TransitWidget().update(context,glanceId)
+        TransitWidget().update(context, glanceId)
     }
 }
 
-
 class TransitWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TransitWidget()
-
-
-    override fun onReceive(context: Context, intent: Intent) {
-        Log.d("TransitWidget", "Action broadcast: $intent")
-        intent.let {
-            if (it.action == AppWidgetManager.EXTRA_APPWIDGET_ID) {
-                val source = it.getStringExtra("Source")
-                val destination = it.getStringExtra("Destination")
-                Log.d("TransitWidget", "Source: $source")
-                Log.d("TransitWidget", "Destination: $destination")
-                if (!source.isNullOrEmpty() && !destination.isNullOrEmpty()) {
-                    Log.d("TransitWidget", "Source and destination NOT null")
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val directionsResponse = ApiCaller.getDirectionsByName(source, destination)
-//                        (
-//                            context, AppSettings(
-//                                lastDirectionsResponse = directionsResponse,
-//                                source = Location(
-//                                    placeId = directionsResponse.geocodedWaypoints[0].placeId,
-//                                    name = source
-//                                ),
-//                                destination = Location(
-//                                    placeId = directionsResponse.geocodedWaypoints[1].placeId,
-//                                    name = destination
-//                                )
-//                            )
-//                        )
-                    }
-                } else {
-                    Log.d("TransitWidget", "Null values for source or destination")
-                }
-            }
-        }
-        super.onReceive(context, intent)
-    }
 }
 
 private fun getTravelModeIconResource(travelMode: String) = when (travelMode) {

@@ -11,3 +11,11 @@
     android:widgetFeatures="reconfigurable"
     android:configure="com.example.nexttransit.TransitWidgetConfigurationActivity">
 </appwidget-provider>
+
+    <!--    android:configure="com.example.nexttransit.NextTransitConfigurationActivity"-->
+<!--    android:previewLayout="@layout/example_appwidget_preview"-->
+<!--    android:initialLayout="@layout/example_loading_appwidget"-->
+<!--    android:configure="com.example.android.ExampleAppWidgetConfigurationActivity"-->
+
+    <!--    android:previewLayout="" requires xml to display preview-->
+<!--    android:configure="com.example.nexttransit.MainActivity"-->
