@@ -6,6 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version embeddedKotlinVersion
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("org.jetbrains.kotlin.plugin.compose")
 //    kotlin("kapt")
 //    id("com.google.dagger.hilt.android")
 }
@@ -15,12 +16,12 @@ localProperties.load(FileInputStream(rootProject.file("local.properties")))
 
 android {
     namespace = "com.example.nexttransit"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.nexttransit"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -73,7 +74,6 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("com.google.android.gms:play-services-maps:19.1.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    //┌───────────────────────────────────┐
 //    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
@@ -93,8 +93,8 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.compose.material:material-icons-extended")
     // Optional - Add window size utils
     implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.activity:activity-ktx:1.10.1")
-    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    implementation("androidx.activity:activity-compose:1.8.2")
 
     // DataStore to save user preferences
     implementation("androidx.datastore:datastore:1.1.3")
@@ -133,6 +133,11 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 //    implementation("com.google.dagger:hilt-android:2.44")
 //    kapt("com.google.dagger:hilt-android-compiler:2.44")
 
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 //kapt {
