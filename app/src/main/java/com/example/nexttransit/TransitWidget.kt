@@ -2,8 +2,6 @@ package com.example.nexttransit
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color.parseColor
-import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -51,21 +51,6 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
 import kotlinx.coroutines.coroutineScope
-
-
-// This is so dumb it's actually good
-//fun GlanceId.toInt(): Int {
-//    Log.d("GlanceWidget", this.toString())
-//    return try {
-//        var str = this.toString().removeRange(0, 24)
-//        str = str.removeRange(str.length - 1, str.length)
-//        str.toInt()
-//    } catch (e: NumberFormatException) {
-//        Log.e("GlanceWidget", "Conversion error")
-//        e.printStackTrace()
-//        0
-//    }
-//}
 
 class TransitWidget : GlanceAppWidget() {
 
@@ -296,14 +281,12 @@ class TransitWidget : GlanceAppWidget() {
     private fun googleMapsIntent(sourcePlaceId: PlaceId, destinationPlaceId: PlaceId) =
         Intent(
             Intent.ACTION_VIEW,
-            Uri.parse(
-                "https://www.google.com/maps/dir/?api=1" +
-                        "&origin=o" +
-                        "&origin_place_id=${sourcePlaceId}" +
-                        "&destination=d" +
-                        "&destination_place_id=${destinationPlaceId}" +
-                        "&travelmode=transit"
-            )
+            ("https://www.google.com/maps/dir/?api=1" +
+                    "&origin=o" +
+                    "&origin_place_id=${sourcePlaceId}" +
+                    "&destination=d" +
+                    "&destination_place_id=${destinationPlaceId}" +
+                    "&travelmode=transit").toUri()
         )
 
 
@@ -343,12 +326,12 @@ class TransitWidget : GlanceAppWidget() {
                         return@Row
                     }
                     val textColor = if (bigStep.transitDetails.line.textColor.isNotBlank()) {
-                        ColorProvider(Color(parseColor(bigStep.transitDetails.line.textColor)))
+                        ColorProvider(Color(bigStep.transitDetails.line.textColor.toColorInt()))
                     } else {
                         onSecondaryContainer
                     }
                     val backgroundTextColor = if (bigStep.transitDetails.line.color.isNotBlank()) {
-                        ColorProvider(Color(parseColor(bigStep.transitDetails.line.color)))
+                        ColorProvider(Color(bigStep.transitDetails.line.color.toColorInt()))
                     } else {
                         secondaryContainer
                     }

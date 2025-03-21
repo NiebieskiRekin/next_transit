@@ -47,7 +47,6 @@ class TransitWidgetConfigurationActivity : ComponentActivity() {
         val appWidgetManager = AppWidgetManager.getInstance(context)
 
 
-
         val resultValue = Intent()
             .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_OK, resultValue)

@@ -12,53 +12,6 @@ data class AppSettings (
     var secondDestination: Location = source,
     var returnResponse: DirectionsResponse = DirectionsResponse()
 ) {
-    fun getSource(i: Int) : Location{
-        return if (i % 2 == 0){
-            source
-        } else {
-            secondSource
-        }
-    }
-
-    fun setSource(i: Int, newValue: Location) {
-        if (i % 2 == 0){
-            source = newValue
-        } else {
-            secondSource = newValue
-        }
-    }
-
-    fun getDestination(i: Int) : Location{
-        return if (i % 2 == 0){
-            destination
-        } else {
-            secondDestination
-        }
-    }
-
-    fun setDestination(i: Int, newValue: Location) {
-        if (i % 2 == 0){
-            destination = newValue
-        } else {
-            secondDestination = newValue
-        }
-    }
-
-    fun getDirections(i: Int) : DirectionsResponse{
-        return if (i % 2 == 0){
-            lastDirectionsResponse
-        } else {
-            returnResponse
-        }
-    }
-
-    fun setDirections(i: Int, newValue: DirectionsResponse) {
-        if (i % 2 == 0){
-            lastDirectionsResponse = newValue
-        } else {
-            returnResponse = newValue
-        }
-    }
 
       fun getDefault() = AppSettings(
             lastDirectionsResponse = getSampleDirections(),

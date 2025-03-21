@@ -58,7 +58,7 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -77,7 +77,7 @@ dependencies {
 //    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
-    val composeBom = platform("androidx.compose:compose-bom:2024.02.01")
+    val composeBom = platform("androidx.compose:compose-bom:2025.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     // Choose one of the following:
@@ -88,19 +88,20 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     // Optional - Add full set of material icons
     implementation("androidx.compose.material:material-icons-extended")
     // Optional - Add window size utils
     implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.activity:activity-ktx:1.10.1")
-    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("androidx.activity:activity-ktx")
+    implementation("androidx.activity:activity-compose")
 
     // DataStore to save user preferences
     implementation("androidx.datastore:datastore:1.1.3")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
 
 //    ┌─────────────────────────────────────────┐
@@ -127,6 +128,17 @@ dependencies {
     implementation("androidx.glance:glance-appwidget:$glanceVersion")
     // For interop APIs with Material 3
     implementation("androidx.glance:glance-material3:$glanceVersion")
+
+
+    val navVersion = "2.8.9"
+
+    // Jetpack Compose Navigation
+    implementation("androidx.navigation:navigation-compose:$navVersion")
+    androidTestImplementation("androidx.navigation:navigation-testing:$navVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    // Views/Fragments Integration
+//    implementation("androidx.navigation:navigation-fragment:$navVersion")
+//    implementation("androidx.navigation:navigation-ui:$navVersion")
 
 
 //    // dagger hilt

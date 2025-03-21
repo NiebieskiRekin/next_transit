@@ -8,18 +8,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.annotation.StringRes
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,34 +26,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
-import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.DirectionsBoat
-import androidx.compose.material.icons.rounded.DirectionsBus
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.DirectionsRailway
-import androidx.compose.material.icons.rounded.DirectionsTransit
-import androidx.compose.material.icons.rounded.QuestionMark
-import androidx.compose.material.icons.rounded.Tram
 import androidx.compose.material.icons.sharp.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,31 +51,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.toColorInt
-import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.nexttransit.ApiCaller.getSampleDirections
 import com.example.nexttransit.ApiCaller.trimPolyline
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -122,187 +108,196 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val appWidgetId = intent?.extras?.getInt(
-        AppWidgetManager.EXTRA_APPWIDGET_ID,
-        AppWidgetManager.INVALID_APPWIDGET_ID
-    ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-
-    private var resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+    private suspend fun updateSettings(
+        sourceName: String, destinationName: String, directions: DirectionsResponse
+    ) {
+        appSettingsDataStore.updateData {
+            it.copy(
+                source = Location(sourceName, directions.geocodedWaypoints[0].placeId),
+                destination = Location(destinationName, directions.geocodedWaypoints[1].placeId),
+                lastDirectionsResponse = directions
+            )
+        }
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setResult(RESULT_CANCELED, resultValue)
+
+        val appWidgetId: Int = extractAppWidgetId()
+        val resultValue = createResultIntent(appWidgetId)
+        setResultBasedOnWidgetId(appWidgetId, resultValue)
+
         setContent {
             NextTransitTheme {
-                val appSettings =
-                    appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
-                MainContent(appSettings)
+                MainContent()
             }
         }
+    }
+
+    private fun extractAppWidgetId(): Int {
+        return intent?.extras?.getInt(
+            AppWidgetManager.EXTRA_APPWIDGET_ID,
+            AppWidgetManager.INVALID_APPWIDGET_ID
+        ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+    }
+
+    private fun createResultIntent(appWidgetId: Int): Intent {
+        return Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+    }
+
+    private fun setResultBasedOnWidgetId(appWidgetId: Int, resultValue: Intent) {
+        when (appWidgetId) {
+            AppWidgetManager.INVALID_APPWIDGET_ID -> {
+                setResult(RESULT_CANCELED, resultValue)
+            }
+
+            else -> {
+                setResult(RESULT_OK, resultValue)
+            }
+        }
+    }
+
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun MainContent(
+        navController: NavHostController = rememberNavController()
+    ) {
+        Scaffold(
+            Modifier.fillMaxSize()
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = AppScreen.WidgetSettings.name,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(route = AppScreen.Start.name) {
+                    Text("Hello World!")
+                }
+                composable(route= AppScreen.Notifications.name){
+                    CopyFirebaseToken()
+                }
+                composable(route = AppScreen.WidgetSettings.name) {
+                    val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
+                    WidgetSettingsView(
+                        it = innerPadding,
+                        appSettings = appSettings,
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * enum values that represent the screens in the app
+     */
+    enum class AppScreen(@StringRes val title: Int) {
+        Start(title = R.string.app_name),
+        WidgetSettings(title = R.string.widget_settings),
+        Notifications(title = R.string.notifications),
+        Calendar(title = R.string.calendar)
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
-    @Preview
     @Composable
-    fun MainContent(appSettings: AppSettings = AppSettings().getDefault()) {
+    fun AppBar(
+        currentScreen: AppScreen,
+        canNavigateBack: Boolean,
+        navigateUp: () -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        TopAppBar(
+            title = { Text(stringResource(currentScreen.title)) },
+            colors = TopAppBarDefaults.mediumTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            modifier = modifier,
+            navigationIcon = {
+                if (canNavigateBack) {
+                    IconButton(onClick = navigateUp) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back_button)
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    @Composable
+    fun WidgetSettingsView(it: PaddingValues, appSettings: AppSettings){
         var directions1 by remember { mutableStateOf(appSettings.lastDirectionsResponse) }
         var directions1ButtonClicked by remember { mutableStateOf(false) }
-        var directions1Generated by remember { mutableStateOf(false) }
         var directions2 by remember { mutableStateOf(appSettings.returnResponse) }
-        var directions2ButtonClicked by remember { mutableStateOf(false) }
-        var directions2Generated by remember { mutableStateOf(false) }
         var source1 by remember { mutableStateOf(appSettings.source.name) }
-        var source2 by remember { mutableStateOf(appSettings.secondSource.name) }
         var destination1 by remember { mutableStateOf(appSettings.destination.name) }
-        var destination2 by remember { mutableStateOf(appSettings.secondDestination.name) }
-
+        var directions2Generated by remember { mutableStateOf(false) }
+        var directions1Generated by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
-        Scaffold(
-            Modifier.fillMaxSize(),
-            {
-                TopAppBar(title = { Text("Next Transit") },
-                    navigationIcon = {})
-            }, {}, floatingActionButton = {
-                if (directions1Generated || directions2Generated) {
-                    IconButton(
-                        onClick = {
-                            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                            setResult(RESULT_OK, resultValue)
-                            val manager = GlanceAppWidgetManager(applicationContext)
-                            val widget = TransitWidget()
-                            scope.launch {
-                                try {
-                                    widget.update(
-                                        applicationContext,
-                                        manager.getGlanceIdBy(appWidgetId)
-                                    )
-                                    finish()
-                                } catch (e: Exception) {
-                                    Log.e("TransitWidget", "Couldn't update widget. $e")
-                                }
-                            }
-                        },
-                        colors = IconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceDim,
-                            disabledContentColor = MaterialTheme.colorScheme.surfaceDim
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Save, "Save and exit"
-                        )
+        if (directions1Generated || directions2Generated) {
+            FloatingActionButton(
+                onClick = {
+                    val resultValue: Intent = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, extractAppWidgetId())
+                    setResult(RESULT_OK, resultValue)
+                    val manager = GlanceAppWidgetManager(applicationContext)
+                    val widget = TransitWidget()
+                    scope.launch {
+                        try {
+                            widget.update(
+                                applicationContext,
+                                manager.getGlanceIdBy(extractAppWidgetId())
+                            )
+                            finish()
+                        } catch (e: Exception) {
+                            Log.e("TransitWidget", "Couldn't update widget. $e")
+                        }
                     }
-                }
-            }
-        ) { it ->
-            LazyColumn(Modifier.padding(it)) {
-                item {
-                    CopyFirebaseToken()
-                    Text(
-                        "First Route:",
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp, 0.dp)
-                    )
-                    Content(
-                        source1,
-                        destination1,
-                        Pair(directions1Generated, directions1),
-                        ::updateSettings,
-                        { directions1ButtonClicked = it }
-                    ) { directionsGenerated, source, destination, directions ->
-                        directions1Generated = directionsGenerated
-                        source1 = source
-                        destination1 = destination
-                        directions1 = directions
-                    }
-                }
-                item {
-                    LoadingDirectionsWidget(
-                        directions = directions1,
-                        source = source1,
-                        destination = destination1,
-                        directionsButtonClicked = directions1ButtonClicked,
-                        directionsGenerated = directions1Generated
-                    )
-                }
-
-                item {
-                    Spacer(Modifier.padding(10.dp))
-                }
-
-
-                item {
-                    Text(
-                        "Second Route (return of first by default):",
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp, 0.dp)
-                    )
-
-                    Content(
-                        source2,
-                        destination2,
-                        Pair(directions2Generated, directions2),
-                        ::updateSettings2,
-                        { directions2ButtonClicked = it }
-                    ) { directionsGenerated, source, destination, directions ->
-                        directions2Generated = directionsGenerated
-                        source2 = source
-                        destination2 = destination
-                        directions2 = directions
-                    }
-                }
-
-                item {
-                    LoadingDirectionsWidget(
-                        directions = directions2,
-                        source = source2,
-                        destination = destination2,
-                        directionsButtonClicked = directions2ButtonClicked,
-                        directionsGenerated = directions2Generated
-                    )
-                }
-
-                item {
-                    DebugOutput(
-                        appSettings = appSettings,
-                        newDirections1 = directions1,
-                        newDirections2 = directions2
-                    )
-                }
-            }
-
-        }
-    }
-
-    @Preview
-    @Composable
-    fun LoadingDirectionsWidget(
-        directions: DirectionsResponse = getSampleDirections(),
-        source: String = "Środa Wlkp.",
-        destination: String = "Poznań, Piotrowo 2",
-        directionsButtonClicked: Boolean = true,
-        directionsGenerated: Boolean = false
-    ) {
-        if (!directionsGenerated && directionsButtonClicked) {
-            ColumnPill(Modifier.height(80.dp)) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                },
+            ) {
+                Icon(
+                    Icons.Default.Save, "Save and exit"
                 )
             }
-        } else if (directionsGenerated) {
-            SimpleDisplay(
-                directions,
-                source,
-                destination
-            )
+        }
+
+        LazyColumn(Modifier.padding(it)) {
+            item {
+                DirectionsTextFieldsSettings(
+                    source1,
+                    destination1,
+                    Pair(directions1Generated, directions1),
+                    ::updateSettings,
+                    { directions1ButtonClicked = it }
+                ) { directionsGenerated, source, destination, directions ->
+                    directions1Generated = directionsGenerated
+                    source1 = source
+                    destination1 = destination
+                    directions1 = directions
+                }
+            }
+            item {
+                LoadingDirectionsWidget(
+                    directions = directions1,
+                    source = source1,
+                    destination = destination1,
+                    directionsButtonClicked = directions1ButtonClicked,
+                    directionsGenerated = directions1Generated
+                )
+            }
+
+            item {
+                DebugOutput(
+                    appSettings = appSettings,
+                    newDirections1 = directions1,
+                    newDirections2 = directions2
+                )
+            }
         }
     }
+
 
     @Composable
     fun DebugOutput(
@@ -506,7 +501,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun Content(
+    fun DirectionsTextFieldsSettings(
         sourceSeed: String = "Poznań",
         destinationSeed: String = "Kraków",
         directions: Pair<Boolean, DirectionsResponse> = Pair(false, getSampleDirections()),
@@ -531,7 +526,6 @@ class MainActivity : ComponentActivity() {
             onGetDirectionsButtonClicked(false)
             onDirectionsGet(false, source.text, destination.text, DirectionsResponse())
         }
-
         Column {
 
             OutlinedTextField(
@@ -595,202 +589,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private suspend fun updateSettings(
-        sourceName: String, destinationName: String, directions: DirectionsResponse
-    ) {
-        appSettingsDataStore.updateData {
-            it.copy(
-                source = Location(sourceName, directions.geocodedWaypoints[0].placeId),
-                destination = Location(destinationName, directions.geocodedWaypoints[1].placeId),
-                lastDirectionsResponse = directions
-            )
-        }
-    }
-
-    private suspend fun updateSettings2(
-        sourceName2: String, destinationName2: String, directions2: DirectionsResponse
-    ) {
-        appSettingsDataStore.updateData {
-            it.copy(
-                secondSource = Location(sourceName2, directions2.geocodedWaypoints[0].placeId),
-                secondDestination = Location(
-                    destinationName2,
-                    directions2.geocodedWaypoints[1].placeId
-                ),
-                returnResponse = directions2
-            )
-        }
-    }
-
-    @Composable
-    fun ColumnPill(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.secondary)
-                .padding(10.dp)
-        ) {
-            content()
-        }
-    }
-
-    @Composable
-    fun ShowError(text: String) {
-        ColumnPill(modifier = Modifier.height(120.dp)) {
-            Text(
-                "Error: ",
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text,
-            )
-        }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    private fun SimpleDisplay(
-        directions: DirectionsResponse = getSampleDirections(),
-        source: String = "Środa Wlkp.",
-        destination: String = "Poznań"
-    ) {
-        NextTransitTheme {
-            when (directions.status) {
-                "OK" -> {
-                    ColumnPill(
-                        modifier = Modifier.clickable(true, "Open Google Maps", null, onClick =
-                        {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                ("https://www.google.com/maps/dir/?api=1" +
-                                        "&origin=${source}" +
-                                        "&destination=${destination}" +
-                                        "&travelmode=transit").toUri()
-                            )
-                            ContextCompat.startActivity(this@MainActivity, intent, null)
-                        })
-                    ) {
-                        if (directions.routes.isEmpty()) {
-                            ShowError(text = "No route found.")
-                        }
-                        directions.routes.forEach { route: Route ->
-                            route.legs.forEach { leg: Leg ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Departure: ",
-                                        style = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSecondary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp
-                                        )
-                                    )
-                                    Text(
-                                        text = leg.departureTime.text,
-                                        style = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSecondary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
-                                        )
-                                    )
-                                    Spacer(Modifier.size(16.dp))
-                                    Text(
-                                        text = "Planned Arrival: ",
-                                        style = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSecondary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp
-                                        )
-                                    )
-                                    Text(
-                                        text = leg.arrivalTime.text,
-                                        style = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSecondary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
-                                        )
-                                    )
-                                }
-                                LazyRow(
-                                    verticalAlignment = Alignment.Top,
-                                ) {
-                                    for ((i, bigStep: Step) in leg.steps.withIndex()) {
-                                        item {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                val travelModeText = getTravelModeText(bigStep)
-                                                Row(
-                                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                                    verticalAlignment = Alignment.Bottom
-                                                ) {
-                                                    Icon(
-                                                        imageVector = getTravelModeIcon(
-                                                            travelModeText
-                                                        ),
-                                                        travelModeText,
-                                                        tint = MaterialTheme.colorScheme.onSecondary,
-                                                    )
-                                                    if (bigStep.transitDetails?.line != null) {
-                                                        val text =
-                                                            if (bigStep.transitDetails.line.shortName.isNotBlank()) {
-                                                                bigStep.transitDetails.line.shortName
-                                                            } else if (bigStep.transitDetails.line.name.isNotBlank()) {
-                                                                bigStep.transitDetails.line.name
-                                                            } else {
-                                                                return@Row
-                                                            }
-                                                        val textColor =
-                                                            if (bigStep.transitDetails.line.textColor.isNotBlank()) {
-                                                                Color(bigStep.transitDetails.line.textColor.toColorInt())
-                                                            } else {
-                                                                MaterialTheme.colorScheme.onPrimaryContainer
-                                                            }
-                                                        val backgroundTextColor =
-                                                            if (bigStep.transitDetails.line.color.isNotBlank()) {
-                                                                Color(bigStep.transitDetails.line.color.toColorInt())
-                                                            } else {
-                                                                MaterialTheme.colorScheme.primaryContainer
-                                                            }
-                                                        Text(
-                                                            text = text,
-                                                            style = TextStyle(color = textColor),
-                                                            modifier = Modifier
-                                                                .clip(MaterialTheme.shapes.small)
-                                                                .background(backgroundTextColor)
-                                                                .padding(2.dp)
-                                                        )
-                                                    }
-                                                }
-                                                Text(
-                                                    text = getTravelTime(bigStep),
-                                                    style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
-                                                )
-                                            }
-                                            if (i < leg.steps.lastIndex) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.ChevronRight,
-                                                    ">",
-                                                    tint = MaterialTheme.colorScheme.onSecondary,
-                                                )
-//                                        Spacer(Modifier.size(16.dp))
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                "Error" -> ShowError(text = "Directions data not available.")
-                "Empty" -> ShowError(text = "Empty response.")
-                else -> {}
-            }
-        }
-    }
-
-
     private fun askNotificationPermission() {
         // This is only necessary for API level >= 33 (TIRAMISU)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -816,41 +614,3 @@ class MainActivity : ComponentActivity() {
 
 }
 
-fun getLocalTime(ts: Long?): String {
-    if (ts == null) return ""
-    //Get instance of calendar
-    val calendar = Calendar.getInstance(Locale.getDefault())
-    //get current date from ts
-    calendar.timeInMillis = ts * 1000
-    //return formatted date
-    return DateFormat.format("HH:mm", calendar).toString()
-}
-
-fun getTravelModeText(bigStep: Step): String {
-    return if (bigStep.travelMode == "TRANSIT") {
-        bigStep.transitDetails?.line?.vehicle?.type ?: "TRANSIT"
-    } else {
-        bigStep.travelMode
-    }
-}
-
-fun getTravelTime(bigStep: Step): String {
-    return if (bigStep.travelMode == "TRANSIT") {
-        (getLocalTime(bigStep.transitDetails?.departureTime?.value) + "-" + getLocalTime(bigStep.transitDetails?.arrivalTime?.value))
-    } else {
-        bigStep.duration.text
-    }
-}
-
-
-private fun getTravelModeIcon(travelMode: String) = when (travelMode) {
-    "TRANSIT" -> Icons.Rounded.DirectionsTransit
-    "WALKING" -> Icons.AutoMirrored.Rounded.DirectionsWalk
-    "BICYCLING" -> Icons.AutoMirrored.Rounded.DirectionsBike
-    "DRIVING" -> Icons.Rounded.DirectionsCar
-    "BUS" -> Icons.Rounded.DirectionsBus
-    "TRAM" -> Icons.Rounded.Tram
-    "HEAVY_RAIL" -> Icons.Rounded.DirectionsRailway
-    "BOAT" -> Icons.Rounded.DirectionsBoat
-    else -> Icons.Rounded.QuestionMark
-}
