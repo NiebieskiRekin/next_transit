@@ -1,7 +1,6 @@
 package com.example.nexttransit
 
 import android.Manifest
-import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -112,7 +111,7 @@ class MainActivity : ComponentActivity() {
             })
         } else {
             // Inform user that that your app will not show notifications.
-            Log.d(TAG, "Permissions to send notifications refused");
+            Log.d(TAG, "Permissions to send notifications refused")
         }
     }
 
@@ -133,7 +132,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setResult(Activity.RESULT_CANCELED, resultValue)
+        setResult(RESULT_CANCELED, resultValue)
         setContent {
             NextTransitTheme {
                 val appSettings =
@@ -181,7 +180,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     finish()
                                 } catch (e: Exception) {
-                                    Log.e("TransitWidget", "Couldn't update widget.")
+                                    Log.e("TransitWidget", "Couldn't update widget. $e")
                                 }
                             }
                         },
@@ -501,7 +500,7 @@ class MainActivity : ComponentActivity() {
     ): Pair<Boolean, DirectionsResponse> {
         return try {
             Pair(true, ApiCaller.getDirectionsByName(source, destination))
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Pair(false, DirectionsResponse(status = "Error"))
         }
     }
@@ -578,7 +577,7 @@ class MainActivity : ComponentActivity() {
                                 update(source.text, destination.text, directions.second)
                                 prefsButtonText = "Updated"
                                 prefsButtonColor = secondary
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 prefsButtonText = "Error!"
                                 prefsButtonColor = error
                             }
@@ -799,7 +798,7 @@ class MainActivity : ComponentActivity() {
                 PackageManager.PERMISSION_GRANTED
             ) {
                 // FCM SDK (and your app) can post notifications.
-                val msg = "Permissons granted to send notifications";
+                val msg = "Permissons granted to send notifications"
                 Log.d(TAG, msg)
                 Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
             } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
