@@ -1,16 +1,20 @@
 package com.example.nexttransit
 
+import android.Manifest
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color.parseColor
-import android.net.Uri
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -72,18 +76,45 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.example.nexttransit.ApiCaller.getSampleDirections
 import com.example.nexttransit.ApiCaller.trimPolyline
 import com.example.nexttransit.ui.theme.NextTransitTheme
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
+    // Declare the launcher at the top of your Activity/Fragment:
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // FCM SDK (and your app) can post notifications.
+            FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                    return@OnCompleteListener
+                }
+                // Get new FCM registration token
+                val token = task.result
+
+                // Log and toast
+                Log.d(TAG, token)
+                Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
+            })
+        } else {
+            // Inform user that that your app will not show notifications.
+            Log.d(TAG, "Permissions to send notifications refused");
+        }
+    }
 
     companion object {
         val Context.appSettingsDataStore: DataStore<AppSettings> by dataStore(
@@ -170,6 +201,7 @@ class MainActivity : ComponentActivity() {
         ) { it ->
             LazyColumn(Modifier.padding(it)) {
                 item {
+                    CopyFirebaseToken()
                     Text(
                         "First Route:",
                         Modifier
@@ -634,12 +666,10 @@ class MainActivity : ComponentActivity() {
                         {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse(
-                                    "https://www.google.com/maps/dir/?api=1" +
-                                            "&origin=${source}" +
-                                            "&destination=${destination}" +
-                                            "&travelmode=transit"
-                                )
+                                ("https://www.google.com/maps/dir/?api=1" +
+                                        "&origin=${source}" +
+                                        "&destination=${destination}" +
+                                        "&travelmode=transit").toUri()
                             )
                             ContextCompat.startActivity(this@MainActivity, intent, null)
                         })
@@ -713,13 +743,13 @@ class MainActivity : ComponentActivity() {
                                                             }
                                                         val textColor =
                                                             if (bigStep.transitDetails.line.textColor.isNotBlank()) {
-                                                                Color(parseColor(bigStep.transitDetails.line.textColor))
+                                                                Color(bigStep.transitDetails.line.textColor.toColorInt())
                                                             } else {
                                                                 MaterialTheme.colorScheme.onPrimaryContainer
                                                             }
                                                         val backgroundTextColor =
                                                             if (bigStep.transitDetails.line.color.isNotBlank()) {
-                                                                Color(parseColor(bigStep.transitDetails.line.color))
+                                                                Color(bigStep.transitDetails.line.color.toColorInt())
                                                             } else {
                                                                 MaterialTheme.colorScheme.primaryContainer
                                                             }
@@ -757,6 +787,30 @@ class MainActivity : ComponentActivity() {
                 "Error" -> ShowError(text = "Directions data not available.")
                 "Empty" -> ShowError(text = "Empty response.")
                 else -> {}
+            }
+        }
+    }
+
+
+    private fun askNotificationPermission() {
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+                val msg = "Permissons granted to send notifications";
+                Log.d(TAG, msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }

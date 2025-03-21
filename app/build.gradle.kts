@@ -7,6 +7,7 @@ plugins {
     kotlin("plugin.serialization") version embeddedKotlinVersion
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.gms.google-services")
 //    kotlin("kapt")
 //    id("com.google.dagger.hilt.android")
 }
@@ -67,8 +68,7 @@ android {
 }
 
 dependencies {
-
-implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("com.google.android.gms:play-services-maps:19.1.0")
@@ -93,8 +93,8 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.compose.material:material-icons-extended")
     // Optional - Add window size utils
     implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.activity:activity-ktx:1.10.1")
+    implementation("androidx.activity:activity-compose:1.10.1")
 
     // DataStore to save user preferences
     implementation("androidx.datastore:datastore:1.1.3")
@@ -133,6 +133,9 @@ implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 //    implementation("com.google.dagger:hilt-android:2.44")
 //    kapt("com.google.dagger:hilt-android-compiler:2.44")
 
+    val firebaseBom = platform("com.google.firebase:firebase-bom:33.10.0")
+    implementation(firebaseBom)
+    implementation("com.google.firebase:firebase-messaging")
 }
 java {
     toolchain {
