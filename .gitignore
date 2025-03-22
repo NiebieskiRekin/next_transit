@@ -18,3 +18,6 @@ local.properties
 /DirectionsResponseUML.png
 /app/src/main/res/sample_response.json
 /app/build/*
+/.kotlin/sessions/kotlin-compiler-17722648751300109050.salive
+/.idea/studiobot.xml
+/app/google-services.json
