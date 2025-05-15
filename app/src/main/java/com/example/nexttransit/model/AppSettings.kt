@@ -1,5 +1,6 @@
 package com.example.nexttransit.model
 
+import Location
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import kotlinx.serialization.Serializable
 
@@ -21,10 +22,6 @@ data class AppSettings (
 
 }
 
-@Serializable
-data class Location(
-    val name: String = "",
-    val placeId: PlaceId = "",
-)
+
 
 
