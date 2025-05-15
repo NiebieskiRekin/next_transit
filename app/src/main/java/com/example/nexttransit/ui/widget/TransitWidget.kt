@@ -1,4 +1,4 @@
-package com.example.nexttransit
+package com.example.nexttransit.ui.widget
 
 import android.content.Context
 import android.content.Intent
@@ -49,7 +49,19 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.example.nexttransit.model.AppSettings
+import com.example.nexttransit.model.DirectionsResponse
+import com.example.nexttransit.model.Leg
+import com.example.nexttransit.MainActivity
 import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
+import com.example.nexttransit.model.PlaceId
+import com.example.nexttransit.R
+import com.example.nexttransit.model.Route
+import com.example.nexttransit.model.Step
+import com.example.nexttransit.api.ApiCaller
+import com.example.nexttransit.getLocalTime
+import com.example.nexttransit.getTravelModeText
+import com.example.nexttransit.getTravelTime
 import kotlinx.coroutines.coroutineScope
 
 class TransitWidget : GlanceAppWidget() {

@@ -1,6 +1,7 @@
 package com.example.nexttransit
 
 import androidx.datastore.core.Serializer
+import com.example.nexttransit.model.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException

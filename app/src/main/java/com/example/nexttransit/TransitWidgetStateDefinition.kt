@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import androidx.glance.state.GlanceStateDefinition
+import com.example.nexttransit.model.AppSettings
 import java.io.File
 
 private const val DATA_STORE_FILENAME_PREFIX = "widgetSettings_"

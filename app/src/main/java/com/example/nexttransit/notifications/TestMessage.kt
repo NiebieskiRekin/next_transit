@@ -1,4 +1,4 @@
-package com.example.nexttransit
+package com.example.nexttransit.notifications
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api

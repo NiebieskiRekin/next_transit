@@ -1,4 +1,4 @@
-package com.example.nexttransit
+package com.example.nexttransit.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

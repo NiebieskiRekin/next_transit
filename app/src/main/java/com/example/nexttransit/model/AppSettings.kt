@@ -1,6 +1,6 @@
-package com.example.nexttransit
+package com.example.nexttransit.model
 
-import com.example.nexttransit.ApiCaller.getSampleDirections
+import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import kotlinx.serialization.Serializable
 
 @Serializable

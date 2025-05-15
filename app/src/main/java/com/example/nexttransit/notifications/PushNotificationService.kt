@@ -1,6 +1,6 @@
-package com.example.nexttransit
+package com.example.nexttransit.notifications
 
-import android.content.ContentValues.TAG
+import android.content.ContentValues
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -12,7 +12,7 @@ class PushNotificationService : FirebaseMessagingService(){
      * FCM registration token is initially generated so this is where you would retrieve the token.
      */
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+        Log.d(ContentValues.TAG, "Refreshed token: $token")
         super.onNewToken(token)
 
         // If you want to send messages to this application instance or

@@ -1,9 +1,16 @@
-package com.example.nexttransit
+package com.example.nexttransit.api
 
+import com.example.nexttransit.BuildConfig
+import com.example.nexttransit.model.DirectionsResponse
+import com.example.nexttransit.model.OverviewPolyline
+import com.example.nexttransit.model.PlaceId
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.ANDROID
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.http.URLProtocol
@@ -13,21 +20,24 @@ import kotlinx.serialization.json.Json
 
 object ApiCaller {
     private val client = HttpClient(Android) {
-        install(Logging)
+        install(Logging){
+            logger = Logger.ANDROID
+            level = LogLevel.ALL
+        }
+
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
                 isLenient = true
                 ignoreUnknownKeys = true
-            }
-            )
+            })
         }
     }
 
-    suspend fun getDirectionsByName(origin: String, destination: String) : DirectionsResponse{
+    suspend fun getDirectionsByName(origin: String, destination: String) : DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
-                protocol = URLProtocol.HTTPS
+                protocol = URLProtocol.Companion.HTTPS
                 host = "maps.googleapis.com"
                 path("/maps/api/directions/json")
                 parameters.append("destination",destination)
@@ -43,7 +53,7 @@ object ApiCaller {
     suspend fun getDirectionsByPlaceId(origin: PlaceId, destination: PlaceId): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
-                protocol = URLProtocol.HTTPS
+                protocol = URLProtocol.Companion.HTTPS
                 host = "maps.googleapis.com"
                 path("/maps/api/directions/json")
                 parameters.append("destination", "place_id:$destination")
@@ -638,6 +648,6 @@ object ApiCaller {
   ],
   "status" : "OK"
 }"""
-        return Json.decodeFromString(response)
+        return Json.Default.decodeFromString(response)
     }
 }

@@ -37,7 +37,7 @@
         </activity>
 
         <receiver
-            android:name=".TransitWidgetReceiver"
+            android:name=".ui.widget.TransitWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -49,7 +49,7 @@
         </receiver>
 
         <service
-            android:name=".PushNotificationService"
+            android:name=".notifications.PushNotificationService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

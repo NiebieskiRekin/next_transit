@@ -1,4 +1,4 @@
-package com.example.nexttransit
+package com.example.nexttransit.ui.app
 
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -40,8 +40,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
-import com.example.nexttransit.ApiCaller.getSampleDirections
+import com.example.nexttransit.model.DirectionsResponse
+import com.example.nexttransit.model.Leg
+import com.example.nexttransit.model.Route
+import com.example.nexttransit.model.Step
+import com.example.nexttransit.api.ApiCaller.getSampleDirections
+import com.example.nexttransit.getTravelModeText
+import com.example.nexttransit.getTravelTime
 import com.example.nexttransit.ui.theme.NextTransitTheme
+import kotlin.collections.forEach
 
 
 private fun getTravelModeIcon(travelMode: String) = when (travelMode) {
