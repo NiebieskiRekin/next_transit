@@ -68,10 +68,10 @@ android {
 }
 
 dependencies {
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
-    implementation("com.google.android.gms:play-services-maps:19.1.0")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
 //    ┌───────────────────────────────────┐
@@ -82,7 +82,7 @@ dependencies {
     androidTestImplementation(composeBom)
     // Choose one of the following:
     // Material Design 3
-    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.compose.material3:material3:1.3.2")
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -97,8 +97,8 @@ dependencies {
     implementation("androidx.activity:activity-compose")
 
     // DataStore to save user preferences
-    implementation("androidx.datastore:datastore:1.1.3")
-    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
+    implementation("androidx.datastore:datastore:1.1.6")
+    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.5")
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
@@ -114,8 +114,8 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 
 
 //    ┌─────────────────────────────────────┐
@@ -130,12 +130,12 @@ dependencies {
     implementation("androidx.glance:glance-material3:$glanceVersion")
 
 
-    val navVersion = "2.8.9"
+    val navVersion = "2.9.0"
 
     // Jetpack Compose Navigation
     implementation("androidx.navigation:navigation-compose:$navVersion")
     androidTestImplementation("androidx.navigation:navigation-testing:$navVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
     // Views/Fragments Integration
 //    implementation("androidx.navigation:navigation-fragment:$navVersion")
 //    implementation("androidx.navigation:navigation-ui:$navVersion")

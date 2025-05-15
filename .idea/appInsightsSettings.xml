@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.nexttransit" />
-                  <option name="mobileSdkAppId" value="1:671758085708:android:0fd87f6fb835e8b7420ee9" />
-                  <option name="projectId" value="next-transit-widget" />
-                  <option name="projectNumber" value="671758085708" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
