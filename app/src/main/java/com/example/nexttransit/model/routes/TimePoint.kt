@@ -1,3 +1,5 @@
+package com.example.nexttransit.model.routes
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

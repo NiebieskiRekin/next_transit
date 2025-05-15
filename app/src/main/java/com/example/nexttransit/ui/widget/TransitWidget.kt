@@ -1,8 +1,8 @@
 package com.example.nexttransit.ui.widget
 
-import Leg
-import Route
-import Step
+import com.example.nexttransit.model.routes.Leg
+import com.example.nexttransit.model.routes.Route
+import com.example.nexttransit.model.routes.Step
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -60,9 +60,9 @@ import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.getLocalTime
 import com.example.nexttransit.getTravelModeText
 import com.example.nexttransit.getTravelTime
-import com.example.nexttransit.model.AppSettings
-import com.example.nexttransit.model.DirectionsResponse
-import com.example.nexttransit.model.PlaceId
+import com.example.nexttransit.model.settings.AppSettings
+import com.example.nexttransit.model.routes.DirectionsResponse
+import com.example.nexttransit.model.routes.PlaceId
 import kotlinx.coroutines.coroutineScope
 
 class TransitWidget : GlanceAppWidget() {

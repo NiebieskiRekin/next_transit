@@ -1,4 +1,5 @@
-import com.example.nexttransit.model.PlaceId
+package com.example.nexttransit.model.routes
+
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -1,8 +1,8 @@
 package com.example.nexttransit.ui.app
 
-import Leg
-import Route
-import Step
+import com.example.nexttransit.model.routes.Leg
+import com.example.nexttransit.model.routes.Route
+import com.example.nexttransit.model.routes.Step
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
-import com.example.nexttransit.model.DirectionsResponse
+import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import com.example.nexttransit.getTravelModeText
 import com.example.nexttransit.getTravelTime

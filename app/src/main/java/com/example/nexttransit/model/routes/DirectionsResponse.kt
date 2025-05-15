@@ -1,11 +1,7 @@
-package com.example.nexttransit.model
+package com.example.nexttransit.model.routes
 
-import GeocodedWaypoint
-import Route
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-typealias PlaceId = String
 
 @Serializable
 data class DirectionsResponse(

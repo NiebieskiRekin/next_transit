@@ -1,7 +1,8 @@
-package com.example.nexttransit.model
+package com.example.nexttransit.model.settings
 
-import Location
-import com.example.nexttransit.api.ApiCaller.getSampleDirections
+import com.example.nexttransit.api.ApiCaller
+import com.example.nexttransit.model.routes.DirectionsResponse
+import com.example.nexttransit.model.routes.Location
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,13 +16,9 @@ data class AppSettings (
 ) {
 
       fun getDefault() = AppSettings(
-            lastDirectionsResponse = getSampleDirections(),
+            lastDirectionsResponse = ApiCaller.getSampleDirections(),
             source = Location("Środa Wielkopolska", "ChIJLcfSImn7BEcRa3MR7sqwJsw"),
             destination = Location("Politechnika Poznańska, Kampus Piotrowo","ChIJC0kwPxJbBEcRaulLN8Dqppc")
         )
 
 }
-
-
-
-

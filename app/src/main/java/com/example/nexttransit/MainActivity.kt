@@ -1,6 +1,6 @@
 package com.example.nexttransit
 
-import Location
+import com.example.nexttransit.model.routes.Location
 import android.Manifest
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
@@ -72,8 +72,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import com.example.nexttransit.api.ApiCaller.trimPolyline
-import com.example.nexttransit.model.AppSettings
-import com.example.nexttransit.model.DirectionsResponse
+import com.example.nexttransit.model.settings.AppSettings
+import com.example.nexttransit.model.settings.AppSettingsSerializer
+import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.notifications.CopyFirebaseToken
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.theme.NextTransitTheme

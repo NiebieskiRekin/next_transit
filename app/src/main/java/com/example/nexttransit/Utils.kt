@@ -1,7 +1,7 @@
 package com.example.nexttransit
 
-import Step
 import android.text.format.DateFormat
+import com.example.nexttransit.model.routes.Step
 import java.util.Calendar
 import java.util.Locale
 

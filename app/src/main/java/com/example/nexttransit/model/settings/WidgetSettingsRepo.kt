@@ -1,9 +1,8 @@
-package com.example.nexttransit
+package com.example.nexttransit.model.settings
 
-import Location
 import com.example.nexttransit.api.ApiCaller
-import com.example.nexttransit.model.AppSettings
-import com.example.nexttransit.model.PlaceId
+import com.example.nexttransit.model.routes.Location
+import com.example.nexttransit.model.routes.PlaceId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

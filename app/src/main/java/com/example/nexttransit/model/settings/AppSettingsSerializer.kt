@@ -1,7 +1,6 @@
-package com.example.nexttransit
+package com.example.nexttransit.model.settings
 
 import androidx.datastore.core.Serializer
-import com.example.nexttransit.model.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
@@ -15,7 +14,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
 
     override suspend fun readFrom(input: InputStream): AppSettings {
         return try {
-            Json.decodeFromString(
+            Json.Default.decodeFromString(
                 deserializer = AppSettings.serializer(), string = input.readBytes().decodeToString()
             )
         } catch (e: SerializationException) {
@@ -26,7 +25,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
 
     fun readFrom(input: String): AppSettings {
         return try {
-            Json.decodeFromString(
+            Json.Default.decodeFromString(
                 deserializer = AppSettings.serializer(), string = input
             )
         } catch (e: SerializationException) {
@@ -38,7 +37,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
     override suspend fun writeTo(t: AppSettings, output: OutputStream) {
         withContext(Dispatchers.IO) {
             output.write(
-                Json.encodeToString(
+                Json.Default.encodeToString(
                     serializer = AppSettings.serializer(),
                     value = t,
                 ).encodeToByteArray()
