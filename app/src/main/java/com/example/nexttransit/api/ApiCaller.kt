@@ -1,8 +1,8 @@
 package com.example.nexttransit.api
 
+import OverviewPolyline
 import com.example.nexttransit.BuildConfig
 import com.example.nexttransit.model.DirectionsResponse
-import com.example.nexttransit.model.OverviewPolyline
 import com.example.nexttransit.model.PlaceId
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

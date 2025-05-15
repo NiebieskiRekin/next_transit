@@ -1,5 +1,9 @@
 package com.example.nexttransit.ui.widget
 
+import Leg
+import Route
+import Step
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -49,19 +53,16 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import com.example.nexttransit.model.AppSettings
-import com.example.nexttransit.model.DirectionsResponse
-import com.example.nexttransit.model.Leg
 import com.example.nexttransit.MainActivity
 import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
-import com.example.nexttransit.model.PlaceId
 import com.example.nexttransit.R
-import com.example.nexttransit.model.Route
-import com.example.nexttransit.model.Step
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.getLocalTime
 import com.example.nexttransit.getTravelModeText
 import com.example.nexttransit.getTravelTime
+import com.example.nexttransit.model.AppSettings
+import com.example.nexttransit.model.DirectionsResponse
+import com.example.nexttransit.model.PlaceId
 import kotlinx.coroutines.coroutineScope
 
 class TransitWidget : GlanceAppWidget() {
@@ -316,6 +317,7 @@ class TransitWidget : GlanceAppWidget() {
         )
     }
 
+    @SuppressLint("RestrictedApi")
     @Composable
     fun DisplayStep(bigStep: Step) {
         Column(
