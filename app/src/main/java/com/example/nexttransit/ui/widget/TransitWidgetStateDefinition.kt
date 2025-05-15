@@ -1,4 +1,4 @@
-package com.example.nexttransit
+package com.example.nexttransit.ui.widget
 
 import android.content.Context
 import androidx.datastore.core.DataStoreFactory
@@ -8,9 +8,8 @@ import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
 import java.io.File
 
-private const val DATA_STORE_FILENAME_PREFIX = "widgetSettings_"
-
 class TransitWidgetStateDefinition : GlanceStateDefinition<AppSettings> {
+    private val DATA_STORE_FILENAME_PREFIX = "widgetSettings_"
 
     override suspend fun getDataStore(context: Context, fileKey: String) = DataStoreFactory.create(
         serializer = AppSettingsSerializer,
