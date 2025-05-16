@@ -2,13 +2,12 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.jetbrains.kotlin.compose)
     kotlin("plugin.serialization") version embeddedKotlinVersion
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.gms.google-services")
-//    kotlin("kapt")
+    alias(libs.plugins.maps.secrets)
+    alias(libs.plugins.google.services)
 //    id("com.google.dagger.hilt.android")
 }
 
@@ -132,6 +131,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.material3.adaptive.navigation.suite)
     // Views/Fragments Integration
 //    implementation("androidx.navigation:navigation-fragment:$navVersion")
 //    implementation("androidx.navigation:navigation-ui:$navVersion")
