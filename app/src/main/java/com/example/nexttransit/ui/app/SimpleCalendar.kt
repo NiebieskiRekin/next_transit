@@ -80,7 +80,7 @@ fun SimpleCalendarView(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(8.dp)
     ) {
         // Header section with month/year and navigation buttons
         CalendarHeader(

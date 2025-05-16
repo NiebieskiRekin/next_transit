@@ -36,13 +36,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +78,8 @@ import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
+import com.example.nexttransit.ui.app.DailyScheduleView
+import com.example.nexttransit.ui.app.Event
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.app.SimpleCalendarView
 import com.example.nexttransit.ui.theme.NextTransitTheme
@@ -81,6 +87,8 @@ import com.example.nexttransit.ui.widget.TransitWidget
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
 
 
 class MainActivity : ComponentActivity() {
@@ -189,7 +197,51 @@ class MainActivity : ComponentActivity() {
                 AppScreen.Notifications -> Text("Notifications")
                 AppScreen.Start -> Text("Start")
                 AppScreen.Calendar -> {
-                    SimpleCalendarView()
+                    val sampleEvents = listOf(
+                        Event(
+                            name = "Poranne spotkanie",
+                            place = "Biuro, Sala A",
+                            startTime = LocalTime.of(9, 0),
+                            endTime = LocalTime.of(10, 30),
+                            color = Color(0xFFB2DFDB) // Light Teal
+                        ),
+                        Event(
+                            name = "Lunch z klientem",
+                            place = "Restauracja Centrum",
+                            startTime = LocalTime.of(12, 0),
+                            endTime = LocalTime.of(13, 30),
+                            color = Color(0xFFFFF9C4) // Light Yellow
+                        ),
+                        Event(
+                            name = "Prezentacja projektu",
+                            place = "Online",
+                            startTime = LocalTime.of(15, 0),
+                            endTime = LocalTime.of(16, 30),
+                            color = Color(0xFFC5CAE9) // Light Indigo
+                        ),
+                        Event(
+                            name = "Wieczorne zadania",
+                            place = "Dom",
+                            startTime = LocalTime.of(20, 0),
+                            endTime = LocalTime.of(21, 45),
+                            color = Color(0xFFD1C4E9) // Light Deep Purple
+                        )
+                    )
+                    val today = LocalDate.now()
+                    val scrollBehavior =
+                        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState()) // https://developer.android.com/develop/ui/compose/components/app-bars#scroll
+
+                    Scaffold(topBar = {
+                        LargeTopAppBar(
+                            title = {
+                                SimpleCalendarView()
+                            },
+                            scrollBehavior = scrollBehavior,
+                            expandedHeight = 400.dp
+                        )
+                    }, modifier=Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)){ innerPadding ->
+                        DailyScheduleView(today,sampleEvents,Modifier.padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection))
+                    }
                 }
                 AppScreen.WidgetSettings -> {
                     Column{
