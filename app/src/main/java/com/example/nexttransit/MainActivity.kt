@@ -1,6 +1,5 @@
 package com.example.nexttransit
 
-import com.example.nexttransit.model.routes.Location
 import android.Manifest
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
@@ -14,7 +13,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,17 +38,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -66,16 +64,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import com.example.nexttransit.api.ApiCaller.trimPolyline
+import com.example.nexttransit.model.AppScreen
+import com.example.nexttransit.model.routes.DirectionsResponse
+import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
-import com.example.nexttransit.model.routes.DirectionsResponse
-import com.example.nexttransit.notifications.CopyFirebaseToken
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ui.widget.TransitWidget
@@ -172,39 +169,47 @@ class MainActivity : ComponentActivity() {
     fun MainContent(
         navController: NavHostController = rememberNavController()
     ) {
-        Scaffold(
-            Modifier.fillMaxSize()
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = AppScreen.WidgetSettings.name,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(route = AppScreen.Start.name) {
-                    Text("Hello World!")
-                }
-                composable(route= AppScreen.Notifications.name){
-                    CopyFirebaseToken()
-                }
-                composable(route = AppScreen.WidgetSettings.name) {
-                    val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
-                    WidgetSettingsView(
-                        it = innerPadding,
-                        appSettings = appSettings,
+        var currentDestination by rememberSaveable { mutableStateOf(AppScreen.Start) }
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                AppScreen.entries.forEach {
+                    item(
+                        icon = { Icon(it.icon, contentDescription = stringResource(it.contentDescription)) },
+                        label = { Text(stringResource(it.title)) },
+                        selected = currentDestination == it,
+                        onClick = { currentDestination = it }
                     )
                 }
+            },
+            Modifier.fillMaxSize()
+        ) {
+            when (currentDestination) {
+                AppScreen.Notifications -> Text("Notifications")
+                AppScreen.Start -> Text("Start")
+                AppScreen.Calendar -> Text("Calendar")
+                AppScreen.WidgetSettings -> Text("Widget Settings")
             }
-        }
-    }
 
-    /**
-     * enum values that represent the screens in the app
-     */
-    enum class AppScreen(@StringRes val title: Int) {
-        Start(title = R.string.app_name),
-        WidgetSettings(title = R.string.widget_settings),
-        Notifications(title = R.string.notifications),
-        Calendar(title = R.string.calendar)
+//            NavHost(
+//                navController = navController,
+//                startDestination = AppScreen.WidgetSettings.name,
+//                modifier = Modifier.padding(innerPadding)
+//            ) {
+//                composable(route = AppScreen.Start.name) {
+//                    Text("Hello World!")
+//                }
+//                composable(route= AppScreen.Notifications.name){
+//                    CopyFirebaseToken()
+//                }
+//                composable(route = AppScreen.WidgetSettings.name) {
+//                    val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
+//                    WidgetSettingsView(
+//                        it = innerPadding,
+//                        appSettings = appSettings,
+//                    )
+//                }
+//            }
+        }
     }
 
     @OptIn(ExperimentalMaterial3Api::class)

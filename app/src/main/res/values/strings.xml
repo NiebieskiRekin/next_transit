@@ -10,7 +10,7 @@
     </string>
     <string name="title_activity_transit_widget_configuration">TransitWidgetConfigurationActivity
     </string>
-    <string name="widget_settings">Widget settings</string>
+    <string name="widget_settings">Settings</string>
     <string name="notifications">Notifications</string>
     <string name="calendar">Calendar</string>
     <string name="back_button">Go back</string>
