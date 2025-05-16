@@ -22,3 +22,4 @@ local.properties
 /.idea/studiobot.xml
 /app/google-services.json
 /.kotlin/
+/.idea/
