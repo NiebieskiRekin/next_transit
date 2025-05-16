@@ -230,11 +230,16 @@ class MainActivity : ComponentActivity() {
                     val today = LocalDate.now()
                     val scrollBehavior =
                         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState()) // https://developer.android.com/develop/ui/compose/components/app-bars#scroll
+                    val selectedDate = remember { mutableStateOf(today) }
 
                     Scaffold(topBar = {
                         LargeTopAppBar(
                             title = {
-                                SimpleCalendarView()
+                                SimpleCalendarView(onDateSelected = {
+                                    date ->
+                                    selectedDate.value = date
+                                    Log.d("MainActivity", "Selected date: $date")
+                                })
                             },
                             scrollBehavior = scrollBehavior,
                             expandedHeight = 400.dp

@@ -87,10 +87,13 @@ fun SimpleCalendarView(
             yearMonth = currentYearMonth,
             onPreviousMonthClicked = {
                 currentYearMonth = currentYearMonth.minusMonths(1)
+                selectedDate = null;
             },
             onNextMonthClicked = {
                 currentYearMonth = currentYearMonth.plusMonths(1)
-            }
+                selectedDate = null;
+            },
+            selectedDay = selectedDate
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -140,11 +143,13 @@ fun SimpleCalendarView(
 @Composable
 fun CalendarHeader(
     yearMonth: YearMonth,
+    selectedDay: LocalDate? = null,
     onPreviousMonthClicked: () -> Unit,
     onNextMonthClicked: () -> Unit
 ) {
     // Formatter for the month and year string
-    val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
+    val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault()) }
+    val dayMonthYearFormatter = remember { DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -156,7 +161,7 @@ fun CalendarHeader(
         }
 
         Text(
-            text = yearMonth.format(monthYearFormatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+            text = selectedDay?.format(dayMonthYearFormatter) ?: yearMonth.format(monthYearFormatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
