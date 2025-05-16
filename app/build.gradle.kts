@@ -68,12 +68,12 @@ android {
 }
 
 dependencies {
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("com.google.android.gms:play-services-maps:19.2.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.play.services.maps)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
 //    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
@@ -82,60 +82,56 @@ dependencies {
     androidTestImplementation(composeBom)
     // Choose one of the following:
     // Material Design 3
-    implementation("androidx.compose.material3:material3:1.3.2")
+    implementation(libs.androidx.material3)
     // Android Studio Preview support
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation(libs.androidx.ui.tooling.preview)
+    debugImplementation(libs.androidx.ui.tooling)
     // UI Tests
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.test.manifest)
     // Optional - Add full set of material icons
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.material.icons.extended)
     // Optional - Add window size utils
-    implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.activity:activity-ktx")
-    implementation("androidx.activity:activity-compose")
+    implementation(libs.androidx.material3.window.size.class1)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.activity.compose)
 
     // DataStore to save user preferences
-    implementation("androidx.datastore:datastore:1.1.6")
-    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.5")
+    implementation(libs.androidx.datastore)
+    implementation(libs.protobuf.gradle.plugin)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.serialization.json)
 
 
 //    ┌─────────────────────────────────────────┐
 //    │ Networking library - Ktor + dependencies│
 //    └─────────────────────────────────────────┘
-    val ktorVersion = "3.1.3"
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-android:$ktorVersion")
-    implementation("io.ktor:ktor-client-logging:$ktorVersion")
-    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
 
 
 //    ┌─────────────────────────────────────┐
 //    │ Home screen widget library - Glance │
 //    └─────────────────────────────────────┘
-    val glanceVersion = "1.1.1"
     // For Glance support
-    implementation("androidx.glance:glance:$glanceVersion")
+    implementation(libs.androidx.glance)
     // For AppWidgets support
-    implementation("androidx.glance:glance-appwidget:$glanceVersion")
+    implementation(libs.androidx.glance.appwidget)
     // For interop APIs with Material 3
-    implementation("androidx.glance:glance-material3:$glanceVersion")
+    implementation(libs.androidx.glance.material3)
 
-
-    val navVersion = "2.9.0"
 
     // Jetpack Compose Navigation
-    implementation("androidx.navigation:navigation-compose:$navVersion")
-    androidTestImplementation("androidx.navigation:navigation-testing:$navVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
+    implementation(libs.androidx.navigation.compose)
+    androidTestImplementation(libs.androidx.navigation.testing)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     // Views/Fragments Integration
 //    implementation("androidx.navigation:navigation-fragment:$navVersion")
 //    implementation("androidx.navigation:navigation-ui:$navVersion")
@@ -145,9 +141,8 @@ dependencies {
 //    implementation("com.google.dagger:hilt-android:2.44")
 //    kapt("com.google.dagger:hilt-android-compiler:2.44")
 
-    val firebaseBom = platform("com.google.firebase:firebase-bom:33.10.0")
-    implementation(firebaseBom)
-    implementation("com.google.firebase:firebase-messaging")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }
 java {
     toolchain {
