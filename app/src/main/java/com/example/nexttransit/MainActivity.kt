@@ -44,6 +44,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +75,7 @@ import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
+import com.example.nexttransit.ui.app.SimpleCalendarView
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ui.widget.TransitWidget
 import com.google.android.gms.tasks.OnCompleteListener
@@ -186,8 +188,20 @@ class MainActivity : ComponentActivity() {
             when (currentDestination) {
                 AppScreen.Notifications -> Text("Notifications")
                 AppScreen.Start -> Text("Start")
-                AppScreen.Calendar -> Text("Calendar")
-                AppScreen.WidgetSettings -> Text("Widget Settings")
+                AppScreen.Calendar -> {
+                    SimpleCalendarView()
+                }
+                AppScreen.WidgetSettings -> {
+                    Column{
+                        Text("Widget Settings")
+                        val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
+                        WidgetSettingsView(
+                            it = PaddingValues(0.dp),
+                            appSettings = appSettings,
+                        )
+                    }
+
+                }
             }
 
 //            NavHost(
@@ -202,11 +216,7 @@ class MainActivity : ComponentActivity() {
 //                    CopyFirebaseToken()
 //                }
 //                composable(route = AppScreen.WidgetSettings.name) {
-//                    val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
-//                    WidgetSettingsView(
-//                        it = innerPadding,
-//                        appSettings = appSettings,
-//                    )
+//
 //                }
 //            }
         }
