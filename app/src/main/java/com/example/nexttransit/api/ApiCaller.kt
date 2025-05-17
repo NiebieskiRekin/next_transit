@@ -18,6 +18,17 @@ import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+suspend fun getDirections(
+    source: String,
+    destination: String
+): Pair<Boolean, DirectionsResponse> {
+    return try {
+        Pair(true, ApiCaller.getDirectionsByName(source, destination))
+    } catch (_: Exception) {
+        Pair(false, DirectionsResponse(status = "Error"))
+    }
+}
+
 object ApiCaller {
     private val client = HttpClient(Android) {
         install(Logging){
