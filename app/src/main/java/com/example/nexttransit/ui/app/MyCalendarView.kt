@@ -51,6 +51,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.startActivity
 import com.example.nexttransit.R
 import com.example.nexttransit.api.ApiCaller
@@ -60,6 +61,7 @@ import com.example.nexttransit.model.calendar.ScheduleSlotItem
 import com.example.nexttransit.model.calendar.generateScheduleSlots
 import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.calendar.getEvents
+import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -67,9 +69,11 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+val CHANNEL_ID = "TRANSIT_RESULT"
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MyCalendarView(contentResolver: ContentResolver) {
+fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1: String, place2: String, directions: DirectionsResponse) -> Unit) {
     val scope = rememberCoroutineScope()
     // In your Activity or Composable
     var events = remember { mutableStateListOf<Event>() }
@@ -191,6 +195,8 @@ fun MyCalendarView(contentResolver: ContentResolver) {
                                     firstEvent!!.place,secondEvent!!.place,departureDateTime
                                 )
                                 Log.d("CalendarAccess", directions.toString())
+
+                                createNotification(firstEvent!!.place,secondEvent!!.place,directions)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -211,6 +217,8 @@ fun MyCalendarView(contentResolver: ContentResolver) {
                                     firstEvent!!.place,secondEvent!!.place,arrivalDateTime
                                 )
                                 Log.d("CalendarAccess", directions.toString())
+
+                                createNotification(firstEvent!!.place,secondEvent!!.place,directions)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,

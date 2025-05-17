@@ -34,15 +34,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
+import com.example.nexttransit.ui.app.CHANNEL_ID
 import com.example.nexttransit.ui.app.DebugOutput
 import com.example.nexttransit.ui.app.DirectionsTextFieldsSettings
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
@@ -52,6 +57,7 @@ import com.example.nexttransit.ui.widget.TransitWidget
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 
 class MainActivity : ComponentActivity() {
@@ -108,6 +114,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             NextTransitTheme {
                 MainContent()
+                sendNotification(
+                    "test1",
+                    "test2",
+                    ApiCaller.getSampleDirections()
+                )
             }
         }
     }
@@ -135,6 +146,40 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun getNotificationBuilder(place1: String, place2: String, directions: DirectionsResponse): NotificationCompat.Builder {
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Trasa: ${place1} - ${place2}")
+            .setContentText(directions.routes[0].legs[0].steps[0].htmlInstructions)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        return builder
+    }
+
+    fun sendNotification(place1: String, place2: String, directions: DirectionsResponse){
+        val builder = getNotificationBuilder(place1,place2,directions)
+        with(NotificationManagerCompat.from(this)) {
+            if (ActivityCompat.checkSelfPermission(
+                    this@MainActivity,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.e("Notifications","Permission not granted")
+                // TODO: Consider calling
+                // ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                //                                        grantResults: IntArray)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                requestPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
+
+                return@with
+            }
+            // notificationId is a unique int for each notification that you must define.
+            notify(Random.nextInt(), builder.build())
+        }
+    }
 
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -159,7 +204,13 @@ class MainActivity : ComponentActivity() {
                 AppScreen.Notifications -> Text("Notifications")
                 AppScreen.Start -> Text("Start")
                 AppScreen.Calendar -> {
-                    MyCalendarView(contentResolver)
+                    MyCalendarView(contentResolver) { place1, place2, directions ->
+                        sendNotification(
+                            place1,
+                            place2,
+                            directions
+                        )
+                    }
                 }
                 AppScreen.WidgetSettings -> {
                     val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
