@@ -3,9 +3,9 @@ package com.example.nexttransit.model.calendar
 import android.content.ContentResolver
 import android.provider.CalendarContract
 import androidx.compose.ui.graphics.Color
-import com.example.nexttransit.ui.app.Event
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 
 
@@ -137,7 +137,8 @@ fun getEvents(
                         place = location,
                         startTime = startTime,
                         endTime = correctedEndTime,
-                        color = eventColor // Pass the event color
+                        color = eventColor,
+                        eventId = it.getColumnIndex(CalendarContract.Events._ID).toLong()
                     )
                 )
             }
@@ -236,11 +237,56 @@ fun getEventsForNext14Days(
                         place = location,
                         startTime = startTime,
                         endTime = correctedEndTime,
-                        color = eventColor // Pass the event color
+                        color = eventColor,
+                        eventId = it.getColumnIndex(CalendarContract.Events._ID).toLong()
                     )
                 )
             }
         }
     }
     return eventsList
+}
+
+
+/**
+ * Generates a list of [ScheduleSlotItem]s for a given day,
+ * filling gaps between events.
+ *
+ * @param events A list of [Event]s for the day, assumed to be non-overlapping
+ * and ideally pre-sorted by start time.
+ * @param dayStart The start time of the day (e.g., 00:00).
+ * @param dayEnd The end time of the day (e.g., 23:59:59).
+ * @return A list of [ScheduleSlotItem]s representing the chronological schedule.
+ */
+fun generateScheduleSlots(
+    events: List<Event>,
+    dayStart: LocalTime = LocalTime.MIN, // 00:00
+    dayEnd: LocalTime = LocalTime.MAX    // 23:59:59.999999999
+): List<ScheduleSlotItem> {
+    val scheduleItems = mutableListOf<ScheduleSlotItem>()
+    var currentTime = dayStart
+
+    // Sort events by start time to ensure correct chronological processing
+    val sortedEvents = events.sortedBy { it.startTime }
+
+    for (event in sortedEvents) {
+        // If there's a gap before this event starts
+        if (event.startTime.isAfter(currentTime)) {
+            scheduleItems.add(ScheduleSlotItem.GapItem(currentTime, event.startTime))
+        }
+        // Add the event itself
+        scheduleItems.add(ScheduleSlotItem.EventItem(event))
+        // Move current time to the end of this event
+        currentTime = event.endTime
+    }
+
+    // If there's a gap after the last event until the end of the day
+    if (currentTime.isBefore(dayEnd)) {
+        // Ensure we don't add a zero-duration gap if currentTime is exactly dayEnd
+        // (though LocalTime.MAX makes this unlikely to be equal unless explicitly set)
+        if (currentTime < dayEnd) {
+            scheduleItems.add(ScheduleSlotItem.GapItem(currentTime, dayEnd))
+        }
+    }
+    return scheduleItems
 }

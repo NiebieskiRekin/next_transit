@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.nexttransit.model.calendar.CalendarInfo
+import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.calendar.getEvents
 import java.time.LocalDate
