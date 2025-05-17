@@ -63,6 +63,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -90,6 +91,8 @@ import com.example.nexttransit.api.ApiCaller.trimPolyline
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.getAvailableCalendars
+import com.example.nexttransit.model.calendar.getEvents
+import com.example.nexttransit.model.calendar.getEventsForNext14Days
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
@@ -105,6 +108,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 
 
 class MainActivity : ComponentActivity() {
@@ -190,6 +194,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MainContent(
@@ -215,7 +220,7 @@ class MainActivity : ComponentActivity() {
                 AppScreen.Calendar -> {
                     // In your Activity or Composable
                     var events = remember { mutableStateListOf<Event>() }
-                    val (calendar,onCalendarSelected) = remember { mutableStateOf<CalendarInfo?>(null) }
+                    var calendar by remember { mutableStateOf<CalendarInfo?>(null) }
                     val calendars = remember {mutableStateListOf<CalendarInfo>()}
                     val requestPermissionLauncher = rememberLauncherForActivityResult(
                         ActivityResultContracts.RequestPermission()
@@ -224,6 +229,7 @@ class MainActivity : ComponentActivity() {
                             // Permission is granted. You can proceed to fetch calendars/events.
                             Log.d("CalendarAccess", "READ_CALENDAR permission granted.")
                             // Launch your calendar fetching logic here
+                            calendars.clear()
                             calendars.addAll( getAvailableCalendars(contentResolver))
                         } else {
                             // Permission denied. Handle appropriately (e.g., show a message).
@@ -231,48 +237,57 @@ class MainActivity : ComponentActivity() {
                             // Inform the user why the permission is needed
 
                             events.clear()
-                            events.addAll(listOf(
-                                Event(
-                                    name = "Poranne spotkanie",
-                                    place = "Biuro, Sala A",
-                                    startTime = LocalTime.of(9, 0),
-                                    endTime = LocalTime.of(10, 30),
-                                    color = Color(0xFFB2DFDB) // Light Teal
-                                ),
-                                Event(
-                                    name = "Lunch z klientem",
-                                    place = "Restauracja Centrum",
-                                    startTime = LocalTime.of(12, 0),
-                                    endTime = LocalTime.of(13, 30),
-                                    color = Color(0xFFFFF9C4) // Light Yellow
-                                ),
-                                Event(
-                                    name = "Prezentacja projektu",
-                                    place = "Online",
-                                    startTime = LocalTime.of(15, 0),
-                                    endTime = LocalTime.of(16, 30),
-                                    color = Color(0xFFC5CAE9) // Light Indigo
-                                ),
-                                Event(
-                                    name = "Wieczorne zadania",
-                                    place = "Dom",
-                                    startTime = LocalTime.of(20, 0),
-                                    endTime = LocalTime.of(21, 45),
-                                    color = Color(0xFFD1C4E9) // Light Deep Purple
-                                )
-                            ))
+//                            events.addAll(listOf(
+//                                Event(
+//                                    name = "Poranne spotkanie",
+//                                    place = "Biuro, Sala A",
+//                                    startTime = LocalTime.of(9, 0),
+//                                    endTime = LocalTime.of(10, 30),
+//                                    color = Color(0xFFB2DFDB) // Light Teal
+//                                ),
+//                                Event(
+//                                    name = "Lunch z klientem",
+//                                    place = "Restauracja Centrum",
+//                                    startTime = LocalTime.of(12, 0),
+//                                    endTime = LocalTime.of(13, 30),
+//                                    color = Color(0xFFFFF9C4) // Light Yellow
+//                                ),
+//                                Event(
+//                                    name = "Prezentacja projektu",
+//                                    place = "Online",
+//                                    startTime = LocalTime.of(15, 0),
+//                                    endTime = LocalTime.of(16, 30),
+//                                    color = Color(0xFFC5CAE9) // Light Indigo
+//                                ),
+//                                Event(
+//                                    name = "Wieczorne zadania",
+//                                    place = "Dom",
+//                                    startTime = LocalTime.of(20, 0),
+//                                    endTime = LocalTime.of(21, 45),
+//                                    color = Color(0xFFD1C4E9) // Light Deep Purple
+//                                )
+//                            ))
                         }
                     }
 
-                    val today = LocalDate.now()
                     val scrollBehavior =
                         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState()) // https://developer.android.com/develop/ui/compose/components/app-bars#scroll
-                    val selectedDate = remember { mutableStateOf(today) }
+                    var selectedDate by remember{mutableStateOf(LocalDate.now())}
 
-                    val onDismissRequest = {
+                    fun onDismissRequest(){
                         events.clear()
                         Log.d("CalendarAccess", "No calendar chosen")
+                    }
 
+                    fun onDateChanged(){
+                        if (calendar != null){
+                            events.clear()
+                            val startDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            val endDateMillis = selectedDate.atTime(23, 59, 59)
+                                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            events.addAll(getEvents(contentResolver, calendar!!.id,startDateMillis, endDateMillis).toMutableStateList())
+                            Log.d("CalendarAccess", events.toString())
+                        }
                     }
 
                     Scaffold(topBar = {
@@ -280,7 +295,8 @@ class MainActivity : ComponentActivity() {
                             title = {
                                 SimpleCalendarView(onDateSelected = {
                                     date ->
-                                    selectedDate.value = date
+                                    selectedDate = date
+                                    onDateChanged()
                                     Log.d("MainActivity", "Selected date: $date")
                                 })
                             },
@@ -288,8 +304,7 @@ class MainActivity : ComponentActivity() {
                             expandedHeight = 400.dp
                         )
                     }, modifier=Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)){ innerPadding ->
-                        DailyScheduleView(today,events,Modifier.padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection))
-
+                        DailyScheduleView(selectedDate,events.toList(),Modifier.padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection))
                     }
 
                     if (calendar == null){
@@ -333,7 +348,7 @@ class MainActivity : ComponentActivity() {
                                                         .height(56.dp)
                                                         .selectable(
                                                             selected = (calendar == c),
-                                                            onClick = { onCalendarSelected(c) },
+                                                            onClick = { calendar = c; onDateChanged()},
                                                             role = Role.RadioButton
                                                         )
                                                         .padding(horizontal = 16.dp),
@@ -369,22 +384,6 @@ class MainActivity : ComponentActivity() {
 
                 }
             }
-
-//            NavHost(
-//                navController = navController,
-//                startDestination = AppScreen.WidgetSettings.name,
-//                modifier = Modifier.padding(innerPadding)
-//            ) {
-//                composable(route = AppScreen.Start.name) {
-//                    Text("Hello World!")
-//                }
-//                composable(route= AppScreen.Notifications.name){
-//                    CopyFirebaseToken()
-//                }
-//                composable(route = AppScreen.WidgetSettings.name) {
-//
-//                }
-//            }
         }
     }
 
