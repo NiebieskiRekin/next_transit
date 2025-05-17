@@ -74,7 +74,6 @@ fun SimpleCalendarView(
     // Generate the list of days to display in the grid
     val daysInMonth = currentYearMonth.lengthOfMonth()
     val firstOfMonth = currentYearMonth.atDay(1)
-    val lastOfMonth = currentYearMonth.atEndOfMonth()
     // Calculate the number of empty cells before the first day of the month
     // DayOfWeek.MONDAY.value is 1, DayOfWeek.SUNDAY.value is 7
     val emptyCellsBefore = (firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value + daysOfWeek) % daysOfWeek

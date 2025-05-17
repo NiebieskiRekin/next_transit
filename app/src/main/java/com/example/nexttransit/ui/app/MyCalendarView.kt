@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -32,10 +33,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
@@ -53,17 +58,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.startActivity
+import com.example.nexttransit.R
+import com.example.nexttransit.api.ApiCaller
+import com.example.nexttransit.api.getDirections
 import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.ScheduleSlotItem
 import com.example.nexttransit.model.calendar.generateScheduleSlots
 import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.calendar.getEvents
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -73,6 +83,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun MyCalendarView(contentResolver: ContentResolver) {
+    val scope = rememberCoroutineScope()
     // In your Activity or Composable
     var events = remember { mutableStateListOf<Event>() }
     var calendar by remember { mutableStateOf<CalendarInfo?>(null) }
@@ -178,6 +189,38 @@ fun MyCalendarView(contentResolver: ContentResolver) {
 
 
     Scaffold(
+        floatingActionButton = {
+            if (firstEvent != null && secondEvent != null){
+                Column{
+                    SmallFloatingActionButton(
+                        onClick = {
+                            scope.launch {
+//                                val directions =
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(80.dp).padding(4.dp)
+                    ) {
+                        Icon(painterResource(R.drawable.depart_at),"Wyznacz trasę wyruszając od końca pierwszego zdarzenia", modifier = Modifier.padding(4.dp))
+                    }
+                    SmallFloatingActionButton(
+                        onClick = {
+                            scope.launch {
+//                                val directions = ApiCaller.getDirectionsByNameAndArriveBy(
+//                                    firstEvent.place,secondEvent.place,secondEvent.startTime
+//                                )
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(80.dp).padding(4.dp)
+                    ) {
+                        Icon(painterResource(R.drawable.arrive_by),"Wyznacz trasę, aby dotrzeć na czas na drugie zdarzenie", modifier = Modifier.padding(4.dp))
+                    }
+                }
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
