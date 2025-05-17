@@ -100,6 +100,7 @@ import com.example.nexttransit.model.settings.AppSettingsSerializer
 import com.example.nexttransit.ui.app.DailyScheduleView
 import com.example.nexttransit.ui.app.Event
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
+import com.example.nexttransit.ui.app.MyCalendarView
 import com.example.nexttransit.ui.app.SimpleCalendarView
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ui.widget.TransitWidget
@@ -112,7 +113,6 @@ import java.time.ZoneId
 
 
 class MainActivity : ComponentActivity() {
-    // Declare the launcher at the top of your Activity/Fragment:
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted: Boolean ->
@@ -197,9 +197,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun MainContent(
-        navController: NavHostController = rememberNavController()
-    ) {
+    fun MainContent() {
         var currentDestination by rememberSaveable { mutableStateOf(AppScreen.Start) }
         NavigationSuiteScaffold(
             navigationSuiteItems = {
@@ -218,159 +216,7 @@ class MainActivity : ComponentActivity() {
                 AppScreen.Notifications -> Text("Notifications")
                 AppScreen.Start -> Text("Start")
                 AppScreen.Calendar -> {
-                    // In your Activity or Composable
-                    var events = remember { mutableStateListOf<Event>() }
-                    var calendar by remember { mutableStateOf<CalendarInfo?>(null) }
-                    val calendars = remember {mutableStateListOf<CalendarInfo>()}
-                    val requestPermissionLauncher = rememberLauncherForActivityResult(
-                        ActivityResultContracts.RequestPermission()
-                    ) { isGranted: Boolean ->
-                        if (isGranted) {
-                            // Permission is granted. You can proceed to fetch calendars/events.
-                            Log.d("CalendarAccess", "READ_CALENDAR permission granted.")
-                            // Launch your calendar fetching logic here
-                            calendars.clear()
-                            calendars.addAll( getAvailableCalendars(contentResolver))
-                        } else {
-                            // Permission denied. Handle appropriately (e.g., show a message).
-                            Log.w("CalendarAccess", "READ_CALENDAR permission denied.")
-                            // Inform the user why the permission is needed
-
-                            events.clear()
-//                            events.addAll(listOf(
-//                                Event(
-//                                    name = "Poranne spotkanie",
-//                                    place = "Biuro, Sala A",
-//                                    startTime = LocalTime.of(9, 0),
-//                                    endTime = LocalTime.of(10, 30),
-//                                    color = Color(0xFFB2DFDB) // Light Teal
-//                                ),
-//                                Event(
-//                                    name = "Lunch z klientem",
-//                                    place = "Restauracja Centrum",
-//                                    startTime = LocalTime.of(12, 0),
-//                                    endTime = LocalTime.of(13, 30),
-//                                    color = Color(0xFFFFF9C4) // Light Yellow
-//                                ),
-//                                Event(
-//                                    name = "Prezentacja projektu",
-//                                    place = "Online",
-//                                    startTime = LocalTime.of(15, 0),
-//                                    endTime = LocalTime.of(16, 30),
-//                                    color = Color(0xFFC5CAE9) // Light Indigo
-//                                ),
-//                                Event(
-//                                    name = "Wieczorne zadania",
-//                                    place = "Dom",
-//                                    startTime = LocalTime.of(20, 0),
-//                                    endTime = LocalTime.of(21, 45),
-//                                    color = Color(0xFFD1C4E9) // Light Deep Purple
-//                                )
-//                            ))
-                        }
-                    }
-
-                    val scrollBehavior =
-                        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState()) // https://developer.android.com/develop/ui/compose/components/app-bars#scroll
-                    var selectedDate by remember{mutableStateOf(LocalDate.now())}
-
-                    fun onDismissRequest(){
-                        events.clear()
-                        Log.d("CalendarAccess", "No calendar chosen")
-                    }
-
-                    fun onDateChanged(){
-                        if (calendar != null){
-                            events.clear()
-                            val startDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                            val endDateMillis = selectedDate.atTime(23, 59, 59)
-                                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                            events.addAll(getEvents(contentResolver, calendar!!.id,startDateMillis, endDateMillis).toMutableStateList())
-                            Log.d("CalendarAccess", events.toString())
-                        }
-                    }
-
-                    Scaffold(topBar = {
-                        LargeTopAppBar(
-                            title = {
-                                SimpleCalendarView(onDateSelected = {
-                                    date ->
-                                    selectedDate = date
-                                    onDateChanged()
-                                    Log.d("MainActivity", "Selected date: $date")
-                                })
-                            },
-                            scrollBehavior = scrollBehavior,
-                            expandedHeight = 400.dp
-                        )
-                    }, modifier=Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)){ innerPadding ->
-                        DailyScheduleView(selectedDate,events.toList(),Modifier.padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection))
-                    }
-
-                    if (calendar == null){
-                        Dialog(onDismissRequest = { onDismissRequest() }){
-                            Card(            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(375.dp)
-                                .padding(16.dp),
-                                shape = RoundedCornerShape(16.dp)
-                            ){
-                                Column(verticalArrangement = Arrangement.SpaceAround, horizontalAlignment = Alignment.CenterHorizontally, modifier=Modifier.fillMaxSize()) {
-                                    if (calendars.isEmpty()) {
-                                        Text("No calendars available")
-                                        Row {
-                                            TextButton(
-                                                onClick = { onDismissRequest() },
-                                                modifier = Modifier.padding(8.dp),
-                                            ) {
-                                                Text("Dismiss", textAlign = TextAlign.Center)
-                                            }
-                                            TextButton(
-                                                onClick = {
-                                                    requestPermissionLauncher.launch(
-                                                        Manifest.permission.READ_CALENDAR
-                                                    )
-                                                },
-                                                modifier = Modifier.padding(8.dp),
-                                            ) {
-                                                Text("Grant access to calendars", textAlign = TextAlign.Center)
-                                            }
-                                        }
-                                    } else {
-                                        Text("Please choose a calendar")
-
-                                        // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior
-                                        LazyColumn (Modifier.selectableGroup()) {
-                                            itemsIndexed(calendars) { i,c ->
-                                                Row(
-                                                    Modifier
-                                                        .fillMaxWidth()
-                                                        .height(56.dp)
-                                                        .selectable(
-                                                            selected = (calendar == c),
-                                                            onClick = { calendar = c; onDateChanged()},
-                                                            role = Role.RadioButton
-                                                        )
-                                                        .padding(horizontal = 16.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    RadioButton(
-                                                        selected = (c == calendar),
-                                                        onClick = null
-                                                    )
-                                                    Text(
-                                                        text = c.displayName,
-                                                        style = MaterialTheme.typography.bodyLarge,
-                                                        modifier = Modifier.padding(start = 16.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    MyCalendarView(contentResolver)
                 }
                 AppScreen.WidgetSettings -> {
                     Column{
@@ -387,45 +233,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun AppBar(
-        currentScreen: AppScreen,
-        canNavigateBack: Boolean,
-        navigateUp: () -> Unit,
-        modifier: Modifier = Modifier
-    ) {
-        TopAppBar(
-            title = { Text(stringResource(currentScreen.title)) },
-            colors = TopAppBarDefaults.mediumTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            modifier = modifier,
-            navigationIcon = {
-                if (canNavigateBack) {
-                    IconButton(onClick = navigateUp) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back_button)
-                        )
-                    }
-                }
-            }
-        )
-    }
-
     @Composable
     fun WidgetSettingsView(it: PaddingValues, appSettings: AppSettings){
         var directions1 by remember { mutableStateOf(appSettings.lastDirectionsResponse) }
         var directions1ButtonClicked by remember { mutableStateOf(false) }
-        var directions2 by remember { mutableStateOf(appSettings.returnResponse) }
         var source1 by remember { mutableStateOf(appSettings.source.name) }
         var destination1 by remember { mutableStateOf(appSettings.destination.name) }
-        var directions2Generated by remember { mutableStateOf(false) }
         var directions1Generated by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
-        if (directions1Generated || directions2Generated) {
+        if (directions1Generated) {
             FloatingActionButton(
                 onClick = {
                     val resultValue: Intent = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, extractAppWidgetId())
@@ -479,8 +296,7 @@ class MainActivity : ComponentActivity() {
             item {
                 DebugOutput(
                     appSettings = appSettings,
-                    newDirections1 = directions1,
-                    newDirections2 = directions2
+                    newDirections = directions1,
                 )
             }
         }
@@ -490,8 +306,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun DebugOutput(
         appSettings: AppSettings = AppSettings().getDefault(),
-        newDirections1: DirectionsResponse = getSampleDirections(),
-        newDirections2: DirectionsResponse = DirectionsResponse()
+        newDirections: DirectionsResponse = getSampleDirections(),
     ) {
         var showDebugOutput by remember { mutableStateOf(false) }
         Column {
@@ -592,7 +407,7 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                         SelectionContainer {
-                            Text(text = trimPolyline(newDirections1).toString())
+                            Text(text = trimPolyline(newDirections).toString())
                         }
                     }
                     item {
@@ -602,76 +417,6 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxWidth()
                         )
                     }
-                    item {
-                        Text(
-                            text = "Saved origin 2:",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        )
-                        SelectionContainer {
-                            Text(text = appSettings.secondSource.toString())
-                        }
-                    }
-                    item {
-                        Spacer(
-                            Modifier
-                                .size(0.dp, 5.dp)
-                                .fillMaxWidth()
-                        )
-                    }
-                    item {
-                        Text(
-                            text = "Saved destination 2:",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        )
-                        SelectionContainer {
-                            Text(text = appSettings.secondDestination.toString())
-                        }
-                    }
-                    item {
-                        Spacer(
-                            Modifier
-                                .size(0.dp, 5.dp)
-                                .fillMaxWidth()
-                        )
-                    }
-                    item {
-                        Text(
-                            text = "Saved last directions response 2:",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        )
-                        SelectionContainer {
-                            Text(text = trimPolyline(appSettings.returnResponse).toString())
-                        }
-                    }
-                    item {
-                        Spacer(
-                            Modifier
-                                .size(0.dp, 10.dp)
-                                .fillMaxWidth()
-                        )
-                    }
-                    item {
-                        Text(
-                            text = "New Directions 2:",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        )
-                        SelectionContainer {
-                            Text(text = trimPolyline(newDirections2).toString())
-                        }
-                    }
-
                 }
             }
         }
