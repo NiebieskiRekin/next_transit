@@ -17,6 +17,9 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
 
 suspend fun getDirections(
     source: String,
@@ -53,6 +56,40 @@ object ApiCaller {
                 path("/maps/api/directions/json")
                 parameters.append("destination",destination)
                 parameters.append("origin",origin)
+                parameters.append("mode","transit")
+                parameters.append("language","pl")
+                parameters.append("key", BuildConfig.API_KEY)
+            }
+        }.body()
+        return response
+    }
+
+    suspend fun getDirectionsByNameAndDepartAt(origin: String, destination: String, departureDateTime: LocalDateTime) : DirectionsResponse {
+        val response: DirectionsResponse = client.get {
+            url {
+                protocol = URLProtocol.Companion.HTTPS
+                host = "maps.googleapis.com"
+                path("/maps/api/directions/json")
+                parameters.append("destination",destination)
+                parameters.append("origin",origin)
+                parameters.append("departure_time",departureDateTime.toEpochSecond(ZoneOffset.UTC).toString())
+                parameters.append("mode","transit")
+                parameters.append("language","pl")
+                parameters.append("key", BuildConfig.API_KEY)
+            }
+        }.body()
+        return response
+    }
+
+    suspend fun getDirectionsByNameAndArriveBy(origin: String, destination: String, arrivalDateTime: LocalDateTime) : DirectionsResponse {
+        val response: DirectionsResponse = client.get {
+            url {
+                protocol = URLProtocol.Companion.HTTPS
+                host = "maps.googleapis.com"
+                path("/maps/api/directions/json")
+                parameters.append("destination",destination)
+                parameters.append("origin",origin)
+                parameters.append("arrival_time",arrivalDateTime.toEpochSecond(ZoneOffset.UTC).toString())
                 parameters.append("mode","transit")
                 parameters.append("language","pl")
                 parameters.append("key", BuildConfig.API_KEY)
