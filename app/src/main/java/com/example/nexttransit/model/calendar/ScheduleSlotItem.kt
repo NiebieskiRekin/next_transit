@@ -10,8 +10,8 @@ sealed interface ScheduleSlotItem {
     val endTime: LocalTime
 
     data class EventItem(val event: Event) : ScheduleSlotItem {
-        override val startTime: LocalTime get() = event.startTime
-        override val endTime: LocalTime get() = event.endTime
+        override val startTime: LocalTime get() = event.startDateTime.toLocalTime()
+        override val endTime: LocalTime get() = event.endDateTime.toLocalTime()
     }
 
     data class GapItem(

@@ -119,9 +119,9 @@ fun getEvents(
 
             // Convert Millis to LocalTime for your Event data class
             val startTime = Instant.ofEpochMilli(startTimeMillis)
-                .atZone(ZoneId.systemDefault()).toLocalTime()
+                .atZone(ZoneId.systemDefault()).toLocalDateTime()
             val endTime = Instant.ofEpochMilli(endTimeMillis)
-                .atZone(ZoneId.systemDefault()).toLocalTime()
+                .atZone(ZoneId.systemDefault()).toLocalDateTime()
 
             // Ensure endTime is after startTime if it was a fallback
             val correctedEndTime = if (endTime.isBefore(startTime) || endTime == startTime) {
@@ -136,8 +136,8 @@ fun getEvents(
                     Event( // Use your Event class
                         name = title,
                         place = location,
-                        startTime = startTime,
-                        endTime = correctedEndTime,
+                        startDateTime = startTime,
+                        endDateTime = correctedEndTime,
                         color = eventColor,
                         eventId = eventId
                     )
@@ -168,17 +168,17 @@ fun generateScheduleSlots(
     var currentTime = dayStart
 
     // Sort events by start time to ensure correct chronological processing
-    val sortedEvents = events.sortedBy { it.startTime }
+    val sortedEvents = events.sortedBy { it.startDateTime }
 
     for (event in sortedEvents) {
         // If there's a gap before this event starts
-        if (event.startTime.isAfter(currentTime)) {
-            scheduleItems.add(ScheduleSlotItem.GapItem(currentTime, event.startTime))
+        if (event.startDateTime.toLocalTime().isAfter(currentTime)) {
+            scheduleItems.add(ScheduleSlotItem.GapItem(currentTime, event.startDateTime.toLocalTime()))
         }
         // Add the event itself
         scheduleItems.add(ScheduleSlotItem.EventItem(event))
         // Move current time to the end of this event
-        currentTime = event.endTime
+        currentTime = event.endDateTime.toLocalTime()
     }
 
     // If there's a gap after the last event until the end of the day

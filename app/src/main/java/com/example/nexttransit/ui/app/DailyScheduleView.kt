@@ -108,7 +108,7 @@ fun EventCard(event: Event, timeFormatter: DateTimeFormatter, onClick: () -> Uni
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${event.startTime.format(timeFormatter)} - ${event.endTime.format(timeFormatter)}",
+                text = "${event.startDateTime.format(timeFormatter)} - ${event.endDateTime.format(timeFormatter)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
@@ -166,87 +166,87 @@ fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFor
     }
 }
 
-
-@Preview(showBackground = true, name = "Daily Schedule Preview")
-@Composable
-fun DailyScheduleViewPreview() {
-    val sampleEvents = listOf(
-        Event(
-            name = "Poranne spotkanie",
-            place = "Biuro, Sala A",
-            startTime = LocalTime.of(9, 0),
-            endTime = LocalTime.of(10, 30),
-            color = Color(0xFFB2DFDB), // Light Teal
-            eventId = 0
-        ),
-        Event(
-            name = "Lunch z klientem",
-            place = "Restauracja Centrum",
-            startTime = LocalTime.of(12, 0),
-            endTime = LocalTime.of(13, 30),
-            color = Color(0xFFFFF9C4), // Light Yellow
-            eventId = 0
-        ),
-        Event(
-            name = "Prezentacja projektu",
-            place = "Online",
-            startTime = LocalTime.of(15, 0),
-            endTime = LocalTime.of(16, 30),
-            color = Color(0xFFC5CAE9), // Light Indigo
-            eventId = 0
-        ),
-        Event(
-            name = "Wieczorne zadania",
-            place = "Dom",
-            startTime = LocalTime.of(20, 0),
-            endTime = LocalTime.of(21, 45),
-            color = Color(0xFFD1C4E9), // Light Deep Purple
-            eventId = 0
-        )
-    )
-    val today = LocalDate.now()
-
-    MaterialTheme { // Apply MaterialTheme for preview
-        Surface(modifier = Modifier.fillMaxSize()) {
-//            DailyScheduleView(date = today, events = sampleEvents)
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Empty Day Schedule Preview")
-@Composable
-fun EmptyDailyScheduleViewPreview() {
-    val today = LocalDate.now()
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-//            DailyScheduleView(date = today, events = emptyList())
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Schedule with Edge Case Times")
-@Composable
-fun EdgeCaseSchedulePreview() {
-    val sampleEvents = listOf(
-        Event(
-            name = "Wczesny poranek",
-            place = "Siłownia",
-            startTime = LocalTime.MIN, // 00:00
-            endTime = LocalTime.of(1, 30),
-            eventId = 0
-        ),
-        Event(
-            name = "Późna noc",
-            place = "Dom",
-            startTime = LocalTime.of(22, 0),
-            endTime = LocalTime.MAX, // 23:59:59...
-            eventId = 0
-        )
-    )
-    val today = LocalDate.now()
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-//            DailyScheduleView(date = today, events = sampleEvents)
-        }
-    }
-}
+//
+//@Preview(showBackground = true, name = "Daily Schedule Preview")
+//@Composable
+//fun DailyScheduleViewPreview() {
+//    val sampleEvents = listOf(
+//        Event(
+//            name = "Poranne spotkanie",
+//            place = "Biuro, Sala A",
+//            startTime = LocalTime.of(9, 0),
+//            endTime = LocalTime.of(10, 30),
+//            color = Color(0xFFB2DFDB), // Light Teal
+//            eventId = 0
+//        ),
+//        Event(
+//            name = "Lunch z klientem",
+//            place = "Restauracja Centrum",
+//            startTime = LocalTime.of(12, 0),
+//            endTime = LocalTime.of(13, 30),
+//            color = Color(0xFFFFF9C4), // Light Yellow
+//            eventId = 0
+//        ),
+//        Event(
+//            name = "Prezentacja projektu",
+//            place = "Online",
+//            startTime = LocalTime.of(15, 0),
+//            endTime = LocalTime.of(16, 30),
+//            color = Color(0xFFC5CAE9), // Light Indigo
+//            eventId = 0
+//        ),
+//        Event(
+//            name = "Wieczorne zadania",
+//            place = "Dom",
+//            startTime = LocalTime.of(20, 0),
+//            endTime = LocalTime.of(21, 45),
+//            color = Color(0xFFD1C4E9), // Light Deep Purple
+//            eventId = 0
+//        )
+//    )
+//    val today = LocalDate.now()
+//
+//    MaterialTheme { // Apply MaterialTheme for preview
+//        Surface(modifier = Modifier.fillMaxSize()) {
+////            DailyScheduleView(date = today, events = sampleEvents)
+//        }
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Empty Day Schedule Preview")
+//@Composable
+//fun EmptyDailyScheduleViewPreview() {
+//    val today = LocalDate.now()
+//    MaterialTheme {
+//        Surface(modifier = Modifier.fillMaxSize()) {
+////            DailyScheduleView(date = today, events = emptyList())
+//        }
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Schedule with Edge Case Times")
+//@Composable
+//fun EdgeCaseSchedulePreview() {
+//    val sampleEvents = listOf(
+//        Event(
+//            name = "Wczesny poranek",
+//            place = "Siłownia",
+//            startTime = LocalTime.MIN, // 00:00
+//            endTime = LocalTime.of(1, 30),
+//            eventId = 0
+//        ),
+//        Event(
+//            name = "Późna noc",
+//            place = "Dom",
+//            startTime = LocalTime.of(22, 0),
+//            endTime = LocalTime.MAX, // 23:59:59...
+//            eventId = 0
+//        )
+//    )
+//    val today = LocalDate.now()
+//    MaterialTheme {
+//        Surface(modifier = Modifier.fillMaxSize()) {
+////            DailyScheduleView(date = today, events = sampleEvents)
+//        }
+//    }
+//}

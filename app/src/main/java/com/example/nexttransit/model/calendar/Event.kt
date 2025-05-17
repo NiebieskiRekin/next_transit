@@ -3,10 +3,7 @@ package com.example.nexttransit.model.calendar
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.google.android.gms.common.internal.Objects.hashCode
-import java.lang.reflect.Constructor
-import java.time.LocalTime
-import java.util.UUID
-import kotlin.hashCode
+import java.time.LocalDateTime
 
 /**
  * Represents an event in the schedule.
@@ -23,26 +20,26 @@ data class Event(
     val id: Int,
     val name: String,
     val place: String,
-    val startTime: LocalTime,
-    val endTime: LocalTime,
+    val startDateTime: LocalDateTime,
+    val endDateTime: LocalDateTime,
     val color: Color? = null,
     val eventId: Long
 ){
-    constructor(name: String, place: String, startTime: LocalTime, endTime: LocalTime, eventId: Long) : this(
-        hashCode(name, place, startTime, endTime),
+    constructor(name: String, place: String, startDateTime: LocalDateTime, endDateTime: LocalDateTime, eventId: Long) : this(
+        hashCode(name, place, startDateTime, endDateTime),
         name,
         place,
-        startTime,
-        endTime,
+        startDateTime,
+        endDateTime,
         null,
         eventId
     )
-    constructor(name: String, place: String, startTime: LocalTime, endTime: LocalTime, color: Color?, eventId: Long) : this(
-        hashCode(name, place, startTime, endTime),
+    constructor(name: String, place: String, startDateTime: LocalDateTime, endDateTime: LocalDateTime, color: Color?, eventId: Long) : this(
+        hashCode(name, place, startDateTime, endDateTime),
         name,
         place,
-        startTime,
-        endTime,
+        startDateTime,
+        endDateTime,
         color,
         eventId
     )
