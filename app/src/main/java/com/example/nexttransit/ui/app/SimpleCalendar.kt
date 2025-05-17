@@ -1,10 +1,12 @@
 package com.example.nexttransit.ui.app
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +46,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.ceil
 
 /**
  * Main composable function for the simple calendar view.
@@ -55,13 +61,12 @@ import java.util.Locale
 @Composable
 fun SimpleCalendarView(
     modifier: Modifier = Modifier,
-    initialYearMonth: YearMonth = YearMonth.now(),
-    onDateSelected: ((LocalDate) -> Unit)? = null
+    currentYearMonth: YearMonth,
+    onDateSelected: ((LocalDate) -> Unit)? = null,
 ) {
-    // State for the currently displayed month and year
-    var currentYearMonth by remember { mutableStateOf(initialYearMonth) }
     // State for the currently selected date
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    val daysOfWeek = 7
 
     // Get the current system date to highlight it
     val today = LocalDate.now()
@@ -69,9 +74,10 @@ fun SimpleCalendarView(
     // Generate the list of days to display in the grid
     val daysInMonth = currentYearMonth.lengthOfMonth()
     val firstOfMonth = currentYearMonth.atDay(1)
+    val lastOfMonth = currentYearMonth.atEndOfMonth()
     // Calculate the number of empty cells before the first day of the month
     // DayOfWeek.MONDAY.value is 1, DayOfWeek.SUNDAY.value is 7
-    val emptyCellsBefore = (firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
+    val emptyCellsBefore = (firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value + daysOfWeek) % daysOfWeek
 
     // Create a list of nullable integers representing day numbers.
     // Null values are for empty cells in the grid.
@@ -82,50 +88,43 @@ fun SimpleCalendarView(
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // Header section with month/year and navigation buttons
-        CalendarHeader(
-            yearMonth = currentYearMonth,
-            onPreviousMonthClicked = {
-                currentYearMonth = currentYearMonth.minusMonths(1)
-                selectedDate = null;
-            },
-            onNextMonthClicked = {
-                currentYearMonth = currentYearMonth.plusMonths(1)
-                selectedDate = null;
-            },
-            selectedDay = selectedDate
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Header for the days of the week (Mon, Tue, etc.)
         DaysOfWeekHeader()
 
         Spacer(modifier = Modifier.height(8.dp))
 
         // Grid for displaying the days of the month
-        LazyVerticalGrid (
-            columns = GridCells.Fixed(7), // 7 days a week
+        Column (
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(calendarDays) { i, day ->
-                if (day == null)  {
-                    // Empty cell, occupies space
-                    Box(modifier = Modifier.aspectRatio(1f))
-                } else  {
-                    val date = currentYearMonth.atDay(day)
-                    CalendarDay(
-                        day = day,
-                        date = date,
-                        isCurrentDay = date.isEqual(today),
-                        isSelected = (selectedDate != null) && date.isEqual(selectedDate),
-                        onDateClicked = { clickedDate ->
-                            selectedDate = clickedDate
-                            onDateSelected?.invoke(clickedDate)
+            var rows = ceil(calendarDays.size / daysOfWeek.toFloat()).toInt()
+            for (rowId in 0 until rows) {
+                val firstIndex = rowId * daysOfWeek
+
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (columnId in 0 until daysOfWeek) {
+                        Log.e("CalendarView", "rowId: $rowId, columnId: $columnId")
+                        val index = firstIndex + columnId
+                        val day = calendarDays.getOrNull(index)
+                        if (day == null) {
+                            // Empty cell, occupies space
+                            Box(modifier = Modifier.aspectRatio(1f).weight(1f))
+                        } else {
+                            val date = currentYearMonth.atDay(day)
+                            CalendarDay(
+                                day = day,
+                                date = date,
+                                isCurrentDay = date.isEqual(today),
+                                isSelected = (selectedDate != null) && date.isEqual(selectedDate),
+                                onDateClicked = { clickedDate ->
+                                    selectedDate = clickedDate
+                                    onDateSelected?.invoke(clickedDate)
+                                },
+                                Modifier.weight(1f)
+                            )
                         }
-                    )
+                    }
                 }
             }
         }
@@ -214,7 +213,8 @@ fun CalendarDay(
     date: LocalDate,
     isCurrentDay: Boolean,
     isSelected: Boolean,
-    onDateClicked: (LocalDate) -> Unit
+    onDateClicked: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val backgroundColor = when {
         isSelected -> MaterialTheme.colorScheme.primary
@@ -228,7 +228,7 @@ fun CalendarDay(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .aspectRatio(1f) // Makes the cell square
             .clip(MaterialTheme.shapes.small)
             .background(backgroundColor)
@@ -244,27 +244,27 @@ fun CalendarDay(
     }
 }
 
-/**
- * Preview composable for SimpleCalendarView.
- * Allows you to see the calendar in Android Studio's preview.
- */
-@Preview(showBackground = true, name = "Simple Calendar View")
-@Composable
-fun SimpleCalendarViewPreview() {
-    MaterialTheme { // Ensure a MaterialTheme is applied for previews
-        SimpleCalendarView(
-            onDateSelected = { date ->
-                println("Selected date: $date")
-            }
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Simple Calendar View - Specific Month")
-@Composable
-fun SimpleCalendarViewSpecificMonthPreview() {
-    MaterialTheme {
-        SimpleCalendarView(initialYearMonth = YearMonth.of(2025, 12))
-    }
-}
+///**
+// * Preview composable for SimpleCalendarView.
+// * Allows you to see the calendar in Android Studio's preview.
+// */
+//@Preview(showBackground = true, name = "Simple Calendar View")
+//@Composable
+//fun SimpleCalendarViewPreview() {
+//    MaterialTheme { // Ensure a MaterialTheme is applied for previews
+//        SimpleCalendarView(
+//            onDateSelected = { date ->
+//                println("Selected date: $date")
+//            }
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Simple Calendar View - Specific Month")
+//@Composable
+//fun SimpleCalendarViewSpecificMonthPreview() {
+//    MaterialTheme {
+//        SimpleCalendarView(initialYearMonth = YearMonth.of(2025, 12))
+//    }
+//}
 

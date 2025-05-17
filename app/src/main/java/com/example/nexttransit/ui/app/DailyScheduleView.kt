@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,102 +52,6 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.sortedBy
-
-/**
- * Main composable for displaying the daily schedule.
- *
- * @param date The date for which the schedule is being displayed (for context or future header).
- * @param events List of [Event]s for the given date.
- * @param modifier Modifier for this composable.
- * @param dayStart The time considered as the start of the day for scheduling.
- * @param dayEnd The time considered as the end of the day for scheduling.
- */
-@Composable
-fun DailyScheduleView(
-    date: LocalDate,
-    events: List<Event>,
-    modifier: Modifier = Modifier,
-    dayStart: LocalTime = LocalTime.MIN,
-    dayEnd: LocalTime = LocalTime.MAX
-) {
-    val scheduleSlots = remember(events, dayStart, dayEnd) {
-        generateScheduleSlots(events, dayStart, dayEnd)
-    }
-
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
-
-    if (scheduleSlots.isEmpty()) {
-        // Handle empty day - could show a full day gap or a message
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            GapCard(startTime = dayStart, endTime = dayEnd, timeFormatter = timeFormatter)
-        }
-        return
-    }
-
-    var firstEvent by remember { mutableStateOf<Event?>(null)}
-    var secondEvent by remember { mutableStateOf<Event?>(null)}
-    val context = LocalContext.current
-
-
-    fun onEventClick(event: Event) {
-        // Edit event in system calendar
-        val uri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.eventId)
-        val intent = Intent(Intent.ACTION_EDIT)
-            .setData(uri).putExtra(CalendarContract.Events.TITLE, event.name)
-        startActivity(context,intent,null)
-    }
-
-    fun onLongPressEvent(event: Event) {
-        Log.d("CalendarAccess", firstEvent.toString() + "\n" + secondEvent.toString())
-        if (firstEvent?.id == event.id){
-            firstEvent = null
-            return
-        }
-
-        if (secondEvent?.id == event.id){
-            secondEvent = null
-            return
-        }
-
-        if (firstEvent == null){
-            firstEvent = event
-        } else if (secondEvent == null) {
-            secondEvent = event
-        }
-    }
-
-
-    LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp), // Space between cards
-        contentPadding = PaddingValues(0.dp,8.dp)
-    ) {
-        items(scheduleSlots) { slotItem ->
-            when (slotItem) {
-                is ScheduleSlotItem.EventItem -> {
-                    EventCard(
-                        event = slotItem.event,
-                        timeFormatter = timeFormatter,
-                        onLongClick = {onLongPressEvent(slotItem.event)},
-                        onClick = { onEventClick(slotItem.event) },
-                        isSelected = (slotItem.event.id == firstEvent?.id) || (slotItem.event.id == secondEvent?.id)
-                    )
-                }
-                is ScheduleSlotItem.GapItem -> GapCard(
-                    startTime = slotItem.startTime,
-                    endTime = slotItem.endTime,
-                    timeFormatter = timeFormatter
-                )
-            }
-        }
-    }
-}
 
 /**
  * Composable for displaying an individual event.
@@ -302,7 +207,7 @@ fun DailyScheduleViewPreview() {
 
     MaterialTheme { // Apply MaterialTheme for preview
         Surface(modifier = Modifier.fillMaxSize()) {
-            DailyScheduleView(date = today, events = sampleEvents)
+//            DailyScheduleView(date = today, events = sampleEvents)
         }
     }
 }
@@ -313,7 +218,7 @@ fun EmptyDailyScheduleViewPreview() {
     val today = LocalDate.now()
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            DailyScheduleView(date = today, events = emptyList())
+//            DailyScheduleView(date = today, events = emptyList())
         }
     }
 }
@@ -340,7 +245,7 @@ fun EdgeCaseSchedulePreview() {
     val today = LocalDate.now()
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            DailyScheduleView(date = today, events = sampleEvents)
+//            DailyScheduleView(date = today, events = sampleEvents)
         }
     }
 }
