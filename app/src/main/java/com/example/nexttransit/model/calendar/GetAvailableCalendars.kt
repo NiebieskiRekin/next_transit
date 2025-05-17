@@ -1,0 +1,156 @@
+package com.example.nexttransit.model.calendar
+
+import android.content.ContentResolver
+import android.provider.CalendarContract
+import androidx.compose.ui.graphics.Color
+import com.example.nexttransit.ui.app.Event
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+
+
+fun getAvailableCalendars(contentResolver: ContentResolver): List<CalendarInfo> {
+    val calendarsList = mutableListOf<CalendarInfo>()
+    val projection = arrayOf(
+        CalendarContract.Calendars._ID,
+        CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+        CalendarContract.Calendars.ACCOUNT_NAME,
+        CalendarContract.Calendars.OWNER_ACCOUNT,
+        CalendarContract.Calendars.CALENDAR_COLOR
+    )
+
+    // You might want to filter for specific account types or visible calendars only
+    // val selection = "${CalendarContract.Calendars.VISIBLE} = ?"
+    // val selectionArgs = arrayOf("1")
+
+    val cursor = contentResolver.query(
+        CalendarContract.Calendars.CONTENT_URI,
+        projection,
+        null, // No selection (gets all calendars) or use selection above
+        null, // No selection arguments
+        CalendarContract.Calendars.CALENDAR_DISPLAY_NAME + " ASC" // Sort order
+    )
+
+    cursor?.use {
+        while (it.moveToNext()) {
+            val idIndex = it.getColumnIndex(CalendarContract.Calendars._ID)
+            val displayNameIndex = it.getColumnIndex(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
+            val accountNameIndex = it.getColumnIndex(CalendarContract.Calendars.ACCOUNT_NAME)
+            val ownerNameIndex = it.getColumnIndex(CalendarContract.Calendars.OWNER_ACCOUNT)
+            val colorIndex = it.getColumnIndex(CalendarContract.Calendars.CALENDAR_COLOR)
+
+
+            val id = if (idIndex != -1) it.getLong(idIndex) else -1L
+            val displayName = if (displayNameIndex != -1) it.getString(displayNameIndex) else "N/A"
+            val accountName = if (accountNameIndex != -1) it.getString(accountNameIndex) else "N/A"
+            val ownerName = if (ownerNameIndex != -1) it.getString(ownerNameIndex) else "N/A"
+            val color = if (colorIndex != -1 && !it.isNull(colorIndex)) it.getInt(colorIndex) else null
+
+
+            if (id != -1L) {
+                calendarsList.add(CalendarInfo(id, displayName, accountName, ownerName, color))
+            }
+        }
+    }
+    return calendarsList
+}
+
+
+
+// Assuming you have an Event data class similar to the one in your DailyScheduleView
+// data class Event(val name: String, val place: String?, val startTime: Long, val endTime: Long, ...)
+
+fun getEventsForNext14Days(
+    contentResolver: ContentResolver,
+    calendarId: Long, // The ID of the calendar selected by the user
+    // Your Event data class, similar to the one in jetpack_compose_daily_schedule
+    // but potentially with Long for start/end times initially
+): List<Event> {
+    val eventsList = mutableListOf<Event>()
+
+    val now = LocalDate.now()
+    val startDateMillis = now.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val endDateMillis = now.plusDays(14).atTime(23, 59, 59)
+        .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    val projection = arrayOf(
+        CalendarContract.Events.TITLE,
+        CalendarContract.Events.EVENT_LOCATION,
+        CalendarContract.Events.DTSTART,
+        CalendarContract.Events.DTEND,
+        CalendarContract.Events.EVENT_COLOR // Optional: if you want to use event-specific colors
+        // Add other fields you need, e.g., CalendarContract.Events.DESCRIPTION
+    )
+
+    // Selection: query for events within the date range and for the specific calendar
+    val selection = "(${CalendarContract.Events.CALENDAR_ID} = ?) AND " +
+            "(${CalendarContract.Events.DTSTART} >= ?) AND " +
+            "(${CalendarContract.Events.DTEND} <= ? OR (${CalendarContract.Events.DTEND} IS NULL AND ${CalendarContract.Events.DURATION} IS NOT NULL))"
+    // Note on DTEND: For recurring events without an explicit end time but with a duration,
+    // DTEND might be null. The query above is a simplified example.
+    // Handling all-day events and recurring events properly can be complex.
+
+    val selectionArgs = arrayOf(
+        calendarId.toString(),
+        startDateMillis.toString(),
+        endDateMillis.toString()
+    )
+
+    val cursor = contentResolver.query(
+        CalendarContract.Events.CONTENT_URI,
+        projection,
+        selection,
+        selectionArgs,
+        CalendarContract.Events.DTSTART + " ASC" // Sort by start time
+    )
+
+    cursor?.use {
+        val titleIndex = it.getColumnIndex(CalendarContract.Events.TITLE)
+        val locationIndex = it.getColumnIndex(CalendarContract.Events.EVENT_LOCATION)
+        val dtStartIndex = it.getColumnIndex(CalendarContract.Events.DTSTART)
+        val dtEndIndex = it.getColumnIndex(CalendarContract.Events.DTEND)
+        val eventColorIndex = it.getColumnIndex(CalendarContract.Events.EVENT_COLOR)
+
+
+        while (it.moveToNext()) {
+            val title = if (titleIndex != -1) it.getString(titleIndex) else "No Title"
+            val location = if (locationIndex != -1) it.getString(locationIndex) ?: "" else ""
+            val startTimeMillis = if (dtStartIndex != -1) it.getLong(dtStartIndex) else 0L
+            // DTEND can be null for events with a DURATION instead.
+            // For simplicity, this example assumes DTEND is usually present.
+            // A more robust solution would check DURATION if DTEND is null.
+            val endTimeMillis = if (dtEndIndex != -1 && !it.isNull(dtEndIndex)) it.getLong(dtEndIndex) else startTimeMillis // Fallback
+
+            val eventColorInt = if (eventColorIndex != -1 && !it.isNull(eventColorIndex)) it.getInt(eventColorIndex) else null
+            val eventColor = eventColorInt?.let { colorVal -> Color(colorVal) }
+
+
+            // Convert Millis to LocalTime for your Event data class
+            val startTime = Instant.ofEpochMilli(startTimeMillis)
+                .atZone(ZoneId.systemDefault()).toLocalTime()
+            val endTime = Instant.ofEpochMilli(endTimeMillis)
+                .atZone(ZoneId.systemDefault()).toLocalTime()
+
+            // Ensure endTime is after startTime if it was a fallback
+            val correctedEndTime = if (endTime.isBefore(startTime) || endTime == startTime) {
+                startTime.plusHours(1) // Default to 1 hour duration if end time is invalid
+            } else {
+                endTime
+            }
+
+
+            if (startTimeMillis > 0) { // Basic validation
+                eventsList.add(
+                    Event( // Use your Event class
+                        name = title,
+                        place = location,
+                        startTime = startTime,
+                        endTime = correctedEndTime,
+                        color = eventColor // Pass the event color
+                    )
+                )
+            }
+        }
+    }
+    return eventsList
+}

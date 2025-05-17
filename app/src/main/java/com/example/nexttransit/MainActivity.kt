@@ -1,6 +1,7 @@
 package com.example.nexttransit
 
 import android.Manifest
+import android.R.attr.text
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -11,6 +12,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -25,6 +27,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,6 +38,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.sharp.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -39,6 +46,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,21 +57,27 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
@@ -74,6 +88,8 @@ import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import com.example.nexttransit.api.ApiCaller.trimPolyline
 import com.example.nexttransit.model.AppScreen
+import com.example.nexttransit.model.calendar.CalendarInfo
+import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
@@ -197,40 +213,67 @@ class MainActivity : ComponentActivity() {
                 AppScreen.Notifications -> Text("Notifications")
                 AppScreen.Start -> Text("Start")
                 AppScreen.Calendar -> {
-                    val sampleEvents = listOf(
-                        Event(
-                            name = "Poranne spotkanie",
-                            place = "Biuro, Sala A",
-                            startTime = LocalTime.of(9, 0),
-                            endTime = LocalTime.of(10, 30),
-                            color = Color(0xFFB2DFDB) // Light Teal
-                        ),
-                        Event(
-                            name = "Lunch z klientem",
-                            place = "Restauracja Centrum",
-                            startTime = LocalTime.of(12, 0),
-                            endTime = LocalTime.of(13, 30),
-                            color = Color(0xFFFFF9C4) // Light Yellow
-                        ),
-                        Event(
-                            name = "Prezentacja projektu",
-                            place = "Online",
-                            startTime = LocalTime.of(15, 0),
-                            endTime = LocalTime.of(16, 30),
-                            color = Color(0xFFC5CAE9) // Light Indigo
-                        ),
-                        Event(
-                            name = "Wieczorne zadania",
-                            place = "Dom",
-                            startTime = LocalTime.of(20, 0),
-                            endTime = LocalTime.of(21, 45),
-                            color = Color(0xFFD1C4E9) // Light Deep Purple
-                        )
-                    )
+                    // In your Activity or Composable
+                    var events = remember { mutableStateListOf<Event>() }
+                    val (calendar,onCalendarSelected) = remember { mutableStateOf<CalendarInfo?>(null) }
+                    val calendars = remember {mutableStateListOf<CalendarInfo>()}
+                    val requestPermissionLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestPermission()
+                    ) { isGranted: Boolean ->
+                        if (isGranted) {
+                            // Permission is granted. You can proceed to fetch calendars/events.
+                            Log.d("CalendarAccess", "READ_CALENDAR permission granted.")
+                            // Launch your calendar fetching logic here
+                            calendars.addAll( getAvailableCalendars(contentResolver))
+                        } else {
+                            // Permission denied. Handle appropriately (e.g., show a message).
+                            Log.w("CalendarAccess", "READ_CALENDAR permission denied.")
+                            // Inform the user why the permission is needed
+
+                            events.clear()
+                            events.addAll(listOf(
+                                Event(
+                                    name = "Poranne spotkanie",
+                                    place = "Biuro, Sala A",
+                                    startTime = LocalTime.of(9, 0),
+                                    endTime = LocalTime.of(10, 30),
+                                    color = Color(0xFFB2DFDB) // Light Teal
+                                ),
+                                Event(
+                                    name = "Lunch z klientem",
+                                    place = "Restauracja Centrum",
+                                    startTime = LocalTime.of(12, 0),
+                                    endTime = LocalTime.of(13, 30),
+                                    color = Color(0xFFFFF9C4) // Light Yellow
+                                ),
+                                Event(
+                                    name = "Prezentacja projektu",
+                                    place = "Online",
+                                    startTime = LocalTime.of(15, 0),
+                                    endTime = LocalTime.of(16, 30),
+                                    color = Color(0xFFC5CAE9) // Light Indigo
+                                ),
+                                Event(
+                                    name = "Wieczorne zadania",
+                                    place = "Dom",
+                                    startTime = LocalTime.of(20, 0),
+                                    endTime = LocalTime.of(21, 45),
+                                    color = Color(0xFFD1C4E9) // Light Deep Purple
+                                )
+                            ))
+                        }
+                    }
+
                     val today = LocalDate.now()
                     val scrollBehavior =
                         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState()) // https://developer.android.com/develop/ui/compose/components/app-bars#scroll
                     val selectedDate = remember { mutableStateOf(today) }
+
+                    val onDismissRequest = {
+                        events.clear()
+                        Log.d("CalendarAccess", "No calendar chosen")
+
+                    }
 
                     Scaffold(topBar = {
                         LargeTopAppBar(
@@ -245,7 +288,73 @@ class MainActivity : ComponentActivity() {
                             expandedHeight = 400.dp
                         )
                     }, modifier=Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)){ innerPadding ->
-                        DailyScheduleView(today,sampleEvents,Modifier.padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection))
+                        DailyScheduleView(today,events,Modifier.padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection))
+
+                    }
+
+                    if (calendar == null){
+                        Dialog(onDismissRequest = { onDismissRequest() }){
+                            Card(            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(375.dp)
+                                .padding(16.dp),
+                                shape = RoundedCornerShape(16.dp)
+                            ){
+                                Column(verticalArrangement = Arrangement.SpaceAround, horizontalAlignment = Alignment.CenterHorizontally, modifier=Modifier.fillMaxSize()) {
+                                    if (calendars.isEmpty()) {
+                                        Text("No calendars available")
+                                        Row {
+                                            TextButton(
+                                                onClick = { onDismissRequest() },
+                                                modifier = Modifier.padding(8.dp),
+                                            ) {
+                                                Text("Dismiss", textAlign = TextAlign.Center)
+                                            }
+                                            TextButton(
+                                                onClick = {
+                                                    requestPermissionLauncher.launch(
+                                                        Manifest.permission.READ_CALENDAR
+                                                    )
+                                                },
+                                                modifier = Modifier.padding(8.dp),
+                                            ) {
+                                                Text("Grant access to calendars", textAlign = TextAlign.Center)
+                                            }
+                                        }
+                                    } else {
+                                        Text("Please choose a calendar")
+
+                                        // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior
+                                        LazyColumn (Modifier.selectableGroup()) {
+                                            itemsIndexed(calendars) { i,c ->
+                                                Row(
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .height(56.dp)
+                                                        .selectable(
+                                                            selected = (calendar == c),
+                                                            onClick = { onCalendarSelected(c) },
+                                                            role = Role.RadioButton
+                                                        )
+                                                        .padding(horizontal = 16.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    RadioButton(
+                                                        selected = (c == calendar),
+                                                        onClick = null
+                                                    )
+                                                    Text(
+                                                        text = c.displayName,
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        modifier = Modifier.padding(start = 16.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 AppScreen.WidgetSettings -> {
