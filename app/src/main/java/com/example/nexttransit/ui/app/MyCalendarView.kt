@@ -204,14 +204,14 @@ fun MyCalendarView(contentResolver: ContentResolver) {
         LazyColumn (
             modifier = Modifier.padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(0.dp,8.dp)
+            contentPadding = PaddingValues(0.dp,0.dp,0.dp,8.dp)
         ){
             item{
                 SimpleCalendarView(onDateSelected = { date ->
                     selectedDate = date
                     onDateChanged()
                     Log.d("MainActivity", "Selected date: $date")
-                }, currentYearMonth = currentYearMonth)
+                }, currentYearMonth = currentYearMonth, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer).padding(8.dp))
             }
 
             itemsIndexed(scheduleSlots){ i, slotItem ->

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
@@ -65,7 +67,7 @@ fun EventCard(event: Event, timeFormatter: DateTimeFormatter, onClick: () -> Uni
     var modifier = Modifier.fillMaxWidth().combinedClickable(
         onClick = onClick,
         onLongClick = onLongClick
-    )
+    ).padding(8.dp,0.dp)
 
     if (isSelected){
         modifier = modifier.border(
@@ -125,21 +127,20 @@ fun EventCard(event: Event, timeFormatter: DateTimeFormatter, onClick: () -> Uni
 fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFormatter) {
 
     val outline = MaterialTheme.colorScheme.outline
-    val stroke = Stroke(width = 2f,
+    val stroke = Stroke(width = 4f,
         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
     )
     Card(
-        modifier = Modifier.fillMaxWidth().drawBehind{
-            drawRoundRect(color=outline, style = stroke, cornerRadius = CornerRadius(40f,40f))
-        },
+        modifier = Modifier.fillMaxWidth().padding(8.dp,0.dp).drawBehind {
+            drawRoundRect(
+                color = outline,
+                style = stroke,
+                cornerRadius = CornerRadius(16.dp.toPx())
+            )
+        }.clip(RoundedCornerShape(16.dp)),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        ),
-        border = BorderStroke(
-            width = 0.dp,
-//            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f),
-            brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant)
+            containerColor = MaterialTheme.colorScheme.background
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
