@@ -9,13 +9,8 @@ import android.provider.CalendarContract
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,16 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -44,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -55,8 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -66,7 +54,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.startActivity
 import com.example.nexttransit.R
 import com.example.nexttransit.api.ApiCaller
-import com.example.nexttransit.api.getDirections
 import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.ScheduleSlotItem
@@ -195,7 +182,15 @@ fun MyCalendarView(contentResolver: ContentResolver) {
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-//                                val directions =
+                                var departureDateTime = firstEvent!!.endDateTime
+                                if (firstEvent!!.endDateTime.isAfter(secondEvent!!.endDateTime)){
+                                    departureDateTime = secondEvent!!.endDateTime
+                                }
+
+                                val directions = ApiCaller.getDirectionsByNameAndDepartAt(
+                                    firstEvent!!.place,secondEvent!!.place,departureDateTime
+                                )
+                                Log.d("CalendarAccess", directions.toString())
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -207,9 +202,15 @@ fun MyCalendarView(contentResolver: ContentResolver) {
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-//                                val directions = ApiCaller.getDirectionsByNameAndArriveBy(
-//                                    firstEvent.place,secondEvent.place,secondEvent.startTime
-//                                )
+                                var arrivalDateTime = firstEvent!!.startDateTime
+                                if (firstEvent!!.startDateTime.isBefore(secondEvent!!.startDateTime)){
+                                    arrivalDateTime = secondEvent!!.startDateTime
+                                }
+
+                                val directions = ApiCaller.getDirectionsByNameAndArriveBy(
+                                    firstEvent!!.place,secondEvent!!.place,arrivalDateTime
+                                )
+                                Log.d("CalendarAccess", directions.toString())
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
