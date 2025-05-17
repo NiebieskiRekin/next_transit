@@ -7,6 +7,7 @@ import android.provider.CalendarContract
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -101,12 +103,13 @@ fun DailyScheduleView(
     }
 
     fun onLongPressEvent(event: Event) {
-        if (firstEvent == event){
+        Log.d("CalendarAccess", firstEvent.toString() + "\n" + secondEvent.toString())
+        if (firstEvent?.id == event.id){
             firstEvent = null
             return
         }
 
-        if (secondEvent == event){
+        if (secondEvent?.id == event.id){
             secondEvent = null
             return
         }
@@ -116,8 +119,6 @@ fun DailyScheduleView(
         } else if (secondEvent == null) {
             secondEvent = event
         }
-
-        Log.d("CalendarAccess", firstEvent.toString() + "\n" + secondEvent.toString())
     }
 
 
@@ -128,12 +129,15 @@ fun DailyScheduleView(
     ) {
         items(scheduleSlots) { slotItem ->
             when (slotItem) {
-                is ScheduleSlotItem.EventItem -> EventCard(
-                    event = slotItem.event,
-                    timeFormatter = timeFormatter,
-                    onLongClick = {onLongPressEvent(slotItem.event)},
-                    onClick = { onEventClick(slotItem.event) }
-                )
+                is ScheduleSlotItem.EventItem -> {
+                    EventCard(
+                        event = slotItem.event,
+                        timeFormatter = timeFormatter,
+                        onLongClick = {onLongPressEvent(slotItem.event)},
+                        onClick = { onEventClick(slotItem.event) },
+                        isSelected = (slotItem.event.id == firstEvent?.id) || (slotItem.event.id == secondEvent?.id)
+                    )
+                }
                 is ScheduleSlotItem.GapItem -> GapCard(
                     startTime = slotItem.startTime,
                     endTime = slotItem.endTime,
@@ -152,16 +156,29 @@ fun DailyScheduleView(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventCard(event: Event, timeFormatter: DateTimeFormatter, onClick: () -> Unit = {}, onLongClick: () -> Unit = {}) {
+fun EventCard(event: Event, timeFormatter: DateTimeFormatter, onClick: () -> Unit = {}, onLongClick: () -> Unit = {}, isSelected: Boolean) {
+    var modifier = Modifier.fillMaxWidth().combinedClickable(
+        onClick = onClick,
+        onLongClick = onLongClick
+    )
+
+    if (isSelected){
+        modifier = modifier.border(
+            width = 2.dp,
+            color = colorScheme.onSecondaryContainer,
+            shape = MaterialTheme.shapes.medium
+        )
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth().combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick
-        ),
+        modifier = modifier,
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
 //            containerColor = event.color ?: MaterialTheme.colorScheme.primaryContainer
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = when (isSelected) {
+                true -> colorScheme.secondaryContainer
+                false -> colorScheme.primaryContainer
+            }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
