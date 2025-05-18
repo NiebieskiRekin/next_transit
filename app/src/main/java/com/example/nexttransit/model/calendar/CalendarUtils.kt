@@ -3,11 +3,12 @@ package com.example.nexttransit.model.calendar
 import android.content.ContentResolver
 import android.provider.CalendarContract
 import androidx.compose.ui.graphics.Color
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 fun getAvailableCalendars(contentResolver: ContentResolver): List<CalendarInfo> {
     val calendarsList = mutableListOf<CalendarInfo>()
@@ -48,7 +49,9 @@ fun getAvailableCalendars(contentResolver: ContentResolver): List<CalendarInfo> 
 
 
             if (id != -1L) {
-                calendarsList.add(CalendarInfo(id, displayName, accountName, ownerName, color))
+                calendarsList.add(CalendarInfo(id, displayName, accountName, ownerName,
+                    if (color != null) Color(color) else null
+                ))
             }
         }
     }
@@ -118,14 +121,12 @@ fun getEvents(
             val eventId = it.getColumnIndex(CalendarContract.Events._ID).toLong()
 
             // Convert Millis to LocalTime for your Event data class
-            val startTime = Instant.ofEpochMilli(startTimeMillis)
-                .atZone(ZoneId.systemDefault()).toLocalDateTime()
-            val endTime = Instant.ofEpochMilli(endTimeMillis)
-                .atZone(ZoneId.systemDefault()).toLocalDateTime()
+            val startTime = Instant.fromEpochMilliseconds(startTimeMillis)
+            val endTime =Instant.fromEpochMilliseconds(endTimeMillis)
 
             // Ensure endTime is after startTime if it was a fallback
-            val correctedEndTime = if (endTime.isBefore(startTime) || endTime == startTime) {
-                startTime.plusHours(1) // Default to 1 hour duration if end time is invalid
+            val correctedEndTime = if (endTime < startTime || endTime == startTime) {
+                startTime.plus(1, DateTimeUnit.HOUR) // Default to 1 hour duration if end time is invalid
             } else {
                 endTime
             }
@@ -149,20 +150,22 @@ fun getEvents(
 }
 
 
+fun Instant.getLocalTime(timeZone: TimeZone): LocalTime {
+    return this.toLocalDateTime(timeZone).time
+}
+
 /**
  * Generates a list of [ScheduleSlotItem]s for a given day,
  * filling gaps between events.
  *
  * @param events A list of [Event]s for the day, assumed to be non-overlapping
  * and ideally pre-sorted by start time.
- * @param dayStart The start time of the day (e.g., 00:00).
- * @param dayEnd The end time of the day (e.g., 23:59:59).
  * @return A list of [ScheduleSlotItem]s representing the chronological schedule.
  */
 fun generateScheduleSlots(
     events: List<Event>,
-    dayStart: LocalTime = LocalTime.MIN, // 00:00
-    dayEnd: LocalTime = LocalTime.MAX    // 23:59:59.999999999
+    dayStart: LocalTime,
+    dayEnd: LocalTime
 ): List<ScheduleSlotItem> {
     val scheduleItems = mutableListOf<ScheduleSlotItem>()
     var currentTime = dayStart
@@ -172,17 +175,18 @@ fun generateScheduleSlots(
 
     for (event in sortedEvents) {
         // If there's a gap before this event starts
-        if (event.startDateTime.toLocalTime().isAfter(currentTime)) {
-            scheduleItems.add(ScheduleSlotItem.GapItem(currentTime, event.startDateTime.toLocalTime()))
+        val eventStartTime = event.startDateTime.getLocalTime(TZ)
+        if (eventStartTime > currentTime) {
+            scheduleItems.add(ScheduleSlotItem.GapItem(currentTime, eventStartTime))
         }
         // Add the event itself
         scheduleItems.add(ScheduleSlotItem.EventItem(event))
         // Move current time to the end of this event
-        currentTime = event.endDateTime.toLocalTime()
+        currentTime = event.endDateTime.getLocalTime(TZ)
     }
 
     // If there's a gap after the last event until the end of the day
-    if (currentTime.isBefore(dayEnd)) {
+    if (currentTime < dayEnd) {
         // Ensure we don't add a zero-duration gap if currentTime is exactly dayEnd
         // (though LocalTime.MAX makes this unlikely to be equal unless explicitly set)
         if (currentTime < dayEnd) {
