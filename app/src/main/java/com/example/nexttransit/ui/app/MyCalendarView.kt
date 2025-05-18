@@ -51,23 +51,26 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.startActivity
 import com.example.nexttransit.R
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.ScheduleSlotItem
+import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.calendar.generateScheduleSlots
 import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.calendar.getEvents
 import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import java.time.YearMonth
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 val CHANNEL_ID = "TRANSIT_RESULT"
 
@@ -96,7 +99,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
         }
     }
 
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TZ).date) }
     var currentYearMonth by remember { mutableStateOf(YearMonth.now()) }
 
     fun onDismissRequest() {
@@ -107,30 +110,31 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
     fun onDateChanged() {
         if (calendar != null) {
             events.clear()
-            val startDateMillis =
-                selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
-                    .toEpochMilli()
-            val endDateMillis = selectedDate.atTime(23, 59, 59)
-                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val dayStart = selectedDate.atStartOfDayIn(TZ)
+            val dayEnd = selectedDate.atTime(23, 59, 59, 999_999_999).toInstant(TZ)
             events.addAll(
                 getEvents(
                     contentResolver,
                     calendar!!.id,
-                    startDateMillis,
-                    endDateMillis
+                    dayStart.toEpochMilliseconds(),
+                    dayEnd.toEpochMilliseconds()
                 ).toMutableStateList()
             )
             Log.d("CalendarAccess", events.toString())
         }
     }
 
-    val dayStart = LocalTime.MIN
-    val dayEnd = LocalTime.MAX
-    var scheduleSlots = remember(events.toList(), dayStart, dayEnd) {
-        generateScheduleSlots(events, dayStart, dayEnd)
+    val midnightStart = LocalTime(0, 0, 0, 0)
+    val midnightEnd = LocalTime(23, 59, 59, 999_999_999)
+    var scheduleSlots = remember(events.toList(), midnightStart, midnightEnd) {
+        generateScheduleSlots(events, midnightStart, midnightEnd)
     }
 
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+    val timeFormatter = remember {
+        LocalTime.Format {
+            hour(); char(':'); minute()
+        }
+    }
 
     if (scheduleSlots.isEmpty()) {
         // Handle empty day - could show a full day gap or a message
@@ -141,7 +145,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            GapCard(startTime = dayStart, endTime = dayEnd, timeFormatter = timeFormatter)
+            GapCard(startTime = midnightStart, endTime = midnightEnd, timeFormatter = timeFormatter)
         }
         return
     }
@@ -187,7 +191,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
                         onClick = {
                             scope.launch {
                                 var departureDateTime = firstEvent!!.endDateTime
-                                if (firstEvent!!.endDateTime.isAfter(secondEvent!!.endDateTime)){
+                                if (firstEvent!!.endDateTime > secondEvent!!.endDateTime){
                                     departureDateTime = secondEvent!!.endDateTime
                                 }
 
@@ -209,7 +213,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
                         onClick = {
                             scope.launch {
                                 var arrivalDateTime = firstEvent!!.startDateTime
-                                if (firstEvent!!.startDateTime.isBefore(secondEvent!!.startDateTime)){
+                                if (firstEvent!!.startDateTime < secondEvent!!.startDateTime){
                                     arrivalDateTime = secondEvent!!.startDateTime
                                 }
 
@@ -238,11 +242,11 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
                         yearMonth = currentYearMonth,
                         onPreviousMonthClicked = {
                             currentYearMonth = currentYearMonth.minusMonths(1)
-                            selectedDate = null;
+//                            selectedDate = null;
                         },
                         onNextMonthClicked = {
                             currentYearMonth = currentYearMonth.plusMonths(1)
-                            selectedDate = null;
+//                            selectedDate = null;
                         },
                         selectedDay = selectedDate
                     )
