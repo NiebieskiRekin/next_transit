@@ -34,8 +34,8 @@ class DirectionsQueryViewModel(
                 viewModelScope.launch {
                     dao.upsertDirectionsQuery(
                         DirectionsQuery(
-                            firstEvent = _state.value.firstEvent,
-                            secondEvent = _state.value.secondEvent,
+                            firstEvent = _state.value.firstEvent.id,
+                            secondEvent = _state.value.secondEvent.id,
                             directionsResponse = _state.value.directionsResponse
                         )
                     )

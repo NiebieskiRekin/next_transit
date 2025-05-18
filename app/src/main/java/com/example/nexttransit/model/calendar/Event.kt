@@ -24,7 +24,7 @@ import java.util.Objects.hash
 @Entity
 data class Event(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Long,
     val name: String,
     val place: String,
     val startDateTime: Instant,
@@ -34,7 +34,7 @@ data class Event(
     val eventId: Long
 ){
     constructor(name: String, place: String, startDateTime: Instant, endDateTime: Instant, color: Color?, eventId: Long) : this(
-        hash(name, place, startDateTime, endDateTime),
+        hash(name, place, startDateTime, endDateTime).toLong(),
         name,
         place,
         startDateTime,

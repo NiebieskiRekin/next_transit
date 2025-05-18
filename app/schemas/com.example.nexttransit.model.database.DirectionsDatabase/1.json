@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4ef9f6f92a1c726c284c54b630566adf",
+    "identityHash": "fdb9ac07cddf650394fdf2d2d35d7507",
     "entities": [
       {
         "tableName": "DirectionsQuery",
@@ -91,7 +91,7 @@
       },
       {
         "tableName": "Event",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `place` TEXT NOT NULL, `startDateTime` TEXT NOT NULL, `endDateTime` TEXT NOT NULL, `color` INTEGER, `eventId` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `place` TEXT NOT NULL, `startDateTime` INTEGER NOT NULL, `endDateTime` INTEGER NOT NULL, `color` INTEGER, `eventId` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -114,13 +114,13 @@
           {
             "fieldPath": "startDateTime",
             "columnName": "startDateTime",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "endDateTime",
             "columnName": "endDateTime",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -145,7 +145,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4ef9f6f92a1c726c284c54b630566adf')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fdb9ac07cddf650394fdf2d2d35d7507')"
     ]
   }
 }

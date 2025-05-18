@@ -7,6 +7,16 @@ import kotlinx.serialization.json.Json
 
 class Converters {
     @TypeConverter
+    fun fromULong(value: ULong?): Long? {
+        return value?.toLong()
+    }
+
+    @TypeConverter
+    fun toULong(value: Long?): ULong? {
+        return value?.toULong()
+    }
+    
+    @TypeConverter
     fun fromInstant(value: Instant): Long {
         return value.toEpochMilliseconds()
     }
