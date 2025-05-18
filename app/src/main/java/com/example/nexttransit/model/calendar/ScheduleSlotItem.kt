@@ -1,6 +1,10 @@
 package com.example.nexttransit.model.calendar
 
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+val TZ = TimeZone.currentSystemDefault()
 
 /**
  * Represents a slot in the daily schedule, which can either be an event or a gap.
@@ -10,8 +14,8 @@ sealed interface ScheduleSlotItem {
     val endTime: LocalTime
 
     data class EventItem(val event: Event) : ScheduleSlotItem {
-        override val startTime: LocalTime get() = event.startDateTime.toLocalTime()
-        override val endTime: LocalTime get() = event.endDateTime.toLocalTime()
+        override val startTime: LocalTime get() = event.startDateTime.toLocalDateTime(TZ).time
+        override val endTime: LocalTime get() = event.endDateTime.toLocalDateTime(TZ).time
     }
 
     data class GapItem(
