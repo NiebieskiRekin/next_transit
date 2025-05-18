@@ -1,4 +1,4 @@
-package com.example.nexttransit.model
+package com.example.nexttransit.model.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
