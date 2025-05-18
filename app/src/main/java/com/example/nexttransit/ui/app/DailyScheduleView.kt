@@ -74,19 +74,19 @@ fun EventCard(event: Event, timeFormatter: DateTimeFormat<LocalTime>, onClick: (
                 text = event.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = colorScheme.onPrimaryContainer
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Miejsce: ${event.place}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${event.startDateTime.getLocalTime(TZ).format(timeFormatter)} - ${event.endDateTime.getLocalTime(TZ).format(timeFormatter)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                color = colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
         }
     }
@@ -102,7 +102,7 @@ fun EventCard(event: Event, timeFormatter: DateTimeFormat<LocalTime>, onClick: (
 @Composable
 fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFormat<LocalTime>) {
 
-    val outline = MaterialTheme.colorScheme.outline
+    val outline = colorScheme.outline
     val stroke = Stroke(width = 4f,
         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
     )
@@ -116,7 +116,7 @@ fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFor
         }.clip(RoundedCornerShape(16.dp)),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = colorScheme.background
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -130,13 +130,13 @@ fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFor
                 text = "Wolne",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${startTime.format(timeFormatter)} - ${endTime.format(timeFormatter)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
         }
     }

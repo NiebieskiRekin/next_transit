@@ -50,7 +50,7 @@ import kotlin.math.ceil
  * It manages the state of the currently displayed month and handles navigation.
  *
  * @param modifier Modifier for this composable.
- * @param initialYearMonth The initial month and year to display. Defaults to the current month.
+ * @param currentYearMonth The initial month and year to display. Defaults to the current month.
  * @param onDateSelected Callback function that is invoked when a date is selected.
  * The LocalDate object for the selected date is passed as an argument.
  * Can be null if no date selection handling is needed.
