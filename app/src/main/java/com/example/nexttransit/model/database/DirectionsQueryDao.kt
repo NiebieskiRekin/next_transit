@@ -1,9 +1,12 @@
 package com.example.nexttransit.model.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
+import com.example.nexttransit.model.calendar.Event
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -18,7 +21,8 @@ interface DirectionsQueryDao {
     @Query("SELECT * FROM directionsquery WHERE firstEvent = :e1 AND secondEvent = :e2 LIMIT 1")
     fun getDirectionsQuery(e1: Long, e2: Long): DirectionsQuery
 
+    @Transaction
     @Query("SELECT * FROM directionsquery JOIN event e1 ON directionsquery.firstEvent = e1.id JOIN event e2 ON directionsquery.secondEvent = e2.id ORDER BY e1.endDateTime ASC, e2.startDateTime ASC")
-    fun getAllDirectionsQueries(): Flow<List<DirectionsQuery>>
+    fun getAllDirectionsQueries(): Flow<List<DirectionsQueryFull>>
 
 }

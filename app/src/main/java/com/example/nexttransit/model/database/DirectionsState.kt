@@ -4,7 +4,7 @@ import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.routes.DirectionsResponse
 
 data class DirectionsState(
-    val directions: List<DirectionsQuery> = emptyList(),
+    val directions: List<DirectionsQueryFull> = emptyList(),
     val firstEvent: Event = Event(),
     val secondEvent: Event = Event(),
     val directionsResponse: DirectionsResponse = DirectionsResponse(),
