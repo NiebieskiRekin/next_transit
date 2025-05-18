@@ -5,5 +5,5 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.compose) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.maps.secrets) apply false
-//    id("com.google.dagger.hilt.android") version "2.44" apply false
+    alias(libs.plugins.devtools.ksp) apply false
 }

@@ -8,7 +8,7 @@ plugins {
     kotlin("plugin.serialization") version embeddedKotlinVersion
     alias(libs.plugins.maps.secrets)
     alias(libs.plugins.google.services)
-//    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.devtools.ksp)
 }
 
 val localProperties = Properties()
@@ -95,10 +95,23 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // DataStore to save user preferences
+
+//    ┌────────────────────────────────────────────┐
+//    │  Data persistence library - Room (SQLite)  │
+//    └────────────────────────────────────────────┘
+    implementation(libs.androidx.room.runtime)
+    // Kotlin Symbol Processing (KSP) for annotations
+    ksp(libs.androidx.room.compiler)
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation(libs.androidx.room.ktx)
+
+
+//    ┌───────────────────────────────────────────────┐
+//    │  Data persistence library - Proto DataStore   │
+//    └───────────────────────────────────────────────┘
+    // DataStore to save user preferences (as immutable json dump)
     implementation(libs.androidx.datastore)
     implementation(libs.protobuf.gradle.plugin)
-
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.serialization.json)
 
@@ -132,24 +145,17 @@ dependencies {
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.material3.adaptive.navigation.suite)
-    // Views/Fragments Integration
-//    implementation("androidx.navigation:navigation-fragment:$navVersion")
-//    implementation("androidx.navigation:navigation-ui:$navVersion")
 
-
-//    // dagger hilt
-//    implementation("com.google.dagger:hilt-android:2.44")
-//    kapt("com.google.dagger:hilt-android-compiler:2.44")
-
+//    ┌─────────────────────────────────────┐
+//    │       Firebase Cloud Messaging      │
+//    └─────────────────────────────────────┘
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+
+
 }
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
-
-//kapt {
-//    correctErrorTypes = true
-//}
