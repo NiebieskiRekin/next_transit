@@ -17,16 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
-import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
 import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.DirectionsBoat
-import androidx.compose.material.icons.rounded.DirectionsBus
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.DirectionsRailway
-import androidx.compose.material.icons.rounded.DirectionsTransit
-import androidx.compose.material.icons.rounded.QuestionMark
-import androidx.compose.material.icons.rounded.Tram
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,8 +41,6 @@ import com.example.nexttransit.getTravelModeText
 import com.example.nexttransit.getTravelTime
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlin.collections.forEach
-
-
 
 
 @Composable
@@ -83,14 +72,14 @@ fun ShowError(text: String) {
 }
 
 
-@Preview
+
 @Composable
 fun LoadingDirectionsWidget(
-    directions: DirectionsResponse = getSampleDirections(),
-    source: String = "Środa Wlkp.",
-    destination: String = "Poznań, Piotrowo 2",
-    directionsButtonClicked: Boolean = true,
-    directionsGenerated: Boolean = false
+    directions: DirectionsResponse,
+    source: String,
+    destination: String,
+    directionsButtonClicked: Boolean,
+    directionsGenerated: Boolean
 ) {
     if (!directionsGenerated && directionsButtonClicked) {
         ColumnPill(Modifier.height(80.dp)) {
@@ -100,7 +89,7 @@ fun LoadingDirectionsWidget(
             )
         }
     } else if (directionsGenerated) {
-        SimpleDisplay(
+        DirectionsWidget(
             directions,
             source,
             destination
@@ -109,12 +98,11 @@ fun LoadingDirectionsWidget(
 }
 
 
-@Preview(showBackground = true)
 @Composable
-private fun SimpleDisplay(
-    directions: DirectionsResponse = getSampleDirections(),
-    source: String = "Środa Wlkp.",
-    destination: String = "Poznań"
+private fun DirectionsWidget(
+    directions: DirectionsResponse,
+    source: String,
+    destination: String
 ) {
     NextTransitTheme {
         when (directions.status) {
@@ -247,5 +235,31 @@ private fun SimpleDisplay(
             "Empty" -> ShowError(text = "Empty response.")
             else -> {}
         }
+    }
+}
+
+@Preview
+@Composable
+fun LoadingDirectionsWidgetPreview(
+    directions: DirectionsResponse = getSampleDirections(),
+    source: String = "Kraków ul. Wschodnia 5",
+    destination: String = "Poznań, Piotrowo 2",
+    directionsButtonClicked: Boolean = true,
+    directionsGenerated: Boolean = false
+) {
+    NextTransitTheme {
+        LoadingDirectionsWidget(directions,source,destination,directionsButtonClicked,directionsGenerated)
+    }
+}
+
+@Preview()
+@Composable
+private fun DirectionsWidgetPreview(
+    directions: DirectionsResponse = getSampleDirections(),
+    source: String = "Kraków ul. Wschodnia 5",
+    destination: String = "Poznań, Piotrowo 2",
+) {
+    NextTransitTheme {
+        DirectionsWidget(directions,source,destination)
     }
 }
