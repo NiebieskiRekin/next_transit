@@ -1,6 +1,16 @@
 package com.example.nexttransit
 
 import android.text.format.DateFormat
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
+import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
+import androidx.compose.material.icons.rounded.DirectionsBoat
+import androidx.compose.material.icons.rounded.DirectionsBus
+import androidx.compose.material.icons.rounded.DirectionsCar
+import androidx.compose.material.icons.rounded.DirectionsRailway
+import androidx.compose.material.icons.rounded.DirectionsTransit
+import androidx.compose.material.icons.rounded.QuestionMark
+import androidx.compose.material.icons.rounded.Tram
 import com.example.nexttransit.model.routes.Step
 import java.util.Calendar
 import java.util.Locale
@@ -41,4 +51,16 @@ fun getTravelModeIconResource(travelMode: String) = when (travelMode) {
     "HEAVY_RAIL" -> R.drawable.round_train_24_white
     "BOAT" -> R.drawable.baseline_directions_boat_24_white
     else -> R.drawable.baseline_directions_transit_24_white
+}
+
+fun getTravelModeIcon(travelMode: String) = when (travelMode) {
+    "TRANSIT" -> Icons.Rounded.DirectionsTransit
+    "WALKING" -> Icons.AutoMirrored.Rounded.DirectionsWalk
+    "BICYCLING" -> Icons.AutoMirrored.Rounded.DirectionsBike
+    "DRIVING" -> Icons.Rounded.DirectionsCar
+    "BUS" -> Icons.Rounded.DirectionsBus
+    "TRAM" -> Icons.Rounded.Tram
+    "HEAVY_RAIL" -> Icons.Rounded.DirectionsRailway
+    "BOAT" -> Icons.Rounded.DirectionsBoat
+    else -> Icons.Rounded.QuestionMark
 }

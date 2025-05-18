@@ -45,23 +45,14 @@ import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
+import com.example.nexttransit.getTravelModeIcon
 import com.example.nexttransit.getTravelModeText
 import com.example.nexttransit.getTravelTime
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlin.collections.forEach
 
 
-private fun getTravelModeIcon(travelMode: String) = when (travelMode) {
-    "TRANSIT" -> Icons.Rounded.DirectionsTransit
-    "WALKING" -> Icons.AutoMirrored.Rounded.DirectionsWalk
-    "BICYCLING" -> Icons.AutoMirrored.Rounded.DirectionsBike
-    "DRIVING" -> Icons.Rounded.DirectionsCar
-    "BUS" -> Icons.Rounded.DirectionsBus
-    "TRAM" -> Icons.Rounded.Tram
-    "HEAVY_RAIL" -> Icons.Rounded.DirectionsRailway
-    "BOAT" -> Icons.Rounded.DirectionsBoat
-    else -> Icons.Rounded.QuestionMark
-}
+
 
 @Composable
 fun ColumnPill(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
