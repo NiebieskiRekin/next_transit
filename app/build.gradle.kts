@@ -114,6 +114,7 @@ dependencies {
     implementation(libs.protobuf.gradle.plugin)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
 
 //    ┌─────────────────────────────────────────┐
