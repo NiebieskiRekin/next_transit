@@ -38,4 +38,14 @@ data class Event(
         color,
         eventId
     )
+
+    constructor(): this(
+        0,
+        "",
+        "",
+        Instant.fromEpochMilliseconds(0),
+        Instant.fromEpochMilliseconds(0),
+        null,
+        0
+    )
 }
