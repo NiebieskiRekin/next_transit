@@ -6,16 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -24,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,15 +28,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.time.DayOfWeek
-import java.time.LocalDate
+import com.example.nexttransit.model.calendar.TZ
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toLocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -69,7 +66,7 @@ fun SimpleCalendarView(
     val daysOfWeek = 7
 
     // Get the current system date to highlight it
-    val today = LocalDate.now()
+    val today = Clock.System.now().toLocalDateTime(TZ).date
 
     // Generate the list of days to display in the grid
     val daysInMonth = currentYearMonth.lengthOfMonth()
@@ -110,12 +107,12 @@ fun SimpleCalendarView(
                             // Empty cell, occupies space
                             Box(modifier = Modifier.aspectRatio(1f).weight(1f))
                         } else {
-                            val date = currentYearMonth.atDay(day)
+                            val date = currentYearMonth.atDay(day).toKotlinLocalDate()
                             CalendarDay(
                                 day = day,
                                 date = date,
-                                isCurrentDay = date.isEqual(today),
-                                isSelected = (selectedDate != null) && date.isEqual(selectedDate),
+                                isCurrentDay = date == today,
+                                isSelected = (selectedDate != null) && date == selectedDate,
                                 onDateClicked = { clickedDate ->
                                     selectedDate = clickedDate
                                     onDateSelected?.invoke(clickedDate)
@@ -159,7 +156,7 @@ fun CalendarHeader(
         }
 
         Text(
-            text = selectedDay?.format(dayMonthYearFormatter) ?: yearMonth.format(monthYearFormatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+            text = selectedDay?.toJavaLocalDate()?.format(dayMonthYearFormatter) ?: yearMonth.format(monthYearFormatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
