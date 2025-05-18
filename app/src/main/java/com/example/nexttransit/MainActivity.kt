@@ -114,11 +114,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             NextTransitTheme {
                 MainContent()
-                sendNotification(
-                    "test1",
-                    "test2",
-                    ApiCaller.getSampleDirections()
-                )
             }
         }
     }

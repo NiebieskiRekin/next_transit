@@ -1,17 +1,34 @@
 package com.example.nexttransit.model.database
 
+import androidx.room.Embedded
 import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.ForeignKey
+import androidx.room.Index
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.serialization.Serializable
 
 @Serializable
-@Entity
+@Entity(
+    primaryKeys = ["firstEvent", "secondEvent"],
+    foreignKeys = [
+        ForeignKey(
+            entity = Event::class,
+            parentColumns = ["id"],
+            childColumns = ["firstEvent"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Event::class,
+            parentColumns = ["id"],
+            childColumns = ["secondEvent"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("firstEvent", "secondEvent")]
+)
 data class DirectionsQuery (
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val firstEvent: Event,
-    val secondEvent: Event,
-    val directionsResponse: DirectionsResponse
+    val firstEvent: Long,
+    val secondEvent: Long,
+    @Embedded val directionsResponse: DirectionsResponse
 )

@@ -2,6 +2,8 @@ package com.example.nexttransit.model.calendar
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.example.nexttransit.model.ColorAsIntSerializer
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -19,7 +21,9 @@ import java.util.Objects.hash
  */
 @Immutable
 @Serializable
+@Entity
 data class Event(
+    @PrimaryKey(autoGenerate = true)
     val id: Int,
     val name: String,
     val place: String,
