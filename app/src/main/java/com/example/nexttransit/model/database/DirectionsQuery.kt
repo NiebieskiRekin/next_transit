@@ -1,6 +1,5 @@
 package com.example.nexttransit.model.database
 
-import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -25,10 +24,10 @@ import kotlinx.serialization.Serializable
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("firstEvent", "secondEvent")]
+    indices = [Index("firstEvent", "secondEvent"),Index("firstEvent"),Index("secondEvent")]
 )
 data class DirectionsQuery (
     val firstEvent: Long,
     val secondEvent: Long,
-    @Embedded val directionsResponse: DirectionsResponse
+    val directionsResponse: DirectionsResponse
 )

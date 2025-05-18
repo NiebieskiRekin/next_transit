@@ -2,11 +2,96 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "16fa91a31c9b847e49fab409eb343aeb",
+    "identityHash": "4ef9f6f92a1c726c284c54b630566adf",
     "entities": [
       {
         "tableName": "DirectionsQuery",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `firstEvent` TEXT NOT NULL, `secondEvent` TEXT NOT NULL, `directionsResponse` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstEvent` INTEGER NOT NULL, `secondEvent` INTEGER NOT NULL, `directionsResponse` TEXT NOT NULL, PRIMARY KEY(`firstEvent`, `secondEvent`), FOREIGN KEY(`firstEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`secondEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "firstEvent",
+            "columnName": "firstEvent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secondEvent",
+            "columnName": "secondEvent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "directionsResponse",
+            "columnName": "directionsResponse",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "firstEvent",
+            "secondEvent"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_DirectionsQuery_firstEvent_secondEvent",
+            "unique": false,
+            "columnNames": [
+              "firstEvent",
+              "secondEvent"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQuery_firstEvent_secondEvent` ON `${TABLE_NAME}` (`firstEvent`, `secondEvent`)"
+          },
+          {
+            "name": "index_DirectionsQuery_firstEvent",
+            "unique": false,
+            "columnNames": [
+              "firstEvent"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQuery_firstEvent` ON `${TABLE_NAME}` (`firstEvent`)"
+          },
+          {
+            "name": "index_DirectionsQuery_secondEvent",
+            "unique": false,
+            "columnNames": [
+              "secondEvent"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQuery_secondEvent` ON `${TABLE_NAME}` (`secondEvent`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Event",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "firstEvent"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "Event",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "secondEvent"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "Event",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `place` TEXT NOT NULL, `startDateTime` TEXT NOT NULL, `endDateTime` TEXT NOT NULL, `color` INTEGER, `eventId` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,21 +100,38 @@
             "notNull": true
           },
           {
-            "fieldPath": "firstEvent",
-            "columnName": "firstEvent",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "secondEvent",
-            "columnName": "secondEvent",
+            "fieldPath": "place",
+            "columnName": "place",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "directionsResponse",
-            "columnName": "directionsResponse",
+            "fieldPath": "startDateTime",
+            "columnName": "startDateTime",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endDateTime",
+            "columnName": "endDateTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "eventId",
+            "columnName": "eventId",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -43,7 +145,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '16fa91a31c9b847e49fab409eb343aeb')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4ef9f6f92a1c726c284c54b630566adf')"
     ]
   }
 }

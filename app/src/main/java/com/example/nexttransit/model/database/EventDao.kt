@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EventDao {
-
     @Upsert
     suspend fun upsertEvent(event: Event)
 
@@ -20,5 +19,5 @@ interface EventDao {
     suspend fun queryEvent(id: Long): Event
 
     @Query("SELECT * FROM event ORDER BY startDateTime ASC")
-    suspend fun queryEvents(id: Long): Flow<List<Event>>
+    fun queryEvents(): Flow<List<Event>>
 }
