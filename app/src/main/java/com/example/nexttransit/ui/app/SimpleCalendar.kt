@@ -100,7 +100,6 @@ fun SimpleCalendarView(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     for (columnId in 0 until daysOfWeek) {
-                        Log.e("CalendarView", "rowId: $rowId, columnId: $columnId")
                         val index = firstIndex + columnId
                         val day = calendarDays.getOrNull(index)
                         if (day == null) {
