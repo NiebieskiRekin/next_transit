@@ -3,6 +3,7 @@ appcompat = "1.7.0"
 constraintlayout = "2.2.1"
 datastore = "1.1.6"
 firebaseBom = "33.13.0"
+firebaseUiAuth = "9.0.0"
 glanceVersion = "1.1.1"
 kotlinx-collections-immutable = "0.4.0"
 kotlinx-serialization-json = "1.8.1"
@@ -49,6 +50,7 @@ androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-ui-auth = { module = "com.firebaseui:firebase-ui-auth", version.ref = "firebaseUiAuth" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }

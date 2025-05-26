@@ -155,6 +155,11 @@ dependencies {
     implementation(libs.firebase.messaging)
 
 
+//    ┌─────────────────────────────────────┐
+//    │       Firebase  Authentication      │
+//    └─────────────────────────────────────┘
+    implementation(libs.firebase.ui.auth)
+
 }
 java {
     toolchain {
