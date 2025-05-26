@@ -190,11 +190,12 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-                                var departureDateTime = firstEvent!!.endDateTime
                                 if (firstEvent!!.endDateTime > secondEvent!!.endDateTime){
-                                    departureDateTime = secondEvent!!.endDateTime
+                                    val temp = firstEvent
+                                    firstEvent = secondEvent
+                                    secondEvent = temp
                                 }
-
+                                var departureDateTime = firstEvent!!.endDateTime
                                 val directions = ApiCaller.getDirectionsByNameAndDepartAt(
                                     firstEvent!!.place,secondEvent!!.place,departureDateTime
                                 )
@@ -212,10 +213,12 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-                                var arrivalDateTime = firstEvent!!.startDateTime
                                 if (firstEvent!!.startDateTime < secondEvent!!.startDateTime){
-                                    arrivalDateTime = secondEvent!!.startDateTime
+                                    val temp = firstEvent
+                                    firstEvent = secondEvent
+                                    secondEvent = temp
                                 }
+                                var arrivalDateTime = secondEvent!!.startDateTime
 
                                 val directions = ApiCaller.getDirectionsByNameAndArriveBy(
                                     firstEvent!!.place,secondEvent!!.place,arrivalDateTime

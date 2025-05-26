@@ -15,6 +15,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,8 +27,11 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -235,22 +239,29 @@ class MainActivity : ComponentActivity() {
             when (currentDestination) {
                 AppScreen.Notifications -> Text("Notifications")
                 AppScreen.Start -> {
-                    LazyColumn {
-                         itemsIndexed(state.value.directions) { i,v ->
-                             if (i == 0){
-                                 Spacer(Modifier.padding(8.dp).fillMaxWidth())
-                                 Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
-                             } else if (state.value.directions[i].firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i-1].firstEvent.startDateTime.toLocalDateTime(TZ).date) {
-                                 Spacer(Modifier.padding(8.dp).fillMaxWidth())
-                                 Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
-                             }
-                            DirectionsWidget(
-                                directions = v.directionsQuery.directionsResponse,
-                                source = v.firstEvent.place,
-                                destination = v.secondEvent.place
-                            )
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(title = { Text("Next Transit") }, colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer))
+                        }
+                    ) { padding ->
+                        LazyColumn(Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            itemsIndexed(state.value.directions) { i,v ->
+                                if (i == 0){
+                                    Spacer(Modifier.padding(8.dp).fillMaxWidth())
+                                    Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                                } else if (state.value.directions[i].firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i-1].firstEvent.startDateTime.toLocalDateTime(TZ).date) {
+                                    Spacer(Modifier.padding(8.dp).fillMaxWidth())
+                                    Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                                }
+                                DirectionsWidget(
+                                    directions = v.directionsQuery.directionsResponse,
+                                    source = v.firstEvent.place,
+                                    destination = v.secondEvent.place
+                                )
+                            }
                         }
                     }
+
                 }
                 AppScreen.Calendar -> {
                     MyCalendarView(contentResolver) { event1, event2, directions ->
