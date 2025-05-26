@@ -13,6 +13,4 @@ import com.example.nexttransit.model.calendar.Event
 @TypeConverters(Converters::class)
 abstract class DirectionsDatabase: RoomDatabase() {
     abstract val directionsQueryDao: DirectionsQueryDao
-    abstract val eventDao: EventDao
-    abstract val directionsQueryFullDao: DirectionsQueryFullDao
 }

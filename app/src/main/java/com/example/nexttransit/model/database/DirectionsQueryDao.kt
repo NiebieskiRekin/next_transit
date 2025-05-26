@@ -25,4 +25,22 @@ interface DirectionsQueryDao {
     @Query("SELECT * FROM directionsquery JOIN event e1 ON directionsquery.firstEvent = e1.id JOIN event e2 ON directionsquery.secondEvent = e2.id ORDER BY e1.endDateTime ASC, e2.startDateTime ASC")
     fun getAllDirectionsQueries(): Flow<List<DirectionsQueryFull>>
 
+    @Upsert
+    suspend fun upsertEvent(event: Event)
+
+    @Delete
+    suspend fun deleteEvent(event: Event)
+
+    @Query("SELECT * FROM event WHERE id = :id LIMIT 1")
+    suspend fun queryEvent(id: Long): Event
+
+    @Query("SELECT * FROM event ORDER BY startDateTime ASC")
+    fun queryEvents(): Flow<List<Event>>
+
+    @Transaction
+    suspend fun upsertDirectionsQueryFull(directionsQueryFull: DirectionsQueryFull) {
+        upsertEvent(directionsQueryFull.firstEvent)
+        upsertEvent(directionsQueryFull.secondEvent)
+        upsertDirectionsQuery(directionsQueryFull.directionsQuery)
+    }
 }
