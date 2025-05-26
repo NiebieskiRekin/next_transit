@@ -8,15 +8,19 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.service.autofill.Validators.or
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +39,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -47,7 +53,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.AppScreen
+import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
+import com.example.nexttransit.model.database.DirectionsQuery
+import com.example.nexttransit.model.database.DirectionsQueryFull
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
@@ -56,6 +65,7 @@ import com.example.nexttransit.model.settings.AppSettingsSerializer
 import com.example.nexttransit.ui.app.CHANNEL_ID
 import com.example.nexttransit.ui.app.DebugOutput
 import com.example.nexttransit.ui.app.DirectionsTextFieldsSettings
+import com.example.nexttransit.ui.app.DirectionsWidget
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.app.MyCalendarView
 import com.example.nexttransit.ui.theme.NextTransitTheme
@@ -63,6 +73,7 @@ import com.example.nexttransit.ui.widget.TransitWidget
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
 
 
@@ -205,6 +216,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MainContent() {
+        val state = viewModel.state.collectAsState();
         // Store which screen should be visible, changeable on the bottom bar
         var currentDestination by rememberSaveable { mutableStateOf(AppScreen.Start) }
         NavigationSuiteScaffold(
@@ -222,13 +234,28 @@ class MainActivity : ComponentActivity() {
         ) {
             when (currentDestination) {
                 AppScreen.Notifications -> Text("Notifications")
-                AppScreen.Start -> Text("Start")
+                AppScreen.Start -> {
+                    LazyColumn {
+                         itemsIndexed(state.value.directions) { i,v ->
+                             if (i == 0){
+                                 Spacer(Modifier.padding(8.dp).fillMaxWidth())
+                                 Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                             } else if (state.value.directions[i].firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i-1].firstEvent.startDateTime.toLocalDateTime(TZ).date) {
+                                 Spacer(Modifier.padding(8.dp).fillMaxWidth())
+                                 Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                             }
+                            DirectionsWidget(
+                                directions = v.directionsQuery.directionsResponse,
+                                source = v.firstEvent.place,
+                                destination = v.secondEvent.place
+                            )
+                        }
+                    }
+                }
                 AppScreen.Calendar -> {
-                    MyCalendarView(contentResolver) { place1, place2, directions ->
-                        sendNotification(
-                            place1,
-                            place2,
-                            directions
+                    MyCalendarView(contentResolver) { event1, event2, directions ->
+                        db.directionsQueryDao.upsertDirectionsQueryFull(
+                            directions, event1, event2
                         )
                     }
                 }

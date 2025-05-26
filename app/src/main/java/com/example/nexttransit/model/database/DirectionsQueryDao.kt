@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.example.nexttransit.model.calendar.Event
+import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -38,9 +39,9 @@ interface DirectionsQueryDao {
     fun queryEvents(): Flow<List<Event>>
 
     @Transaction
-    suspend fun upsertDirectionsQueryFull(directionsQueryFull: DirectionsQueryFull) {
-        upsertEvent(directionsQueryFull.firstEvent)
-        upsertEvent(directionsQueryFull.secondEvent)
-        upsertDirectionsQuery(directionsQueryFull.directionsQuery)
+    suspend fun upsertDirectionsQueryFull(directions: DirectionsResponse, firstEvent: Event, secondEvent: Event) {
+        upsertEvent(firstEvent)
+        upsertEvent(secondEvent)
+        upsertDirectionsQuery(DirectionsQuery(directionsResponse = directions,firstEvent = firstEvent.id, secondEvent = secondEvent.id))
     }
 }

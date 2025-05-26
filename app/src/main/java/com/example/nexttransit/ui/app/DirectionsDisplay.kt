@@ -99,7 +99,7 @@ fun LoadingDirectionsWidget(
 
 
 @Composable
-private fun DirectionsWidget(
+fun DirectionsWidget(
     directions: DirectionsResponse,
     source: String,
     destination: String

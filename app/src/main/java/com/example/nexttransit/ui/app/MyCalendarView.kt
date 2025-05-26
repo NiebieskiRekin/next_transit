@@ -76,7 +76,7 @@ val CHANNEL_ID = "TRANSIT_RESULT"
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1: String, place2: String, directions: DirectionsResponse) -> Unit) {
+fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend (event1: Event, event2: Event, directions: DirectionsResponse) -> Unit) {
     val scope = rememberCoroutineScope()
     // In your Activity or Composable
     var events = remember { mutableStateListOf<Event>() }
@@ -200,7 +200,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
                                 )
                                 Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(firstEvent!!.place,secondEvent!!.place,directions)
+                                createNotification(firstEvent!!,secondEvent!!,directions)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -222,7 +222,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: (place1
                                 )
                                 Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(firstEvent!!.place,secondEvent!!.place,directions)
+                                createNotification(firstEvent!!,secondEvent!!,directions)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
