@@ -92,19 +92,19 @@ fun DoubleEvent(e1: Event, e2: Event) {
     }
     val context = LocalContext.current
 
-    Row{
+    Row(modifier = Modifier.fillMaxWidth()){
         EventCard(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).height(100.dp),
             event = e1,
             timeFormatter = timeFormatter,
             onClick = { onEventClick(e1,context) },
             isSelected = false
         )
         EventCard(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).height(100.dp),
             event = e2,
             timeFormatter = timeFormatter,
-            onClick = { onEventClick(e1,context) },
+            onClick = { onEventClick(e2,context) },
             isSelected = false
         )
     }

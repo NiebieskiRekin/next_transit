@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
@@ -78,14 +79,15 @@ fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<Loc
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Miejsce: ${event.place}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                text = event.place,
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                maxLines = 1, overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${event.startDateTime.getLocalTime(TZ).format(timeFormatter)} - ${event.endDateTime.getLocalTime(TZ).format(timeFormatter)}",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
         }

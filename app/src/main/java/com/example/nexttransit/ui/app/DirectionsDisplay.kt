@@ -108,7 +108,7 @@ fun DirectionsWidget(
         when (directions.status) {
             "OK" -> {
                 ColumnPill(
-                    modifier = Modifier.clickable(true, "Open Google Maps", null, onClick =
+                    modifier = Modifier.padding(8.dp).clickable(true, "Open Google Maps", null, onClick =
                         {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,

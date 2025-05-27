@@ -291,7 +291,7 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier
                             .padding(8.dp)
                             .fillMaxWidth())
-                        DoubleEvent(v.firstEvent,v.secondEvent)
+
                         Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
                     } else {
                         val isSameDate = v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(TZ).date
@@ -299,10 +299,10 @@ class MainActivity : ComponentActivity() {
                             Spacer(Modifier
                                 .padding(8.dp)
                                 .fillMaxWidth())
-                            DoubleEvent(v.firstEvent,v.secondEvent)
                             Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
                         }
                     }
+                    DoubleEvent(v.firstEvent,v.secondEvent)
                     DirectionsWidget(
                         directions = v.directionsQuery.directionsResponse,
                         source = v.firstEvent.place,
