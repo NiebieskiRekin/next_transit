@@ -1,7 +1,6 @@
 package com.example.nexttransit
 
 import android.Manifest
-import android.R.attr.data
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -49,7 +48,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -88,17 +86,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import com.google.firebase.firestore.toObject
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
-import kotlin.collections.map
-import kotlin.jvm.java
 import kotlin.random.Random
 
 
@@ -396,7 +389,7 @@ class MainActivity : ComponentActivity() {
                 db.collection("next-transit").document(parentDocumentId)
                     .collection(subcollectionName).document()
             }
-            docRef.set(obj).await()
+            docRef.set(Json.encodeToString(obj)).await()
             Log.d("Firestore", "Object saved successfully to subcollection with ID: ${docRef.id}")
             return true
         } catch (e: Exception) {
@@ -410,7 +403,7 @@ class MainActivity : ComponentActivity() {
         objects.forEach { obj ->
             val docRef = db.collection("next-transit").document(parentDocumentId)
                 .collection(subcollectionName).document() // Auto-generate ID for each
-            batch.set(docRef, obj)
+            batch.set(docRef, mapOf("data" to Json.encodeToString(obj)))
         }
         try {
             batch.commit().await()
@@ -422,6 +415,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     suspend fun fetchObjectsFromSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String): List<DirectionsQueryFull> {
         val items = mutableListOf<DirectionsQueryFull>()
         try {
@@ -430,9 +424,10 @@ class MainActivity : ComponentActivity() {
                 .get()
                 .await()
             for (document in querySnapshot.documents) {
-                document.toObject(DirectionsQueryFull::class.java)?.let {
-                    items.add(it)
-                }
+                val data = document.get("data",String::class.java)
+                if (data == null) continue;
+                val dec = Json.decodeFromString<DirectionsQueryFull>(data)
+                items.add(dec)
             }
         } catch (e: Exception) {
             Log.e("Firestore", "Error fetching objects from subcollection", e)
