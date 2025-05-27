@@ -159,6 +159,10 @@ dependencies {
 //    │       Firebase  Authentication      │
 //    └─────────────────────────────────────┘
     implementation(libs.firebase.ui.auth)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
 }
 java {
