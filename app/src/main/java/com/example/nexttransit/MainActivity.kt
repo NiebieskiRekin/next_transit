@@ -1,6 +1,7 @@
 package com.example.nexttransit
 
 import android.Manifest
+import android.R.attr.handle
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -8,7 +9,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.service.autofill.Validators.or
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -17,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,11 +24,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,28 +46,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.text.TextStyle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.AppScreen
-import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
-import com.example.nexttransit.model.database.DirectionsQuery
-import com.example.nexttransit.model.database.DirectionsQueryFull
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.routes.DirectionsResponse
@@ -78,22 +72,21 @@ import com.example.nexttransit.ui.app.DebugOutput
 import com.example.nexttransit.ui.app.DirectionsTextFieldsSettings
 import com.example.nexttransit.ui.app.DirectionsWidget
 import com.example.nexttransit.ui.app.DoubleEvent
-import com.example.nexttransit.ui.app.EventCard
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.app.MyCalendarView
-import com.example.nexttransit.ui.app.onEventClick
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ui.widget.TransitWidget
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
 
@@ -117,6 +110,51 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
+
+    private fun startSignIn() {
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.GoogleBuilder().build(),
+            AuthUI.IdpConfig.EmailBuilder().build()
+        )
+
+        // Create and launch sign-in intent
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .build()
+        signInLauncher.launch(signInIntent)
+    }
+
+    private lateinit var auth: FirebaseAuth
+
+    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+        val response = result.idpResponse
+        Log.d("FirebaseAuth",result.resultCode.toString());
+        when (result.resultCode) {
+            RESULT_OK -> {
+                Toast.makeText(baseContext, "Zalogowano", Toast.LENGTH_SHORT).show()
+                val user = auth.currentUser
+                Log.d("FirebaseAuth",user.toString());
+            }
+            RESULT_CANCELED -> {
+                Toast.makeText(baseContext, "Anulowano logowanie", Toast.LENGTH_SHORT).show()
+            }
+            RESULT_FIRST_USER -> {
+                val user = auth.currentUser
+                Log.d("FirebaseAuth",user.toString());
+            }
+            else -> {
+                Toast.makeText(baseContext, "Nieznany błąd logowania", Toast.LENGTH_SHORT).show()
+            }
+        }
+        Log.d("FirebaseAuth",response.toString())
+    }
+
+    private val signInLauncher = registerForActivityResult(
+        FirebaseAuthUIActivityResultContract(),
+    ) { res ->
+        this.onSignInResult(res)
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -166,12 +204,22 @@ class MainActivity : ComponentActivity() {
 
         val appWidgetId: Int = extractAppWidgetId()
         val resultValue = createResultIntent(appWidgetId)
+        auth = Firebase.auth
         setResultBasedOnWidgetId(appWidgetId, resultValue)
 
         setContent {
             NextTransitTheme {
                 MainContent()
             }
+        }
+    }
+
+    public override fun onStart() {
+        super.onStart()
+        // Check if user is signed in (non-null) and update UI accordingly.
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            startSignIn()
         }
     }
 
@@ -233,38 +281,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val signInLauncher = registerForActivityResult(
-        FirebaseAuthUIActivityResultContract(),
-    ) { res ->
-        this.onSignInResult(res)
-    }
 
-    // Choose authentication providers
-    val providers = arrayListOf(
-        AuthUI.IdpConfig.EmailBuilder().build(),
-        AuthUI.IdpConfig.GoogleBuilder().build(),
-    )
-
-    // Create and launch sign-in intent
-    val signInIntent = AuthUI.getInstance()
-        .createSignInIntentBuilder()
-        .setAvailableProviders(providers)
-        .build()
-
-    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
-        val response = result.idpResponse
-        if (result.resultCode == RESULT_OK) {
-            // Successfully signed in
-            val user = FirebaseAuth.getInstance().currentUser
-            Log.d("FirebaseAuth",user.toString());
-            // ...
-        } else {
-            // Sign in failed. If response is null the user canceled the
-            // sign-in flow using the back button. Otherwise check
-            // response.getError().getErrorCode() and handle the error.
-            // ...
-        }
-    }
 
 
     @Composable
@@ -333,7 +350,7 @@ class MainActivity : ComponentActivity() {
         ) {
             when (currentDestination) {
                 AppScreen.Notifications -> {
-                    signInLauncher.launch(signInIntent)
+                    NotificationsView()
                 }
                 AppScreen.Start -> {
                     val state = viewModel.state
@@ -354,6 +371,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun NotificationsView() {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(auth.currentUser?.email.toString()) },
+                    navigationIcon = { IconButton({auth.signOut()}) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") } },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                )
+            }
+        ) { padding ->
+            Column(modifier = Modifier.padding(padding)){
+            }
+        }
+
     }
 
     suspend fun UpdateWidgetData(){
