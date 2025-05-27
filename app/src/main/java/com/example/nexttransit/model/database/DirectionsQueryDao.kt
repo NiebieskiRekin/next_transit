@@ -3,6 +3,8 @@ package com.example.nexttransit.model.database
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -15,6 +17,20 @@ interface DirectionsQueryDao {
 
     @Upsert
     suspend fun upsertDirectionsQuery(directionsQuery: DirectionsQuery)
+
+    @Upsert
+    suspend fun upsertAllDirectionsQuery(items: List<DirectionsQuery>)
+
+    @Upsert
+    suspend fun upsertAllEvents(items: List<Event>)
+
+    @Transaction
+    suspend fun upsertAllDirectionsQueryFull(items: List<DirectionsQueryFull>){
+        val events = items.map { listOf(it.firstEvent, it.secondEvent) }.flatten()
+        val directionsQueries = items.map { it.directionsQuery }
+        upsertAllEvents(events)
+        upsertAllDirectionsQuery(directionsQueries)
+    }
 
     @Delete
     suspend fun deleteDirectionsQuery(directionsQuery: DirectionsQuery)

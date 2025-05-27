@@ -1,7 +1,7 @@
 package com.example.nexttransit
 
 import android.Manifest
-import android.R.attr.handle
+import android.R.attr.data
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -15,7 +15,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +25,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -62,10 +61,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
-import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
-import com.example.nexttransit.model.database.DirectionsQuery
 import com.example.nexttransit.model.database.DirectionsQueryFull
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
@@ -89,12 +86,19 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.Json
+import kotlin.collections.map
+import kotlin.jvm.java
 import kotlin.random.Random
 
 
@@ -382,16 +386,70 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
+    suspend fun saveObjectToSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, obj: DirectionsQueryFull, objectId: String? = null): Boolean {
+        try {
+            val docRef = if (objectId != null) {
+                db.collection("next-transit").document(parentDocumentId)
+                    .collection(subcollectionName).document(objectId)
+            } else {
+                db.collection("next-transit").document(parentDocumentId)
+                    .collection(subcollectionName).document()
+            }
+            docRef.set(obj).await()
+            Log.d("Firestore", "Object saved successfully to subcollection with ID: ${docRef.id}")
+            return true
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error saving object to subcollection", e)
+            return false
+        }
+    }
+
+    suspend fun saveListOfObjectsToSubcollectionBatch(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, objects: List<DirectionsQueryFull>): Boolean {
+        val batch = db.batch()
+        objects.forEach { obj ->
+            val docRef = db.collection("next-transit").document(parentDocumentId)
+                .collection(subcollectionName).document() // Auto-generate ID for each
+            batch.set(docRef, obj)
+        }
+        try {
+            batch.commit().await()
+            Log.d("Firestore", "${objects.size} objects saved successfully to subcollection in a batch.")
+            return true
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error saving objects to subcollection in a batch", e)
+            return false
+        }
+    }
+
+    suspend fun fetchObjectsFromSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String): List<DirectionsQueryFull> {
+        val items = mutableListOf<DirectionsQueryFull>()
+        try {
+            val querySnapshot = db.collection("next-transit").document(parentDocumentId)
+                .collection(subcollectionName)
+                .get()
+                .await()
+            for (document in querySnapshot.documents) {
+                document.toObject(DirectionsQueryFull::class.java)?.let {
+                    items.add(it)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error fetching objects from subcollection", e)
+        }
+        return items
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun NotificationsView() {
         val scope = rememberCoroutineScope()
-        Scaffold(
-            topBar = {
-                if (auth.currentUser == null){
-                    startSignIn()
-                } else {
-                    val user = auth.currentUser!!
+        if (auth.currentUser == null) {
+            startSignIn()
+        } else {
+            val user = auth.currentUser!!
+            Scaffold(
+                topBar = {
                     TopAppBar(
                         actions = {
                             IconButton({auth.signOut(); startSignIn()}) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") }
@@ -401,38 +459,38 @@ class MainActivity : ComponentActivity() {
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                     )
                 }
-            }
-        ) { padding ->
-            Column(modifier = Modifier.padding(padding)){
-                Button({
-                    scope.launch {
-                        db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
-                            firestoreDb.collection("next-transit").add(mapOf("data" to mydata))
-                            .addOnSuccessListener {
-                                Log.d("Firestore", "DocumentSnapshot added with ID: ${it.id}")
-                                Toast.makeText(baseContext, "Saved!", Toast.LENGTH_SHORT).show()
-                            }.addOnFailureListener { e ->
-                                Log.w("Firestore", "Error adding document", e)
-                                Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
+            ) { padding ->
+                Column(modifier = Modifier.padding(padding)){
+                    Button({
+                        scope.launch {
+                            db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
+                                val res = saveListOfObjectsToSubcollectionBatch(firestoreDb, "next-transit", user.email.toString(),mydata)
+                                if (res) {
+                                    Toast.makeText(baseContext, "Saved!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
-                    }
 
-                }) {
-                    Text("Save to Firestore")
-                }
-                Button({
-                    firestoreDb.collection("next-transit").get()
-                        .addOnSuccessListener {
-                            Log.d("Firestore", "DocumentSnapshot received")
-                            Log.d("Firestore", it.documents.toString())
-                            Toast.makeText(baseContext,it.documents.toString(), Toast.LENGTH_LONG).show()
-                        }.addOnFailureListener { e ->
-                            Log.w("Firestore", "Error getting document", e)
-                            Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text("Save to Firestore")
+                    }
+                    Button({
+                        scope.launch {
+                            val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", user.email.toString())
+                            if (mydata.isNotEmpty()){
+                                try {
+                                    db.directionsQueryDao.upsertAllDirectionsQueryFull(mydata)
+                                    Toast.makeText(baseContext, "Sync complete!", Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         }
-                }) {
-                    Text("Download from Firestore")
+                    }) {
+                        Text("Download from Firestore")
+                    }
                 }
             }
         }
