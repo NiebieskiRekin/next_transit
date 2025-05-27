@@ -383,13 +383,13 @@ class MainActivity : ComponentActivity() {
     suspend fun saveObjectToSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, obj: DirectionsQueryFull, objectId: String? = null): Boolean {
         try {
             val docRef = if (objectId != null) {
-                db.collection("next-transit").document(parentDocumentId)
+                db.collection(parentDocumentId).document(parentDocumentId)
                     .collection(subcollectionName).document(objectId)
             } else {
-                db.collection("next-transit").document(parentDocumentId)
+                db.collection(parentDocumentId).document(parentDocumentId)
                     .collection(subcollectionName).document()
             }
-            docRef.set(Json.encodeToString(obj)).await()
+            docRef.set(mapOf("data" to Json.encodeToString(obj))).await()
             Log.d("Firestore", "Object saved successfully to subcollection with ID: ${docRef.id}")
             return true
         } catch (e: Exception) {
@@ -401,7 +401,7 @@ class MainActivity : ComponentActivity() {
     suspend fun saveListOfObjectsToSubcollectionBatch(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, objects: List<DirectionsQueryFull>): Boolean {
         val batch = db.batch()
         objects.forEach { obj ->
-            val docRef = db.collection("next-transit").document(parentDocumentId)
+            val docRef = db.collection(parentDocumentId).document(parentDocumentId)
                 .collection(subcollectionName).document() // Auto-generate ID for each
             batch.set(docRef, mapOf("data" to Json.encodeToString(obj)))
         }
@@ -419,7 +419,7 @@ class MainActivity : ComponentActivity() {
     suspend fun fetchObjectsFromSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String): List<DirectionsQueryFull> {
         val items = mutableListOf<DirectionsQueryFull>()
         try {
-            val querySnapshot = db.collection("next-transit").document(parentDocumentId)
+            val querySnapshot = db.collection(parentDocumentId).document(parentDocumentId)
                 .collection(subcollectionName)
                 .get()
                 .await()
@@ -459,7 +459,7 @@ class MainActivity : ComponentActivity() {
                     Button({
                         scope.launch {
                             db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
-                                val res = saveListOfObjectsToSubcollectionBatch(firestoreDb, "next-transit", user.email.toString(),mydata)
+                                val res = saveListOfObjectsToSubcollectionBatch(firestoreDb, "next-transit", auth.currentUser?.uid.toString(),mydata)
                                 if (res) {
                                     Toast.makeText(baseContext, "Saved!", Toast.LENGTH_SHORT).show()
                                 } else {
@@ -473,7 +473,7 @@ class MainActivity : ComponentActivity() {
                     }
                     Button({
                         scope.launch {
-                            val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", user.email.toString())
+                            val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", auth.currentUser?.uid.toString())
                             if (mydata.isNotEmpty()){
                                 try {
                                     db.directionsQueryDao.upsertAllDirectionsQueryFull(mydata)

@@ -26,3 +26,4 @@ local.properties
 /firebase-debug.log
 /firestore-debug.log
 .firebaserc
+local-firebase-dir
