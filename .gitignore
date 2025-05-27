@@ -23,3 +23,6 @@ local.properties
 /app/google-services.json
 /.kotlin/
 /.idea/
+/firebase-debug.log
+/firestore-debug.log
+.firebaserc
