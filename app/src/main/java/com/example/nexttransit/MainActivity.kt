@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -61,8 +62,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
+import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
+import com.example.nexttransit.model.database.DirectionsQuery
+import com.example.nexttransit.model.database.DirectionsQueryFull
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.routes.DirectionsResponse
@@ -82,13 +86,14 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
 
@@ -102,6 +107,8 @@ class MainActivity : ComponentActivity() {
             "directions.db"
         ).build()
     }
+
+    private val firestoreDb = Firebase.firestore
 
     private val viewModel by viewModels<DirectionsQueryViewModel>(
         factoryProducer = {
@@ -378,6 +385,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun NotificationsView() {
+        val scope = rememberCoroutineScope()
         Scaffold(
             topBar = {
                 if (auth.currentUser == null){
@@ -396,6 +404,36 @@ class MainActivity : ComponentActivity() {
             }
         ) { padding ->
             Column(modifier = Modifier.padding(padding)){
+                Button({
+                    scope.launch {
+                        db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
+                            firestoreDb.collection("next-transit").add(mapOf("data" to mydata))
+                            .addOnSuccessListener {
+                                Log.d("Firestore", "DocumentSnapshot added with ID: ${it.id}")
+                                Toast.makeText(baseContext, "Saved!", Toast.LENGTH_SHORT).show()
+                            }.addOnFailureListener { e ->
+                                Log.w("Firestore", "Error adding document", e)
+                                Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+
+                }) {
+                    Text("Save to Firestore")
+                }
+                Button({
+                    firestoreDb.collection("next-transit").get()
+                        .addOnSuccessListener {
+                            Log.d("Firestore", "DocumentSnapshot received")
+                            Log.d("Firestore", it.documents.toString())
+                            Toast.makeText(baseContext,it.documents.toString(), Toast.LENGTH_LONG).show()
+                        }.addOnFailureListener { e ->
+                            Log.w("Firestore", "Error getting document", e)
+                            Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
+                        }
+                }) {
+                    Text("Download from Firestore")
+                }
             }
         }
 

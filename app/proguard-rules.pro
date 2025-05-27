@@ -25,3 +25,5 @@
 ##---------------End: proguard configuration for Pusher Java Client  ----------
 
 #-keep class * extends com.google.protobuf.GenerateMessageLite { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
