@@ -96,6 +96,12 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.activity.compose)
 
+//    ┌────────────────────────────────────────────┐
+//    │        Coil - remote image fetcher         │
+//    └────────────────────────────────────────────┘
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
 
 //    ┌────────────────────────────────────────────┐
 //    │  Data persistence library - Room (SQLite)  │

@@ -15,6 +15,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -58,6 +59,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
+import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
@@ -378,11 +380,19 @@ class MainActivity : ComponentActivity() {
     fun NotificationsView() {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text(auth.currentUser?.email.toString()) },
-                    navigationIcon = { IconButton({auth.signOut()}) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") } },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                )
+                if (auth.currentUser == null){
+                    startSignIn()
+                } else {
+                    val user = auth.currentUser!!
+                    TopAppBar(
+                        actions = {
+                            IconButton({auth.signOut(); startSignIn()}) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") }
+                            AsyncImage(user.photoUrl, user.displayName ?: "User")
+                        },
+                        title = { Text(auth.currentUser?.email.toString()) },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                    )
+                }
             }
         ) { padding ->
             Column(modifier = Modifier.padding(padding)){
