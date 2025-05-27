@@ -39,8 +39,8 @@ import kotlinx.datetime.format.DateTimeFormat
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventCard(event: Event, timeFormatter: DateTimeFormat<LocalTime>, onClick: () -> Unit = {}, onLongClick: () -> Unit = {}, isSelected: Boolean) {
-    var modifier = Modifier.fillMaxWidth().combinedClickable(
+fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<LocalTime>, onClick: () -> Unit = {}, onLongClick: () -> Unit = {}, isSelected: Boolean) {
+    var modifier = modifier.combinedClickable(
         onClick = onClick,
         onLongClick = onLongClick
     ).padding(8.dp,0.dp)

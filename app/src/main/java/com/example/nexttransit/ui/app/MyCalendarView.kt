@@ -3,6 +3,7 @@ package com.example.nexttransit.ui.app
 import android.Manifest
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.CalendarContract
@@ -73,6 +74,41 @@ import kotlinx.datetime.toLocalDateTime
 import java.time.YearMonth
 
 val CHANNEL_ID = "TRANSIT_RESULT"
+
+fun onEventClick(event: Event, context: Context) {
+    // Edit event in system calendar
+    val uri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.eventId)
+    val intent = Intent(Intent.ACTION_EDIT)
+        .setData(uri).putExtra(CalendarContract.Events.TITLE, event.name)
+    startActivity(context,intent,null)
+}
+
+@Composable
+fun DoubleEvent(e1: Event, e2: Event) {
+    val timeFormatter = remember {
+        LocalTime.Format {
+            hour(); char(':'); minute()
+        }
+    }
+    val context = LocalContext.current
+
+    Row{
+        EventCard(
+            modifier = Modifier.weight(1f),
+            event = e1,
+            timeFormatter = timeFormatter,
+            onClick = { onEventClick(e1,context) },
+            isSelected = false
+        )
+        EventCard(
+            modifier = Modifier.weight(1f),
+            event = e2,
+            timeFormatter = timeFormatter,
+            onClick = { onEventClick(e1,context) },
+            isSelected = false
+        )
+    }
+}
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,14 +190,6 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
     var secondEvent by remember { mutableStateOf<Event?>(null)}
     val context = LocalContext.current
 
-
-    fun onEventClick(event: Event) {
-        // Edit event in system calendar
-        val uri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.eventId)
-        val intent = Intent(Intent.ACTION_EDIT)
-            .setData(uri).putExtra(CalendarContract.Events.TITLE, event.name)
-        startActivity(context,intent,null)
-    }
 
     fun onLongPressEvent(event: Event) {
         Log.d("CalendarAccess", firstEvent.toString() + "\n" + secondEvent.toString())
@@ -277,10 +305,11 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                 when (slotItem) {
                     is ScheduleSlotItem.EventItem -> {
                         EventCard(
+                            modifier = Modifier.fillMaxWidth(),
                             event = slotItem.event,
                             timeFormatter = timeFormatter,
                             onLongClick = {onLongPressEvent(slotItem.event)},
-                            onClick = { onEventClick(slotItem.event) },
+                            onClick = { onEventClick(slotItem.event,context) },
                             isSelected = (slotItem.event.id == firstEvent?.id) || (slotItem.event.id == secondEvent?.id)
                         )
                     }

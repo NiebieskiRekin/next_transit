@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,6 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -53,16 +56,19 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.text.TextStyle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.AppScreen
+import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
 import com.example.nexttransit.model.database.DirectionsQuery
 import com.example.nexttransit.model.database.DirectionsQueryFull
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
+import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
@@ -71,8 +77,11 @@ import com.example.nexttransit.ui.app.CHANNEL_ID
 import com.example.nexttransit.ui.app.DebugOutput
 import com.example.nexttransit.ui.app.DirectionsTextFieldsSettings
 import com.example.nexttransit.ui.app.DirectionsWidget
+import com.example.nexttransit.ui.app.DoubleEvent
+import com.example.nexttransit.ui.app.EventCard
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.app.MyCalendarView
+import com.example.nexttransit.ui.app.onEventClick
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ui.widget.TransitWidget
 import com.firebase.ui.auth.AuthUI
@@ -81,7 +90,10 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
 
@@ -254,10 +266,56 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
+    @Composable
+    @OptIn(ExperimentalMaterial3Api::class)
+    fun StartView(stateFlow: StateFlow<DirectionsState>) {
+        val state = stateFlow.collectAsState()
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Next Transit") },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                )
+            }
+        ) { padding ->
+            LazyColumn(
+                Modifier.padding(padding),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                itemsIndexed(state.value.directions) { i, v ->
+                    if (i == 0) {
+                        Text("Zapisane trasy:", style = MaterialTheme.typography.titleLarge)
+
+                        Spacer(Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth())
+                        DoubleEvent(v.firstEvent,v.secondEvent)
+                        Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                    } else {
+                        val isSameDate = v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(TZ).date
+                        if (isSameDate) {
+                            Spacer(Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth())
+                            DoubleEvent(v.firstEvent,v.secondEvent)
+                            Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                        }
+                    }
+                    DirectionsWidget(
+                        directions = v.directionsQuery.directionsResponse,
+                        source = v.firstEvent.place,
+                        destination = v.secondEvent.place
+                    )
+                }
+            }
+        }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MainContent() {
-        val state = viewModel.state.collectAsState();
         // Store which screen should be visible, changeable on the bottom bar
         var currentDestination by rememberSaveable { mutableStateOf(AppScreen.Start) }
         NavigationSuiteScaffold(
@@ -278,29 +336,8 @@ class MainActivity : ComponentActivity() {
                     signInLauncher.launch(signInIntent)
                 }
                 AppScreen.Start -> {
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(title = { Text("Next Transit") }, colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer))
-                        }
-                    ) { padding ->
-                        LazyColumn(Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            itemsIndexed(state.value.directions) { i,v ->
-                                if (i == 0){
-                                    Spacer(Modifier.padding(8.dp).fillMaxWidth())
-                                    Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
-                                } else if (state.value.directions[i].firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i-1].firstEvent.startDateTime.toLocalDateTime(TZ).date) {
-                                    Spacer(Modifier.padding(8.dp).fillMaxWidth())
-                                    Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
-                                }
-                                DirectionsWidget(
-                                    directions = v.directionsQuery.directionsResponse,
-                                    source = v.firstEvent.place,
-                                    destination = v.secondEvent.place
-                                )
-                            }
-                        }
-                    }
-
+                    val state = viewModel.state
+                    StartView(state)
                 }
                 AppScreen.Calendar -> {
                     MyCalendarView(contentResolver) { event1, event2, directions ->
