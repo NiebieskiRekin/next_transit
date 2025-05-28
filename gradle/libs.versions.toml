@@ -7,6 +7,7 @@ datastore = "1.1.7"
 firebaseBom = "33.14.0"
 firebaseUiAuth = "9.0.0"
 glanceVersion = "1.1.1"
+hiltAndroid = "2.56.2"
 kotlinx-collections-immutable = "0.4.0"
 kotlinx-serialization-json = "1.8.1"
 kotlinxCoroutines = "1.10.2"
@@ -23,12 +24,13 @@ kotlin = "2.1.10"
 google-services = "4.4.2"
 maps-secrets-plugin = "2.0.1"
 room = "2.7.1"
-ksp-plugin = "2.0.21-1.0.27"
+ksp-plugin = "2.1.21-2.0.1"
 firebaseAuth = "23.2.1"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
 firebaseFirestore = "25.1.4"
+workRuntimeKtx = "2.10.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose" }
@@ -62,6 +64,8 @@ firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 firebase-ui-auth = { module = "com.firebaseui:firebase-ui-auth", version.ref = "firebaseUiAuth" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
@@ -80,6 +84,7 @@ androidx-credentials = { group = "androidx.credentials", name = "credentials", v
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
@@ -89,3 +94,4 @@ jetbrains-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 maps-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "maps-secrets-plugin" }
 devtools-ksp = {id="com.google.devtools.ksp", version.ref = "ksp-plugin"}
+dagger-hilt = {id="com.google.dagger.hilt.android", version.ref="hiltAndroid"}

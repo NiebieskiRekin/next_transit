@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.maps.secrets)
     alias(libs.plugins.google.services)
     alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.dagger.hilt)
 }
 
 val localProperties = Properties()
@@ -74,6 +75,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.work.runtime.ktx)
 //    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
@@ -175,6 +177,12 @@ dependencies {
 //    │ Remote database: Firebase Firestore │
 //    └─────────────────────────────────────┘
     implementation(libs.firebase.firestore)
+
+//    ┌─────────────────────────────────────┐
+//    │  Dagger Hilt dependency injection   │
+//    └─────────────────────────────────────┘
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
 
 }
 java {
