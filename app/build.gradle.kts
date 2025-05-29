@@ -32,6 +32,7 @@ android {
         }
         buildConfigField("String", "API_KEY",localProperties.getProperty("API_KEY"))
 
+        //noinspection WrongGradleMethod
         ksp {
             arg("room.schemaLocation","$projectDir/schemas")
         }
@@ -76,6 +77,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
 //    ┌───────────────────────────────────┐
 //    │Native UI library - Jetpack Compose│
 //    └───────────────────────────────────┘
