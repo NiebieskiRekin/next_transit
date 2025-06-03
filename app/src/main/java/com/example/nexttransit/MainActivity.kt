@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -70,13 +69,11 @@ import coil3.compose.AsyncImage
 import com.example.nexttransit.api.NextTransitWorker
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
-import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.database.DirectionsDatabase
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.database.classes.DirectionsQuery
 import com.example.nexttransit.model.routes.DirectionsResponse
-import com.example.nexttransit.model.routes.Duration
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
@@ -133,6 +130,9 @@ class MainActivity : ComponentActivity() {
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setAvailableProviders(providers)
+            .setLogo(R.drawable.ic_launcher)
+            .setLockOrientation(true)
+            .setTheme(R.style.Theme_NextTransit_LoginTheme)
             .build()
         signInLauncher.launch(signInIntent)
     }

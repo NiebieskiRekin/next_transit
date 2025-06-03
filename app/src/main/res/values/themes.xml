@@ -13,6 +13,11 @@
         <item name="appWidgetInnerRadius">8dp</item>
     </style>
 
+    <style name="Theme.NextTransit.LoginTheme" parent="FirebaseUI">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+    </style>
+
     <style name="Theme.NextTransit.AppWidgetContainer" parent="Theme.NextTransit.AppWidgetContainerParent">
         <!-- Apply padding to avoid the content of the widget colliding with the rounded corners -->
         <item name="appWidgetPadding">16dp</item>
