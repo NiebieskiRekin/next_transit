@@ -2,99 +2,8 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "22a2995c5f6351428fcbf401b5276bf4",
+    "identityHash": "90b566638d26e582efcc7d1f8825c663",
     "entities": [
-      {
-        "tableName": "DirectionsQueryCrossRef",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstEvent` INTEGER NOT NULL, `secondEvent` INTEGER NOT NULL, `departAtOrArriveBy` TEXT NOT NULL, `directionsResponse` TEXT NOT NULL, PRIMARY KEY(`firstEvent`, `secondEvent`), FOREIGN KEY(`firstEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`secondEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "firstEvent",
-            "columnName": "firstEvent",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "secondEvent",
-            "columnName": "secondEvent",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "departAtOrArriveBy",
-            "columnName": "departAtOrArriveBy",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "directionsResponse",
-            "columnName": "directionsResponse",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "firstEvent",
-            "secondEvent"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_DirectionsQueryCrossRef_firstEvent_secondEvent",
-            "unique": false,
-            "columnNames": [
-              "firstEvent",
-              "secondEvent"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQueryCrossRef_firstEvent_secondEvent` ON `${TABLE_NAME}` (`firstEvent`, `secondEvent`)"
-          },
-          {
-            "name": "index_DirectionsQueryCrossRef_firstEvent",
-            "unique": false,
-            "columnNames": [
-              "firstEvent"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQueryCrossRef_firstEvent` ON `${TABLE_NAME}` (`firstEvent`)"
-          },
-          {
-            "name": "index_DirectionsQueryCrossRef_secondEvent",
-            "unique": false,
-            "columnNames": [
-              "secondEvent"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQueryCrossRef_secondEvent` ON `${TABLE_NAME}` (`secondEvent`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "Event",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "firstEvent"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          },
-          {
-            "table": "Event",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "secondEvent"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          }
-        ]
-      },
       {
         "tableName": "Event",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `place` TEXT NOT NULL, `startDateTime` INTEGER NOT NULL, `endDateTime` INTEGER NOT NULL, `color` INTEGER, `eventId` INTEGER NOT NULL, `calendarId` INTEGER NOT NULL)",
@@ -155,8 +64,99 @@
         }
       },
       {
+        "tableName": "DirectionsQueryCrossRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstEventId` INTEGER NOT NULL, `secondEventId` INTEGER NOT NULL, `departAtOrArriveBy` TEXT NOT NULL, `directionsResponse` TEXT NOT NULL, PRIMARY KEY(`firstEventId`, `secondEventId`), FOREIGN KEY(`firstEventId`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`secondEventId`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "firstEventId",
+            "columnName": "firstEventId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secondEventId",
+            "columnName": "secondEventId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "departAtOrArriveBy",
+            "columnName": "departAtOrArriveBy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "directionsResponse",
+            "columnName": "directionsResponse",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "firstEventId",
+            "secondEventId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_DirectionsQueryCrossRef_firstEventId_secondEventId",
+            "unique": false,
+            "columnNames": [
+              "firstEventId",
+              "secondEventId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQueryCrossRef_firstEventId_secondEventId` ON `${TABLE_NAME}` (`firstEventId`, `secondEventId`)"
+          },
+          {
+            "name": "index_DirectionsQueryCrossRef_firstEventId",
+            "unique": false,
+            "columnNames": [
+              "firstEventId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQueryCrossRef_firstEventId` ON `${TABLE_NAME}` (`firstEventId`)"
+          },
+          {
+            "name": "index_DirectionsQueryCrossRef_secondEventId",
+            "unique": false,
+            "columnNames": [
+              "secondEventId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DirectionsQueryCrossRef_secondEventId` ON `${TABLE_NAME}` (`secondEventId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Event",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "firstEventId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "Event",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "secondEventId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
         "tableName": "CalendarInfo",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `displayName` TEXT NOT NULL, `accountName` TEXT NOT NULL, `ownerName` TEXT NOT NULL, `color` INTEGER, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `displayName` TEXT NOT NULL, `accountName` TEXT NOT NULL, `ownerName` TEXT NOT NULL, `color` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -189,7 +189,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "id"
           ]
@@ -198,7 +198,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '22a2995c5f6351428fcbf401b5276bf4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '90b566638d26e582efcc7d1f8825c663')"
     ]
   }
 }

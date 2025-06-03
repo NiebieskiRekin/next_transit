@@ -60,10 +60,7 @@ import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
-import com.example.nexttransit.model.database.DirectionsDatabase
 import com.example.nexttransit.model.database.classes.DirectionsQuery
-import com.example.nexttransit.model.database.DirectionsQueryViewModel
-import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings

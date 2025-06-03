@@ -8,19 +8,16 @@ import androidx.room.TypeConverters
 import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.database.classes.DirectionsQueryCrossRef
-import com.example.nexttransit.model.database.dao.CalendarInfoDao
-import com.example.nexttransit.model.database.dao.EventDao
+import com.example.nexttransit.model.database.dao.DirectionsDao
 
 @Database(
-    entities = [DirectionsQueryCrossRef::class, Event::class, CalendarInfo::class],
+    entities = [Event::class, DirectionsQueryCrossRef::class, CalendarInfo::class],
     version = 1,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
 abstract class DirectionsDatabase: RoomDatabase() {
-    abstract val eventDao: EventDao;
-    abstract val calendarInfoDao: CalendarInfoDao;
-    abstract val directionsQueryCrossRefDao: DirectionsQueryCrossRef;
+    abstract val directionsQueryDao: DirectionsDao
 
     companion object {
         @Volatile

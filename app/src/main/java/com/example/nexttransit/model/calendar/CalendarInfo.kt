@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Entity
 data class CalendarInfo(
-    @PrimaryKey(autoGenerate = false)
+    @PrimaryKey(autoGenerate=true)
     val id: Long,
     val displayName: String,
     val accountName: String,

@@ -9,26 +9,26 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Entity(
-    primaryKeys = ["firstEvent", "secondEvent"],
+    primaryKeys = ["firstEventId", "secondEventId"],
     foreignKeys = [
         ForeignKey(
             entity = Event::class,
             parentColumns = ["id"],
-            childColumns = ["firstEvent"],
-            onDelete = ForeignKey.Companion.CASCADE
+            childColumns = ["firstEventId"],
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = Event::class,
             parentColumns = ["id"],
-            childColumns = ["secondEvent"],
-            onDelete = ForeignKey.Companion.CASCADE
+            childColumns = ["secondEventId"],
+            onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("firstEvent", "secondEvent"), Index("firstEvent"), Index("secondEvent")]
+    indices = [Index("firstEventId", "secondEventId"), Index("firstEventId"), Index("secondEventId")]
 )
 data class DirectionsQueryCrossRef (
-    val firstEvent: Long,
-    val secondEvent: Long,
+    val firstEventId: Long,
+    val secondEventId: Long,
     val departAtOrArriveBy: DepartAtOrArriveBy,
     val directionsResponse: DirectionsResponse
 ) {
