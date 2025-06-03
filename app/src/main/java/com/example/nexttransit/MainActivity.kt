@@ -1,6 +1,7 @@
 package com.example.nexttransit
 
 import android.Manifest
+import android.app.Activity.RESULT_FIRST_USER
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -48,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -60,6 +62,9 @@ import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
+import com.example.nexttransit.model.database.DirectionsDatabase
+import com.example.nexttransit.model.database.DirectionsQueryViewModel
+import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.database.classes.DirectionsQuery
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
@@ -94,7 +99,7 @@ import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
-
+    private val db by lazy  {DirectionsDatabase.getDatabase(applicationContext)}
 
     private val firestoreDb = Firebase.firestore
 
@@ -318,7 +323,7 @@ class MainActivity : ComponentActivity() {
                     }
                     DoubleEvent(v.firstEvent,v.secondEvent)
                     DirectionsWidget(
-                        directions = v.directionsQuery.directionsResponse,
+                        directions = v.directionsResponse,
                         source = v.firstEvent.place,
                         destination = v.secondEvent.place
                     )
@@ -355,8 +360,8 @@ class MainActivity : ComponentActivity() {
                 }
                 AppScreen.Calendar -> {
                     MyCalendarView(contentResolver) { event1, event2, directions, departAtOrArriveBy ->
-                        db.directionsQueryDao.upsertDirectionsQueryFull(
-                            directions, event1, event2, departAtOrArriveBy
+                        db.directionsQueryDao.upsertDirectionsQuery(
+                            DirectionsQuery(event1, event2,departAtOrArriveBy,directions)
                         )
                     }
                 }
@@ -467,7 +472,7 @@ class MainActivity : ComponentActivity() {
                             val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", user.uid.toString())
                             if (mydata.isNotEmpty()){
                                 try {
-                                    db.directionsQueryDao.upsertAllDirectionsQueryFull(mydata)
+                                    db.directionsQueryDao.upsertAllDirectionsQuery(mydata)
                                     Toast.makeText(baseContext, "Sync complete!", Toast.LENGTH_SHORT).show()
                                 } catch (e: Exception) {
                                     Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()

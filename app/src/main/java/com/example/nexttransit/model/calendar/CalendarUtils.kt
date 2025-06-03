@@ -140,7 +140,8 @@ fun getEvents(
                         startDateTime = startTime,
                         endDateTime = correctedEndTime,
                         color = eventColor,
-                        eventId = eventId
+                        eventId = eventId,
+                        calendarId=calendarId
                     )
                 )
             }
