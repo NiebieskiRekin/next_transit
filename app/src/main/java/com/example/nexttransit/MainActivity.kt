@@ -70,6 +70,7 @@ import com.example.nexttransit.api.NextTransitWorker
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
+import com.example.nexttransit.model.database.DirectionsDatabaseModule
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.database.classes.DirectionsQuery
@@ -102,15 +103,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 import kotlin.random.Random
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val db by lazy { DirectionsDatabase.getDatabase(applicationContext) }
+    @Inject
+    lateinit var db: DirectionsDatabase
 
     private val firestoreDb = Firebase.firestore
 
+    @Suppress("UNCHECKED_CAST")
     private val viewModel by viewModels<DirectionsQueryViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {

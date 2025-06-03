@@ -1,7 +1,6 @@
 package com.example.nexttransit.model.database
 
 import android.content.Context
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -10,6 +9,13 @@ import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.database.classes.DirectionsQueryCrossRef
 import com.example.nexttransit.model.database.dao.DirectionsDao
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
 
 @Database(
     entities = [Event::class, DirectionsQueryCrossRef::class, CalendarInfo::class],
@@ -19,22 +25,23 @@ import com.example.nexttransit.model.database.dao.DirectionsDao
 @TypeConverters(Converters::class)
 abstract class DirectionsDatabase : RoomDatabase() {
     abstract val directionsQueryDao: DirectionsDao
+}
 
-    companion object {
-        @Volatile
-        private var INSTANCE: DirectionsDatabase? = null
+@Module
+@InstallIn(SingletonComponent::class)
+object DirectionsDatabaseModule {
+    @Provides
+    fun provideDirectionsQueryDao(database: DirectionsDatabase): DirectionsDao {
+        return database.directionsQueryDao
+    }
 
-        fun getDatabase(context: Context): DirectionsDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    DirectionsDatabase::class.java,
-                    "directions.db"
-                ).fallbackToDestructiveMigration(true).build()
-                INSTANCE = instance
-                instance
-            }
-
-        }
+    @Provides
+    @Singleton
+    fun provideDirectionsDatabase(@ApplicationContext context: Context): DirectionsDatabase {
+        return Room.databaseBuilder(
+            context.applicationContext,
+            DirectionsDatabase::class.java,
+            "directions.db"
+        ).fallbackToDestructiveMigration(true).build()
     }
 }

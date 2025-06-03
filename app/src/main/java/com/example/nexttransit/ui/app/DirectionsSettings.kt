@@ -19,8 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
-import com.example.nexttransit.api.getDirections
 import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.coroutines.launch
 
@@ -81,7 +81,11 @@ fun DirectionsTextFieldsSettings(
             Button(onClick = {
                 onGetDirectionsButtonClicked(true)
                 scope.launch {
-                    val result = getDirections(source.text, destination.text)
+                    val result = try {
+                        Pair(true, ApiCaller.getDirectionsByName(source.text, destination.text))
+                    } catch (_: Exception) {
+                        Pair(false, DirectionsResponse(status = "Error"))
+                    }
                     onDirectionsGet(result.first, source.text, destination.text, result.second)
                 }
             }) {

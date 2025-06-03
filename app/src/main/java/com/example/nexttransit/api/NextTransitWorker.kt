@@ -15,11 +15,12 @@ import dagger.assisted.AssistedInject
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
-class NextTransitWorker(
-    private val apiCaller: ApiCaller,
-    private val directionsDao: DirectionsDao,
-    context: Context,
-    workerParams: WorkerParameters,
+@HiltWorker
+class NextTransitWorker @AssistedInject constructor(
+    @Assisted private val apiCaller: ApiCaller,
+    @Assisted private val directionsDao: DirectionsDao,
+    @Assisted context: Context,
+    @Assisted workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -72,7 +73,8 @@ class NextTransitWorker(
                 return Result.failure()
             }
         } catch (e: Exception) {
-            if (e is NetworkError || e is java.net.UnknownHostException) {
+            @Suppress("USELESS_IS_CHECK")
+            if (e is NetworkError || (e is java.net.UnknownHostException)) {
                 Log.e(TAG, "Network error calling API: ${e.message}, Retrying...", e)
                 return Result.retry()
             }

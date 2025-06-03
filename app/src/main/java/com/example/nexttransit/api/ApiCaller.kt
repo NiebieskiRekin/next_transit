@@ -4,11 +4,16 @@ package com.example.nexttransit.api
 
 import androidx.credentials.exceptions.domerrors.NetworkError
 import com.example.nexttransit.BuildConfig
+import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.database.classes.DepartAtOrArriveBy
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.OverviewPolyline
 import com.example.nexttransit.model.routes.PlaceId
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -22,45 +27,49 @@ import io.ktor.client.request.get
 import io.ktor.http.URLProtocol
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.util.rootCause
+import javax.inject.Singleton
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 
-suspend fun getDirections(
-    source: String,
-    destination: String
-): Pair<Boolean, DirectionsResponse> {
-    return try {
-        Pair(true, ApiCaller.getDirectionsByName(source, destination))
-    } catch (_: Exception) {
-        Pair(false, DirectionsResponse(status = "Error"))
-    }
-}
-
+@Module
+@InstallIn(SingletonComponent::class)
 object ApiCaller {
-    private val client = HttpClient(Android) {
-        install(Logging) {
-            logger = Logger.ANDROID
-            level = LogLevel.ALL
-        }
 
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-            })
-        }
-        install(HttpRequestRetry) {
-            retryOnServerErrors(maxRetries = 5)
-            retryOnExceptionIf { request, cause ->
-                cause is NetworkError
+    @Singleton
+    @Provides
+    fun provideApiCaller(): ApiCaller {
+        return this
+    }
+
+    @Singleton
+    @Provides
+    fun provideHttpClient(): HttpClient {
+        return HttpClient(Android) {
+            install(Logging) {
+                logger = Logger.ANDROID
+                level = LogLevel.ALL
             }
-            delayMillis { retry ->
-                retry * 3000L
+
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                })
+            }
+            install(HttpRequestRetry) {
+                retryOnServerErrors(maxRetries = 5)
+                retryOnExceptionIf { request, cause ->
+                    cause is NetworkError
+                }
+                delayMillis { retry ->
+                    retry * 3000L
+                }
             }
         }
     }
+
+    private val client = provideHttpClient();
 
     suspend fun getDirectionsByName(origin: String, destination: String): DirectionsResponse {
         val response: DirectionsResponse = client.get {

@@ -30,11 +30,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        buildConfigField("String", "API_KEY",localProperties.getProperty("API_KEY"))
+        buildConfigField("String", "API_KEY", localProperties.getProperty("API_KEY"))
 
         //noinspection WrongGradleMethod
         ksp {
-            arg("room.schemaLocation","$projectDir/schemas")
+            arg("room.schemaLocation", "$projectDir/schemas")
         }
     }
 
@@ -51,11 +51,11 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true

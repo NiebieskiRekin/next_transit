@@ -58,10 +58,10 @@
             </intent-filter>
         </service>
 
-        <!--        <provider-->
-        <!--            android:name="androidx.startup.InitializationProvider"-->
-        <!--            android:authorities="${applicationId}.androidx-startup"-->
-        <!--            tools:node="remove" />-->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
     </application>
 
 </manifest>

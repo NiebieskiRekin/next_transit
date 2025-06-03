@@ -65,6 +65,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.startActivity
+import androidx.glance.action.actionStartActivity
 import com.example.nexttransit.R
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.calendar.CalendarInfo
