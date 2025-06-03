@@ -15,14 +15,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Save
@@ -45,7 +48,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -58,7 +64,6 @@ import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
@@ -293,20 +298,29 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Next Transit") },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Start) {
+                            Image(painterResource(R.drawable.ic_launcher_foreground),"Next transit logo", modifier = Modifier.padding(8.dp).clip(
+                                CircleShape
+                            ))
+                            Text("Next Transit")
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 )
             }
         ) { padding ->
             LazyColumn(
                 Modifier.padding(padding),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                item {
+                    Text("Zapisane trasy:", style = MaterialTheme.typography.titleLarge)
+                }
 
                 itemsIndexed(state.value.directions) { i, v ->
                     if (i == 0) {
-                        Text("Zapisane trasy:", style = MaterialTheme.typography.titleLarge)
-
                         Spacer(Modifier
                             .padding(8.dp)
                             .fillMaxWidth())
@@ -444,7 +458,9 @@ class MainActivity : ComponentActivity() {
                     TopAppBar(
                         actions = {
                             IconButton({auth.signOut(); startSignIn()}) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") }
-                            AsyncImage(user.photoUrl, user.displayName ?: "User")
+                            AsyncImage(user.photoUrl, user.displayName ?: "User",modifier = Modifier.padding(8.dp).clip(
+                                CircleShape
+                            ))
                         },
                         title = { Text(auth.currentUser?.email.toString()) },
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
