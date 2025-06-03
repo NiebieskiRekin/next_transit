@@ -63,7 +63,11 @@ import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.BackoffPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import coil3.compose.AsyncImage
+import com.example.nexttransit.api.NextTransitWorker
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.calendar.getAvailableCalendars
@@ -72,6 +76,7 @@ import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.database.classes.DirectionsQuery
 import com.example.nexttransit.model.routes.DirectionsResponse
+import com.example.nexttransit.model.routes.Duration
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
 import com.example.nexttransit.model.settings.AppSettingsSerializer
@@ -216,6 +221,15 @@ class MainActivity : ComponentActivity() {
         val resultValue = createResultIntent(appWidgetId)
         auth = Firebase.auth
         setResultBasedOnWidgetId(appWidgetId, resultValue)
+
+        val workRequest = OneTimeWorkRequestBuilder<NextTransitWorker>()
+            .setInitialDelay(java.time.Duration.ofSeconds(15))
+            .setBackoffCriteria(
+                backoffPolicy = BackoffPolicy.LINEAR,
+                duration = java.time.Duration.ofSeconds(15)
+            ).build()
+
+        WorkManager.getInstance(applicationContext).enqueue(workRequest)
 
         setContent {
             NextTransitTheme {

@@ -19,10 +19,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NextTransit"
         tools:targetApi="35">
-        <activity android:name=".TransitWidgetConfigurationActivity"
+        <activity
+            android:name=".TransitWidgetConfigurationActivity"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
         <activity
@@ -55,6 +56,11 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!--        <provider-->
+        <!--            android:name="androidx.startup.InitializationProvider"-->
+        <!--            android:authorities="${applicationId}.androidx-startup"-->
+        <!--            tools:node="remove" />-->
     </application>
 
 </manifest>

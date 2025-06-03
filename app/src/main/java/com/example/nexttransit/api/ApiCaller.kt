@@ -1,12 +1,18 @@
+@file:Suppress("USELESS_IS_CHECK")
+
 package com.example.nexttransit.api
 
+import androidx.credentials.exceptions.domerrors.NetworkError
 import com.example.nexttransit.BuildConfig
+import com.example.nexttransit.model.calendar.Event
+import com.example.nexttransit.model.database.classes.DepartAtOrArriveBy
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.OverviewPolyline
 import com.example.nexttransit.model.routes.PlaceId
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
@@ -16,6 +22,7 @@ import io.ktor.client.request.get
 import io.ktor.http.URLProtocol
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.rootCause
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 
@@ -32,7 +39,7 @@ suspend fun getDirections(
 
 object ApiCaller {
     private val client = HttpClient(Android) {
-        install(Logging){
+        install(Logging) {
             logger = Logger.ANDROID
             level = LogLevel.ALL
         }
@@ -44,52 +51,90 @@ object ApiCaller {
                 ignoreUnknownKeys = true
             })
         }
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 5)
+            retryOnExceptionIf { request, cause ->
+                cause is NetworkError
+            }
+            delayMillis { retry ->
+                retry * 3000L
+            }
+        }
     }
 
-    suspend fun getDirectionsByName(origin: String, destination: String) : DirectionsResponse {
+    suspend fun getDirectionsByName(origin: String, destination: String): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.Companion.HTTPS
                 host = "maps.googleapis.com"
                 path("/maps/api/directions/json")
-                parameters.append("destination",destination)
-                parameters.append("origin",origin)
-                parameters.append("mode","transit")
-                parameters.append("language","pl")
+                parameters.append("destination", destination)
+                parameters.append("origin", origin)
+                parameters.append("mode", "transit")
+                parameters.append("language", "pl")
                 parameters.append("key", BuildConfig.API_KEY)
             }
         }.body()
         return response
     }
 
-    suspend fun getDirectionsByNameAndDepartAt(origin: String, destination: String, departureDateTime: Instant) : DirectionsResponse {
+    suspend fun getDirectionsForEvents(
+        origin: Event,
+        destination: Event,
+        departAtOrArriveBy: DepartAtOrArriveBy
+    ): DirectionsResponse {
+        return when (departAtOrArriveBy) {
+            DepartAtOrArriveBy.ArriveBy -> getDirectionsByNameAndArriveBy(
+                origin.place,
+                destination.place,
+                destination.startDateTime
+            )
+
+            DepartAtOrArriveBy.DepartAt -> getDirectionsByNameAndDepartAt(
+                origin.place,
+                destination.place,
+                origin.endDateTime
+            )
+        }
+    }
+
+
+    suspend fun getDirectionsByNameAndDepartAt(
+        origin: String,
+        destination: String,
+        departureDateTime: Instant
+    ): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.Companion.HTTPS
                 host = "maps.googleapis.com"
                 path("/maps/api/directions/json")
-                parameters.append("destination",destination)
-                parameters.append("origin",origin)
-                parameters.append("departure_time",departureDateTime.epochSeconds.toString())
-                parameters.append("mode","transit")
-                parameters.append("language","pl")
+                parameters.append("destination", destination)
+                parameters.append("origin", origin)
+                parameters.append("departure_time", departureDateTime.epochSeconds.toString())
+                parameters.append("mode", "transit")
+                parameters.append("language", "pl")
                 parameters.append("key", BuildConfig.API_KEY)
             }
         }.body()
         return response
     }
 
-    suspend fun getDirectionsByNameAndArriveBy(origin: String, destination: String, arrivalDateTime: Instant) : DirectionsResponse {
+    suspend fun getDirectionsByNameAndArriveBy(
+        origin: String,
+        destination: String,
+        arrivalDateTime: Instant
+    ): DirectionsResponse {
         val response: DirectionsResponse = client.get {
             url {
                 protocol = URLProtocol.Companion.HTTPS
                 host = "maps.googleapis.com"
                 path("/maps/api/directions/json")
-                parameters.append("destination",destination)
-                parameters.append("origin",origin)
-                parameters.append("arrival_time",arrivalDateTime.epochSeconds.toString())
-                parameters.append("mode","transit")
-                parameters.append("language","pl")
+                parameters.append("destination", destination)
+                parameters.append("origin", origin)
+                parameters.append("arrival_time", arrivalDateTime.epochSeconds.toString())
+                parameters.append("mode", "transit")
+                parameters.append("language", "pl")
                 parameters.append("key", BuildConfig.API_KEY)
             }
         }.body()
@@ -113,18 +158,18 @@ object ApiCaller {
         return response
     }
 
-    fun trimPolyline(directionsResponse: DirectionsResponse) : DirectionsResponse {
+    fun trimPolyline(directionsResponse: DirectionsResponse): DirectionsResponse {
         // This is as bad as it gets
         return directionsResponse.copy(
-            routes=directionsResponse.routes.map { route ->
+            routes = directionsResponse.routes.map { route ->
                 route.copy(
                     overviewPolyline = OverviewPolyline("..."),
-                    legs = route.legs.map {leg ->
+                    legs = route.legs.map { leg ->
                         leg.copy(
-                            steps=leg.steps.map {bigStep ->
+                            steps = leg.steps.map { bigStep ->
                                 bigStep.copy(
                                     polyline = OverviewPolyline("..."),
-                                    steps=bigStep.steps?.map { step ->
+                                    steps = bigStep.steps?.map { step ->
                                         step.copy(
                                             polyline = OverviewPolyline("...")
                                         )
@@ -138,7 +183,7 @@ object ApiCaller {
         )
     }
 
-    fun getSampleDirections() : DirectionsResponse {
+    fun getSampleDirections(): DirectionsResponse {
         val response = """{
   "geocoded_waypoints" :
   [
