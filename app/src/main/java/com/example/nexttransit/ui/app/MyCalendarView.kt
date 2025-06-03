@@ -81,7 +81,7 @@ fun onEventClick(event: Event, context: Context) {
     val uri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.eventId)
     val intent = Intent(Intent.ACTION_EDIT)
         .setData(uri).putExtra(CalendarContract.Events.TITLE, event.name)
-    startActivity(context,intent,null)
+    startActivity(context, intent, null)
 }
 
 @Composable
@@ -93,19 +93,23 @@ fun DoubleEvent(e1: Event, e2: Event) {
     }
     val context = LocalContext.current
 
-    Row(modifier = Modifier.fillMaxWidth()){
+    Row(modifier = Modifier.fillMaxWidth()) {
         EventCard(
-            modifier = Modifier.weight(1f).height(100.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(100.dp),
             event = e1,
             timeFormatter = timeFormatter,
-            onClick = { onEventClick(e1,context) },
+            onClick = { onEventClick(e1, context) },
             isSelected = false
         )
         EventCard(
-            modifier = Modifier.weight(1f).height(100.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(100.dp),
             event = e2,
             timeFormatter = timeFormatter,
-            onClick = { onEventClick(e2,context) },
+            onClick = { onEventClick(e2, context) },
             isSelected = false
         )
     }
@@ -113,13 +117,17 @@ fun DoubleEvent(e1: Event, e2: Event) {
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend (event1: Event, event2: Event, directions: DirectionsResponse, departAtOrArriveBy: DepartAtOrArriveBy) -> Unit) {
+fun MyCalendarView(
+    contentResolver: ContentResolver,
+    createNotification: suspend (event1: Event, event2: Event, directions: DirectionsResponse, departAtOrArriveBy: DepartAtOrArriveBy) -> Unit
+) {
     val scope = rememberCoroutineScope()
     // In your Activity or Composable
     var events = remember { mutableStateListOf<Event>() }
     var calendar by remember { mutableStateOf<CalendarInfo?>(null) }
     val calendars = remember { mutableStateListOf<CalendarInfo>() }
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
+
+    val requestCalendarPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
@@ -136,12 +144,14 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
         }
     }
 
+    var showDialog by remember { mutableStateOf(true) };
     var selectedDate by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TZ).date) }
     var currentYearMonth by remember { mutableStateOf(YearMonth.now()) }
 
     fun onDismissRequest() {
         events.clear()
-        Log.d("CalendarAccess", "No calendar chosen")
+        Log.d("CalendarAccess", "Brak dostępu do kalendarza")
+        showDialog = false;
     }
 
     fun onDateChanged() {
@@ -187,24 +197,24 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
         return
     }
 
-    var firstEvent by remember { mutableStateOf<Event?>(null)}
-    var secondEvent by remember { mutableStateOf<Event?>(null)}
+    var firstEvent by remember { mutableStateOf<Event?>(null) }
+    var secondEvent by remember { mutableStateOf<Event?>(null) }
     val context = LocalContext.current
 
 
     fun onLongPressEvent(event: Event) {
         Log.d("CalendarAccess", firstEvent.toString() + "\n" + secondEvent.toString())
-        if (firstEvent?.id == event.id){
+        if (firstEvent?.id == event.id) {
             firstEvent = null
             return
         }
 
-        if (secondEvent?.id == event.id){
+        if (secondEvent?.id == event.id) {
             secondEvent = null
             return
         }
 
-        if (firstEvent == null){
+        if (firstEvent == null) {
             firstEvent = event
         } else if (secondEvent == null) {
             secondEvent = event
@@ -214,35 +224,46 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
 
     Scaffold(
         floatingActionButton = {
-            if (firstEvent != null && secondEvent != null){
-                Column{
+            if (firstEvent != null && secondEvent != null) {
+                Column {
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-                                if (firstEvent!!.endDateTime > secondEvent!!.endDateTime){
+                                if (firstEvent!!.endDateTime > secondEvent!!.endDateTime) {
                                     val temp = firstEvent
                                     firstEvent = secondEvent
                                     secondEvent = temp
                                 }
                                 var departureDateTime = firstEvent!!.endDateTime
                                 val directions = ApiCaller.getDirectionsByNameAndDepartAt(
-                                    firstEvent!!.place,secondEvent!!.place,departureDateTime
+                                    firstEvent!!.place, secondEvent!!.place, departureDateTime
                                 )
                                 Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(firstEvent!!,secondEvent!!,directions, DepartAtOrArriveBy.DepartAt)
+                                createNotification(
+                                    firstEvent!!,
+                                    secondEvent!!,
+                                    directions,
+                                    DepartAtOrArriveBy.DepartAt
+                                )
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(80.dp).padding(4.dp)
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(4.dp)
                     ) {
-                        Icon(painterResource(R.drawable.depart_at),"Wyznacz trasę wyruszając od końca pierwszego zdarzenia", modifier = Modifier.padding(4.dp))
+                        Icon(
+                            painterResource(R.drawable.depart_at),
+                            "Wyznacz trasę wyruszając od końca pierwszego zdarzenia",
+                            modifier = Modifier.padding(4.dp)
+                        )
                     }
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-                                if (firstEvent!!.startDateTime < secondEvent!!.startDateTime){
+                                if (firstEvent!!.startDateTime < secondEvent!!.startDateTime) {
                                     val temp = firstEvent
                                     firstEvent = secondEvent
                                     secondEvent = temp
@@ -250,18 +271,29 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                                 var arrivalDateTime = secondEvent!!.startDateTime
 
                                 val directions = ApiCaller.getDirectionsByNameAndArriveBy(
-                                    firstEvent!!.place,secondEvent!!.place,arrivalDateTime
+                                    firstEvent!!.place, secondEvent!!.place, arrivalDateTime
                                 )
                                 Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(firstEvent!!,secondEvent!!,directions, DepartAtOrArriveBy.ArriveBy)
+                                createNotification(
+                                    firstEvent!!,
+                                    secondEvent!!,
+                                    directions,
+                                    DepartAtOrArriveBy.ArriveBy
+                                )
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(80.dp).padding(4.dp)
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(4.dp)
                     ) {
-                        Icon(painterResource(R.drawable.arrive_by),"Wyznacz trasę, aby dotrzeć na czas na drugie zdarzenie", modifier = Modifier.padding(4.dp))
+                        Icon(
+                            painterResource(R.drawable.arrive_by),
+                            "Wyznacz trasę, aby dotrzeć na czas na drugie zdarzenie",
+                            modifier = Modifier.padding(4.dp)
+                        )
                     }
                 }
             }
@@ -289,31 +321,38 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
             )
         },
     ) { innerPadding ->
-        LazyColumn (
+        LazyColumn(
             modifier = Modifier.padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(0.dp,0.dp,0.dp,8.dp)
-        ){
-            item{
-                SimpleCalendarView(onDateSelected = { date ->
-                    selectedDate = date
-                    onDateChanged()
-                    Log.d("MainActivity", "Selected date: $date")
-                }, currentYearMonth = currentYearMonth, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer).padding(8.dp))
+            contentPadding = PaddingValues(0.dp, 0.dp, 0.dp, 8.dp)
+        ) {
+            item {
+                SimpleCalendarView(
+                    onDateSelected = { date ->
+                        selectedDate = date
+                        onDateChanged()
+                        Log.d("MainActivity", "Selected date: $date")
+                    },
+                    currentYearMonth = currentYearMonth,
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(8.dp)
+                )
             }
 
-            itemsIndexed(scheduleSlots){ i, slotItem ->
+            itemsIndexed(scheduleSlots) { i, slotItem ->
                 when (slotItem) {
                     is ScheduleSlotItem.EventItem -> {
                         EventCard(
                             modifier = Modifier.fillMaxWidth(),
                             event = slotItem.event,
                             timeFormatter = timeFormatter,
-                            onLongClick = {onLongPressEvent(slotItem.event)},
-                            onClick = { onEventClick(slotItem.event,context) },
+                            onLongClick = { onLongPressEvent(slotItem.event) },
+                            onClick = { onEventClick(slotItem.event, context) },
                             isSelected = (slotItem.event.id == firstEvent?.id) || (slotItem.event.id == secondEvent?.id)
                         )
                     }
+
                     is ScheduleSlotItem.GapItem -> GapCard(
                         startTime = slotItem.startTime,
                         endTime = slotItem.endTime,
@@ -322,74 +361,76 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                 }
             }
         }
-    }
-
-    if (calendar == null) {
-        Dialog(onDismissRequest = { onDismissRequest() }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(375.dp)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.SpaceAround,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize()
+        if (showDialog) {
+            Dialog(onDismissRequest = { onDismissRequest() }) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(375.dp)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    if (calendars.isEmpty()) {
-                        Text("No calendars available")
-                        Row {
-                            TextButton(
-                                onClick = { onDismissRequest() },
-                                modifier = Modifier.padding(8.dp),
-                            ) {
-                                Text("Dismiss", textAlign = TextAlign.Center)
-                            }
-                            TextButton(
-                                onClick = {
-                                    requestPermissionLauncher.launch(
-                                        Manifest.permission.READ_CALENDAR
-                                    )
-                                },
-                                modifier = Modifier.padding(8.dp),
-                            ) {
-                                Text(
-                                    "Grant access to calendars",
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                    } else {
-                        Text("Please choose a calendar")
-
-                        // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior
-                        LazyColumn(Modifier.selectableGroup()) {
-                            itemsIndexed(calendars) { i, c ->
-                                Row(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(56.dp)
-                                        .selectable(
-                                            selected = (calendar == c),
-                                            onClick = {
-                                                calendar = c; onDateChanged()
-                                            },
-                                            role = Role.RadioButton
-                                        )
-                                        .padding(horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        verticalArrangement = Arrangement.SpaceAround,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp)
+                    ) {
+                        if (calendars.isEmpty()) {
+                            Text("Ta funkcjonalność aplikacji wymaga dostępu do kalendarza")
+                            Row {
+                                TextButton(
+                                    onClick = { onDismissRequest() },
+                                    modifier = Modifier.padding(8.dp),
                                 ) {
-                                    RadioButton(
-                                        selected = (c == calendar),
-                                        onClick = null
-                                    )
+                                    Text("Odrzuć", textAlign = TextAlign.Center)
+                                }
+                                TextButton(
+                                    onClick = {
+                                        requestCalendarPermissionLauncher.launch(
+                                            Manifest.permission.READ_CALENDAR
+                                        )
+                                    },
+                                    modifier = Modifier.padding(8.dp),
+                                ) {
                                     Text(
-                                        text = c.displayName,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        modifier = Modifier.padding(start = 16.dp)
+                                        "Zezwól na dostęp",
+                                        textAlign = TextAlign.Center
                                     )
+                                }
+                            }
+                        } else {
+                            Text("Wybierz kalendarz z listy")
+
+                            // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior
+                            LazyColumn(Modifier.selectableGroup()) {
+                                itemsIndexed(calendars) { i, c ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(56.dp)
+                                            .selectable(
+                                                selected = (calendar == c),
+                                                onClick = {
+                                                    calendar = c; onDateChanged(); showDialog =
+                                                    false;
+                                                },
+                                                role = Role.RadioButton
+                                            )
+                                            .padding(horizontal = 16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            selected = (c == calendar),
+                                            onClick = null
+                                        )
+                                        Text(
+                                            text = c.displayName,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier.padding(start = 16.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

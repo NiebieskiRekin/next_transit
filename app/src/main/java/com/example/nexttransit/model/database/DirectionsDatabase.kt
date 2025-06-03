@@ -1,6 +1,7 @@
 package com.example.nexttransit.model.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -12,11 +13,11 @@ import com.example.nexttransit.model.database.dao.DirectionsDao
 
 @Database(
     entities = [Event::class, DirectionsQueryCrossRef::class, CalendarInfo::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
-abstract class DirectionsDatabase: RoomDatabase() {
+abstract class DirectionsDatabase : RoomDatabase() {
     abstract val directionsQueryDao: DirectionsDao
 
     companion object {
@@ -29,7 +30,7 @@ abstract class DirectionsDatabase: RoomDatabase() {
                     context.applicationContext,
                     DirectionsDatabase::class.java,
                     "directions.db"
-                ).build()
+                ).fallbackToDestructiveMigration(true).build()
                 INSTANCE = instance
                 instance
             }

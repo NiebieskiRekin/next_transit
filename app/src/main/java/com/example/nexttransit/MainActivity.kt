@@ -1,7 +1,6 @@
 package com.example.nexttransit
 
 import android.Manifest
-import android.app.Activity.RESULT_FIRST_USER
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -12,6 +11,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -55,7 +55,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -67,6 +66,7 @@ import androidx.lifecycle.ViewModelProvider
 import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
+import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.database.DirectionsDatabase
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
@@ -104,13 +104,13 @@ import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
-    private val db by lazy  {DirectionsDatabase.getDatabase(applicationContext)}
+    private val db by lazy { DirectionsDatabase.getDatabase(applicationContext) }
 
     private val firestoreDb = Firebase.firestore
 
     private val viewModel by viewModels<DirectionsQueryViewModel>(
         factoryProducer = {
-            object: ViewModelProvider.Factory {
+            object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return DirectionsQueryViewModel(db.directionsQueryDao) as T
                 }
@@ -136,25 +136,28 @@ class MainActivity : ComponentActivity() {
 
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
         val response = result.idpResponse
-        Log.d("FirebaseAuth",result.resultCode.toString());
+        Log.d("FirebaseAuth", result.resultCode.toString());
         when (result.resultCode) {
             RESULT_OK -> {
                 Toast.makeText(baseContext, "Zalogowano", Toast.LENGTH_SHORT).show()
                 val user = auth.currentUser
-                Log.d("FirebaseAuth",user.toString());
+                Log.d("FirebaseAuth", user.toString());
             }
+
             RESULT_CANCELED -> {
                 Toast.makeText(baseContext, "Anulowano logowanie", Toast.LENGTH_SHORT).show()
             }
+
             RESULT_FIRST_USER -> {
                 val user = auth.currentUser
-                Log.d("FirebaseAuth",user.toString());
+                Log.d("FirebaseAuth", user.toString());
             }
+
             else -> {
                 Toast.makeText(baseContext, "Nieznany błąd logowania", Toast.LENGTH_SHORT).show()
             }
         }
-        Log.d("FirebaseAuth",response.toString())
+        Log.d("FirebaseAuth", response.toString())
     }
 
     private val signInLauncher = registerForActivityResult(
@@ -163,7 +166,7 @@ class MainActivity : ComponentActivity() {
         this.onSignInResult(res)
     }
 
-    private val requestPermissionLauncher = registerForActivityResult(
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted: Boolean ->
         if (isGranted) {
@@ -253,7 +256,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun getNotificationBuilder(place1: String, place2: String, directions: DirectionsResponse): NotificationCompat.Builder {
+    fun getNotificationBuilder(
+        place1: String,
+        place2: String,
+        directions: DirectionsResponse
+    ): NotificationCompat.Builder {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("Trasa: ${place1} - ${place2}")
@@ -263,15 +270,15 @@ class MainActivity : ComponentActivity() {
         return builder
     }
 
-    fun sendNotification(place1: String, place2: String, directions: DirectionsResponse){
-        val builder = getNotificationBuilder(place1,place2,directions)
+    fun sendNotification(place1: String, place2: String, directions: DirectionsResponse) {
+        val builder = getNotificationBuilder(place1, place2, directions)
         with(NotificationManagerCompat.from(this)) {
             if (ActivityCompat.checkSelfPermission(
                     this@MainActivity,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                Log.e("Notifications","Permission not granted")
+                Log.e("Notifications", "Permission not granted")
                 // TODO: Consider calling
                 // ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -279,7 +286,7 @@ class MainActivity : ComponentActivity() {
                 //                                        grantResults: IntArray)
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
-                requestPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
+                requestNotificationPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
 
                 return@with
             }
@@ -287,8 +294,6 @@ class MainActivity : ComponentActivity() {
             notify(Random.nextInt(), builder.build())
         }
     }
-
-
 
 
     @Composable
@@ -299,10 +304,19 @@ class MainActivity : ComponentActivity() {
             topBar = {
                 TopAppBar(
                     title = {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Start) {
-                            Image(painterResource(R.drawable.ic_launcher_foreground),"Next transit logo", modifier = Modifier.padding(8.dp).clip(
-                                CircleShape
-                            ))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Image(
+                                painterResource(R.drawable.ic_launcher_foreground),
+                                "Next transit logo",
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .clip(
+                                        CircleShape
+                                    )
+                            )
                             Text("Next Transit")
                         }
                     },
@@ -321,21 +335,28 @@ class MainActivity : ComponentActivity() {
 
                 itemsIndexed(state.value.directions) { i, v ->
                     if (i == 0) {
-                        Spacer(Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth())
+                        Spacer(
+                            Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth()
+                        )
 
                         Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
                     } else {
-                        val isSameDate = v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(TZ).date
+                        val isSameDate =
+                            v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(
+                                TZ
+                            ).date
                         if (isSameDate) {
-                            Spacer(Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth())
+                            Spacer(
+                                Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth()
+                            )
                             Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
                         }
                     }
-                    DoubleEvent(v.firstEvent,v.secondEvent)
+                    DoubleEvent(v.firstEvent, v.secondEvent)
                     DirectionsWidget(
                         directions = v.directionsResponse,
                         source = v.firstEvent.place,
@@ -355,7 +376,12 @@ class MainActivity : ComponentActivity() {
             navigationSuiteItems = {
                 AppScreen.entries.forEach {
                     item(
-                        icon = { Icon(it.icon, contentDescription = stringResource(it.contentDescription)) },
+                        icon = {
+                            Icon(
+                                it.icon,
+                                contentDescription = stringResource(it.contentDescription)
+                            )
+                        },
                         label = { Text(stringResource(it.title)) },
                         selected = currentDestination == it,
                         onClick = { currentDestination = it }
@@ -368,19 +394,23 @@ class MainActivity : ComponentActivity() {
                 AppScreen.Notifications -> {
                     NotificationsView()
                 }
+
                 AppScreen.Start -> {
                     val state = viewModel.state
                     StartView(state)
                 }
+
                 AppScreen.Calendar -> {
                     MyCalendarView(contentResolver) { event1, event2, directions, departAtOrArriveBy ->
                         db.directionsQueryDao.upsertDirectionsQuery(
-                            DirectionsQuery(event1, event2,departAtOrArriveBy,directions)
+                            DirectionsQuery(event1, event2, departAtOrArriveBy, directions)
                         )
                     }
                 }
+
                 AppScreen.WidgetSettings -> {
-                    val appSettings = appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
+                    val appSettings =
+                        appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
                     WidgetSettingsView(
                         appSettings = appSettings,
                     )
@@ -390,7 +420,13 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    suspend fun saveObjectToSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, obj: DirectionsQuery, objectId: String? = null): Boolean {
+    suspend fun saveObjectToSubcollection(
+        db: FirebaseFirestore,
+        parentDocumentId: String,
+        subcollectionName: String,
+        obj: DirectionsQuery,
+        objectId: String? = null
+    ): Boolean {
         try {
             val docRef = if (objectId != null) {
                 db.collection(parentDocumentId).document(parentDocumentId)
@@ -408,7 +444,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    suspend fun saveListOfObjectsToSubcollectionBatch(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, objects: List<DirectionsQuery>): Boolean {
+    suspend fun saveListOfObjectsToSubcollectionBatch(
+        db: FirebaseFirestore,
+        parentDocumentId: String,
+        subcollectionName: String,
+        objects: List<DirectionsQuery>
+    ): Boolean {
         val batch = db.batch()
         objects.forEach { obj ->
             val docRef = db.collection(parentDocumentId).document(parentDocumentId)
@@ -417,7 +458,10 @@ class MainActivity : ComponentActivity() {
         }
         try {
             batch.commit().await()
-            Log.d("Firestore", "${objects.size} objects saved successfully to subcollection in a batch.")
+            Log.d(
+                "Firestore",
+                "${objects.size} objects saved successfully to subcollection in a batch."
+            )
             return true
         } catch (e: Exception) {
             Log.e("Firestore", "Error saving objects to subcollection in a batch", e)
@@ -426,7 +470,11 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    suspend fun fetchObjectsFromSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String): List<DirectionsQuery> {
+    suspend fun fetchObjectsFromSubcollection(
+        db: FirebaseFirestore,
+        parentDocumentId: String,
+        subcollectionName: String
+    ): List<DirectionsQuery> {
         val items = mutableListOf<DirectionsQuery>()
         try {
             val querySnapshot = db.collection(parentDocumentId).document(parentDocumentId)
@@ -434,7 +482,7 @@ class MainActivity : ComponentActivity() {
                 .get()
                 .await()
             for (document in querySnapshot.documents) {
-                val data = document.get("data",String::class.java)
+                val data = document.get("data", String::class.java)
                 if (data == null) continue;
                 val dec = Json.decodeFromString<DirectionsQuery>(data)
                 items.add(dec)
@@ -457,21 +505,37 @@ class MainActivity : ComponentActivity() {
                 topBar = {
                     TopAppBar(
                         actions = {
-                            IconButton({auth.signOut(); startSignIn()}) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") }
-                            AsyncImage(user.photoUrl, user.displayName ?: "User",modifier = Modifier.padding(8.dp).clip(
-                                CircleShape
-                            ))
+                            IconButton({ auth.signOut(); startSignIn() }) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Logout,
+                                    "Logout"
+                                )
+                            }
+                            AsyncImage(
+                                user.photoUrl,
+                                user.displayName ?: "User",
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .clip(
+                                        CircleShape
+                                    )
+                            )
                         },
                         title = { Text(auth.currentUser?.email.toString()) },
                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                     )
                 }
             ) { padding ->
-                Column(modifier = Modifier.padding(padding)){
+                Column(modifier = Modifier.padding(padding)) {
                     Button({
                         scope.launch {
                             db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
-                                val res = saveListOfObjectsToSubcollectionBatch(firestoreDb, "next-transit", user.uid.toString(),mydata)
+                                val res = saveListOfObjectsToSubcollectionBatch(
+                                    firestoreDb,
+                                    "next-transit",
+                                    user.uid.toString(),
+                                    mydata
+                                )
                                 if (res) {
                                     Toast.makeText(baseContext, "Saved!", Toast.LENGTH_SHORT).show()
                                 } else {
@@ -485,11 +549,19 @@ class MainActivity : ComponentActivity() {
                     }
                     Button({
                         scope.launch {
-                            val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", user.uid.toString())
-                            if (mydata.isNotEmpty()){
+                            val mydata = fetchObjectsFromSubcollection(
+                                firestoreDb,
+                                "next-transit",
+                                user.uid.toString()
+                            )
+                            if (mydata.isNotEmpty()) {
                                 try {
                                     db.directionsQueryDao.upsertAllDirectionsQuery(mydata)
-                                    Toast.makeText(baseContext, "Sync complete!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        baseContext,
+                                        "Sync complete!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 } catch (e: Exception) {
                                     Toast.makeText(baseContext, "Error!", Toast.LENGTH_SHORT).show()
                                 }
@@ -504,8 +576,9 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    suspend fun UpdateWidgetData(){
-        val resultValue: Intent = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, extractAppWidgetId())
+    suspend fun UpdateWidgetData() {
+        val resultValue: Intent =
+            Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, extractAppWidgetId())
         setResult(RESULT_OK, resultValue)
         val manager = GlanceAppWidgetManager(applicationContext)
         val widget = TransitWidget()
@@ -521,7 +594,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun WidgetSettingsView(appSettings: AppSettings){
+    fun WidgetSettingsView(appSettings: AppSettings) {
         var directions1 by remember { mutableStateOf(appSettings.lastDirectionsResponse) }
         var directions1ButtonClicked by remember { mutableStateOf(false) }
         var source1 by remember { mutableStateOf(appSettings.source.name) }
@@ -598,7 +671,7 @@ class MainActivity : ComponentActivity() {
 
             } else {
                 // Directly ask for the permission
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
