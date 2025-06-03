@@ -363,9 +363,9 @@ class MainActivity : ComponentActivity() {
                     StartView(state)
                 }
                 AppScreen.Calendar -> {
-                    MyCalendarView(contentResolver) { event1, event2, directions ->
+                    MyCalendarView(contentResolver) { event1, event2, directions, departAtOrArriveBy ->
                         db.directionsQueryDao.upsertDirectionsQueryFull(
-                            directions, event1, event2
+                            directions, event1, event2, departAtOrArriveBy
                         )
                     }
                 }
@@ -459,7 +459,7 @@ class MainActivity : ComponentActivity() {
                     Button({
                         scope.launch {
                             db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
-                                val res = saveListOfObjectsToSubcollectionBatch(firestoreDb, "next-transit", auth.currentUser?.uid.toString(),mydata)
+                                val res = saveListOfObjectsToSubcollectionBatch(firestoreDb, "next-transit", user.uid.toString(),mydata)
                                 if (res) {
                                     Toast.makeText(baseContext, "Saved!", Toast.LENGTH_SHORT).show()
                                 } else {
@@ -473,7 +473,7 @@ class MainActivity : ComponentActivity() {
                     }
                     Button({
                         scope.launch {
-                            val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", auth.currentUser?.uid.toString())
+                            val mydata = fetchObjectsFromSubcollection(firestoreDb, "next-transit", user.uid.toString())
                             if (mydata.isNotEmpty()){
                                 try {
                                     db.directionsQueryDao.upsertAllDirectionsQueryFull(mydata)

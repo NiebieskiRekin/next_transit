@@ -31,16 +31,18 @@ data class Event(
     val endDateTime: Instant,
     @Serializable(with = ColorAsIntSerializer::class)
     val color: Color? = null,
-    val eventId: Long
+    val eventId: Long,
+    val calendarId: Long
 ){
-    constructor(name: String, place: String, startDateTime: Instant, endDateTime: Instant, color: Color?, eventId: Long) : this(
+    constructor(name: String, place: String, startDateTime: Instant, endDateTime: Instant, color: Color?, eventId: Long, calendarId: Long) : this(
         hash(name, place, startDateTime, endDateTime).toLong(),
         name,
         place,
         startDateTime,
         endDateTime,
         color,
-        eventId
+        eventId,
+        calendarId
     )
 
     constructor(): this(
@@ -50,6 +52,7 @@ data class Event(
         Instant.fromEpochMilliseconds(0),
         Instant.fromEpochMilliseconds(0),
         null,
+        0,
         0
     )
 }

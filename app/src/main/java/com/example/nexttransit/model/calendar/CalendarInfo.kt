@@ -1,12 +1,16 @@
 package com.example.nexttransit.model.calendar
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Immutable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.example.nexttransit.model.ColorAsIntSerializer
 import kotlinx.serialization.Serializable
 
 @Immutable
 @Serializable
+@Entity
 data class CalendarInfo(
+    @PrimaryKey(autoGenerate = false)
     val id: Long,
     val displayName: String,
     val accountName: String,

@@ -29,5 +29,6 @@ import kotlinx.serialization.Serializable
 data class DirectionsQuery (
     val firstEvent: Long,
     val secondEvent: Long,
-    val directionsResponse: DirectionsResponse
+    val directionsResponse: DirectionsResponse,
+    val departAtOrArriveBy: DepartAtOrArriveBy
 )

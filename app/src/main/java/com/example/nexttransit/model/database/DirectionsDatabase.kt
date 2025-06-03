@@ -3,10 +3,11 @@ package com.example.nexttransit.model.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.nexttransit.model.calendar.CalendarInfo
 import com.example.nexttransit.model.calendar.Event
 
 @Database(
-    entities = [DirectionsQuery::class, Event::class],
+    entities = [DirectionsQuery::class, Event::class, CalendarInfo::class],
     version = 1,
     exportSchema = true,
 )

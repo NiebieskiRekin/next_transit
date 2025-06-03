@@ -62,6 +62,7 @@ import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.calendar.generateScheduleSlots
 import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.calendar.getEvents
+import com.example.nexttransit.model.database.DepartAtOrArriveBy
 import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -112,7 +113,7 @@ fun DoubleEvent(e1: Event, e2: Event) {
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend (event1: Event, event2: Event, directions: DirectionsResponse) -> Unit) {
+fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend (event1: Event, event2: Event, directions: DirectionsResponse, departAtOrArriveBy: DepartAtOrArriveBy) -> Unit) {
     val scope = rememberCoroutineScope()
     // In your Activity or Composable
     var events = remember { mutableStateListOf<Event>() }
@@ -229,7 +230,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                                 )
                                 Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(firstEvent!!,secondEvent!!,directions)
+                                createNotification(firstEvent!!,secondEvent!!,directions, DepartAtOrArriveBy.DepartAt)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -253,7 +254,7 @@ fun MyCalendarView(contentResolver: ContentResolver, createNotification: suspend
                                 )
                                 Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(firstEvent!!,secondEvent!!,directions)
+                                createNotification(firstEvent!!,secondEvent!!,directions, DepartAtOrArriveBy.ArriveBy)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,

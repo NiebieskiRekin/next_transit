@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "fdb9ac07cddf650394fdf2d2d35d7507",
+    "identityHash": "944f74dcbc8d4022c34c84bdffdb1cfa",
     "entities": [
       {
         "tableName": "DirectionsQuery",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstEvent` INTEGER NOT NULL, `secondEvent` INTEGER NOT NULL, `directionsResponse` TEXT NOT NULL, PRIMARY KEY(`firstEvent`, `secondEvent`), FOREIGN KEY(`firstEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`secondEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstEvent` INTEGER NOT NULL, `secondEvent` INTEGER NOT NULL, `directionsResponse` TEXT NOT NULL, `departAtOrArriveBy` TEXT NOT NULL, PRIMARY KEY(`firstEvent`, `secondEvent`), FOREIGN KEY(`firstEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`secondEvent`) REFERENCES `Event`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "firstEvent",
@@ -23,6 +23,12 @@
           {
             "fieldPath": "directionsResponse",
             "columnName": "directionsResponse",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "departAtOrArriveBy",
+            "columnName": "departAtOrArriveBy",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -91,7 +97,7 @@
       },
       {
         "tableName": "Event",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `place` TEXT NOT NULL, `startDateTime` INTEGER NOT NULL, `endDateTime` INTEGER NOT NULL, `color` INTEGER, `eventId` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `place` TEXT NOT NULL, `startDateTime` INTEGER NOT NULL, `endDateTime` INTEGER NOT NULL, `color` INTEGER, `eventId` INTEGER NOT NULL, `calendarId` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -133,6 +139,12 @@
             "columnName": "eventId",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "calendarId",
+            "columnName": "calendarId",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -141,11 +153,52 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "CalendarInfo",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `displayName` TEXT NOT NULL, `accountName` TEXT NOT NULL, `ownerName` TEXT NOT NULL, `color` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountName",
+            "columnName": "accountName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerName",
+            "columnName": "ownerName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fdb9ac07cddf650394fdf2d2d35d7507')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '944f74dcbc8d4022c34c84bdffdb1cfa')"
     ]
   }
 }
