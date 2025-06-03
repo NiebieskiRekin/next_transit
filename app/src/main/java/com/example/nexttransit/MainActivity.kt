@@ -61,7 +61,7 @@ import coil3.compose.AsyncImage
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.database.DirectionsDatabase
-import com.example.nexttransit.model.database.DirectionsQueryFull
+import com.example.nexttransit.model.database.classes.DirectionsQuery
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
 import com.example.nexttransit.model.routes.DirectionsResponse
@@ -97,13 +97,7 @@ import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
-    private val db by lazy {
-        Room.databaseBuilder(
-            applicationContext,
-            DirectionsDatabase::class.java,
-            "directions.db"
-        ).build()
-    }
+
 
     private val firestoreDb = Firebase.firestore
 
@@ -380,7 +374,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    suspend fun saveObjectToSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, obj: DirectionsQueryFull, objectId: String? = null): Boolean {
+    suspend fun saveObjectToSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, obj: DirectionsQuery, objectId: String? = null): Boolean {
         try {
             val docRef = if (objectId != null) {
                 db.collection(parentDocumentId).document(parentDocumentId)
@@ -398,7 +392,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    suspend fun saveListOfObjectsToSubcollectionBatch(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, objects: List<DirectionsQueryFull>): Boolean {
+    suspend fun saveListOfObjectsToSubcollectionBatch(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String, objects: List<DirectionsQuery>): Boolean {
         val batch = db.batch()
         objects.forEach { obj ->
             val docRef = db.collection(parentDocumentId).document(parentDocumentId)
@@ -416,8 +410,8 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    suspend fun fetchObjectsFromSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String): List<DirectionsQueryFull> {
-        val items = mutableListOf<DirectionsQueryFull>()
+    suspend fun fetchObjectsFromSubcollection(db: FirebaseFirestore, parentDocumentId: String, subcollectionName: String): List<DirectionsQuery> {
+        val items = mutableListOf<DirectionsQuery>()
         try {
             val querySnapshot = db.collection(parentDocumentId).document(parentDocumentId)
                 .collection(subcollectionName)
@@ -426,7 +420,7 @@ class MainActivity : ComponentActivity() {
             for (document in querySnapshot.documents) {
                 val data = document.get("data",String::class.java)
                 if (data == null) continue;
-                val dec = Json.decodeFromString<DirectionsQueryFull>(data)
+                val dec = Json.decodeFromString<DirectionsQuery>(data)
                 items.add(dec)
             }
         } catch (e: Exception) {

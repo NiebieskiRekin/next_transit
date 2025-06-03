@@ -7,5 +7,4 @@ plugins {
     alias(libs.plugins.maps.secrets) apply false
     alias(libs.plugins.devtools.ksp) apply false
     alias(libs.plugins.dagger.hilt) apply false
-//    alias(libs.plugins.kotlinx.serialization) apply false
 }

@@ -62,7 +62,7 @@ import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.calendar.generateScheduleSlots
 import com.example.nexttransit.model.calendar.getAvailableCalendars
 import com.example.nexttransit.model.calendar.getEvents
-import com.example.nexttransit.model.database.DepartAtOrArriveBy
+import com.example.nexttransit.model.database.classes.DepartAtOrArriveBy
 import com.example.nexttransit.model.routes.DirectionsResponse
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock

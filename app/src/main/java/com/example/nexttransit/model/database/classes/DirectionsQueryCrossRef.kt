@@ -1,4 +1,4 @@
-package com.example.nexttransit.model.database
+package com.example.nexttransit.model.database.classes
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -15,20 +15,22 @@ import kotlinx.serialization.Serializable
             entity = Event::class,
             parentColumns = ["id"],
             childColumns = ["firstEvent"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.Companion.CASCADE
         ),
         ForeignKey(
             entity = Event::class,
             parentColumns = ["id"],
             childColumns = ["secondEvent"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.Companion.CASCADE
         )
     ],
-    indices = [Index("firstEvent", "secondEvent"),Index("firstEvent"),Index("secondEvent")]
+    indices = [Index("firstEvent", "secondEvent"), Index("firstEvent"), Index("secondEvent")]
 )
-data class DirectionsQuery (
+data class DirectionsQueryCrossRef (
     val firstEvent: Long,
     val secondEvent: Long,
-    val directionsResponse: DirectionsResponse,
-    val departAtOrArriveBy: DepartAtOrArriveBy
-)
+    val departAtOrArriveBy: DepartAtOrArriveBy,
+    val directionsResponse: DirectionsResponse
+) {
+    constructor() :this(0, 0, DepartAtOrArriveBy.DepartAt, DirectionsResponse())
+}
