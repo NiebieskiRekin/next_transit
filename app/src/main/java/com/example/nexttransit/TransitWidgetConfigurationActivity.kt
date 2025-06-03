@@ -7,11 +7,14 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.nexttransit.ui.theme.NextTransitTheme
 
@@ -33,17 +36,23 @@ class TransitWidgetConfigurationActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Button(onClick = {
-                        saveAndExit("Poznań","Kraków",this, appWidgetId)
-                    }){
-                        Text("Add widget!")
+                    val context = this.applicationContext
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Button(onClick = {
+                            saveAndExit("Poznań", "Kraków", context, appWidgetId)
+                        }) {
+                            Text("Add widget!")
+                        }
                     }
                 }
             }
         }
     }
 
-    fun saveAndExit(source:String, destination:String, context:Context, appWidgetId:Int ){
+    fun saveAndExit(source: String, destination: String, context: Context, appWidgetId: Int) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
 
 

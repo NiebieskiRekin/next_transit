@@ -96,6 +96,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -103,7 +104,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val db by lazy { DirectionsDatabase.getDatabase(applicationContext) }

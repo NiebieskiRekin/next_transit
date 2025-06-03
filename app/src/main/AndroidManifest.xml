@@ -9,6 +9,7 @@
 
     <!-- TODO: Change to android:usesCleartextTraffic="false" -->
     <application
+        android:name=".NextTransitApp"
         android:allowBackup="true"
         android:usesCleartextTraffic="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
