@@ -1,10 +1,13 @@
 package com.example.nexttransit.ui.app
 
 import android.Manifest
+import android.R.attr.text
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.Shape
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
@@ -12,9 +15,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,10 +53,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.startActivity
@@ -136,6 +148,7 @@ fun MyCalendarView(
             // Launch your calendar fetching logic here
             calendars.clear()
             calendars.addAll(getAvailableCalendars(contentResolver))
+            Log.d("CalendarAccess", calendars.toString())
         } else {
             // Permission denied. Handle appropriately (e.g., show a message).
             Log.w("CalendarAccess", "READ_CALENDAR permission denied.")
@@ -365,20 +378,20 @@ fun MyCalendarView(
             Dialog(onDismissRequest = { onDismissRequest() }) {
                 Card(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(375.dp)
                         .padding(16.dp),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.SpaceAround,
+                        verticalArrangement = Arrangement.SpaceEvenly,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .fillMaxSize()
                             .padding(8.dp)
                     ) {
                         if (calendars.isEmpty()) {
-                            Text("Ta funkcjonalność aplikacji wymaga dostępu do kalendarza")
+                            Text(
+                                "Ta funkcjonalność aplikacji wymaga dostępu do kalendarza",
+                                modifier = Modifier.padding(8.dp)
+                            )
                             Row {
                                 TextButton(
                                     onClick = { onDismissRequest() },
@@ -404,32 +417,59 @@ fun MyCalendarView(
                             Text("Wybierz kalendarz z listy")
 
                             // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior
-                            LazyColumn(Modifier.selectableGroup()) {
+                            LazyColumn(
+                                Modifier.selectableGroup(),
+                                contentPadding = PaddingValues(8.dp)
+                            ) {
                                 itemsIndexed(calendars) { i, c ->
+                                    val modifierCal = Modifier
+                                        .fillMaxWidth()
+                                        .selectable(
+                                            selected = (calendar == c),
+                                            onClick = {
+                                                calendar = c; onDateChanged(); showDialog =
+                                                false;
+                                            },
+                                            role = Role.RadioButton
+                                        )
+
                                     Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(56.dp)
-                                            .selectable(
-                                                selected = (calendar == c),
-                                                onClick = {
-                                                    calendar = c; onDateChanged(); showDialog =
-                                                    false;
-                                                },
-                                                role = Role.RadioButton
-                                            )
-                                            .padding(horizontal = 16.dp),
+                                        modifier = modifierCal,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         RadioButton(
                                             selected = (c == calendar),
-                                            onClick = null
+                                            onClick = null,
+                                            modifier = Modifier.padding(end = 8.dp)
                                         )
-                                        Text(
-                                            text = c.displayName,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            modifier = Modifier.padding(start = 16.dp)
-                                        )
+
+                                        Column {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                if (c.color != null) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(8.dp)
+                                                            .clip(CircleShape)
+                                                            .background(c.color)
+                                                    )
+                                                }
+                                                Text(
+                                                    text = c.displayName,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    modifier = Modifier.padding(4.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = c.accountName,
+                                                overflow = TextOverflow.Ellipsis,
+                                                maxLines = 1,
+                                                style = MaterialTheme.typography.bodySmall,
+                                            )
+                                            Spacer(Modifier.padding(8.dp))
+                                        }
+
                                     }
                                 }
                             }
