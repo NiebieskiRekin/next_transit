@@ -227,6 +227,7 @@ class MainActivity : ComponentActivity() {
         auth = Firebase.auth
         setResultBasedOnWidgetId(appWidgetId, resultValue)
 
+        
         val workRequest = OneTimeWorkRequestBuilder<NextTransitWorker>()
             .setInitialDelay(java.time.Duration.ofSeconds(15))
             .setBackoffCriteria(
