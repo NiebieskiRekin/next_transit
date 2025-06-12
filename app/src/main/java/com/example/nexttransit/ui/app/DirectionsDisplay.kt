@@ -72,7 +72,6 @@ fun ShowError(text: String) {
 }
 
 
-
 @Composable
 fun LoadingDirectionsWidget(
     directions: DirectionsResponse,
@@ -102,127 +101,129 @@ fun LoadingDirectionsWidget(
 fun DirectionsWidget(
     directions: DirectionsResponse,
     source: String,
-    destination: String
+    destination: String,
+    modifier: Modifier = Modifier
 ) {
-    NextTransitTheme {
-        when (directions.status) {
-            "OK" -> {
-                ColumnPill(
-                    modifier = Modifier.padding(8.dp).clickable(true, "Open Google Maps", null, onClick =
-                        {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                ("https://www.google.com/maps/dir/?api=1" +
-                                        "&origin=${source}" +
-                                        "&destination=${destination}" +
-                                        "&travelmode=transit").toUri()
-                            )
-                            // TODO start main activity
+    when (directions.status) {
+        "OK" -> {
+            ColumnPill(
+                modifier = modifier
+                    .padding(8.dp)
+                    .clickable(
+                        true, "Open Google Maps", null, onClick =
+                            {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    ("https://www.google.com/maps/dir/?api=1" +
+                                            "&origin=${source}" +
+                                            "&destination=${destination}" +
+                                            "&travelmode=transit").toUri()
+                                )
+                                // TODO start main activity
 //                            ContextCompat.startActivity(MainActivity::class, intent, null)
-                        })
-                ) {
-                    if (directions.routes.isEmpty()) {
-                        ShowError(text = "No route found.")
-                    }
-                    directions.routes.forEach { route: Route ->
-                        route.legs.forEach { leg: Leg ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "Departure: ",
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
+                            })
+            ) {
+                if (directions.routes.isEmpty()) {
+                    ShowError(text = "No route found.")
+                }
+                directions.routes.forEach { route: Route ->
+                    route.legs.forEach { leg: Leg ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Departure: ",
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
                                 )
-                                Text(
-                                    text = leg.departureTime.text,
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
+                            )
+                            Text(
+                                text = leg.departureTime.text,
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
                                 )
-                                Spacer(Modifier.size(16.dp))
-                                Text(
-                                    text = "Planned Arrival: ",
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
+                            )
+                            Spacer(Modifier.size(16.dp))
+                            Text(
+                                text = "Planned Arrival: ",
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
                                 )
-                                Text(
-                                    text = leg.arrivalTime.text,
-                                    style = TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
+                            )
+                            Text(
+                                text = leg.arrivalTime.text,
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
                                 )
-                            }
-                            LazyRow(
-                                verticalAlignment = Alignment.Top,
-                            ) {
-                                for ((i, bigStep: Step) in leg.steps.withIndex()) {
-                                    item {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            val travelModeText = getTravelModeText(bigStep)
-                                            Row(
-                                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                                verticalAlignment = Alignment.Bottom
-                                            ) {
-                                                Icon(
-                                                    imageVector = getTravelModeIcon(
-                                                        travelModeText
-                                                    ),
-                                                    travelModeText,
-                                                    tint = MaterialTheme.colorScheme.onSecondary,
-                                                )
-                                                if (bigStep.transitDetails?.line != null) {
-                                                    val text =
-                                                        if (bigStep.transitDetails.line.shortName.isNotBlank()) {
-                                                            bigStep.transitDetails.line.shortName
-                                                        } else if (bigStep.transitDetails.line.name.isNotBlank()) {
-                                                            bigStep.transitDetails.line.name
-                                                        } else {
-                                                            return@Row
-                                                        }
-                                                    val textColor =
-                                                        if (bigStep.transitDetails.line.textColor.isNotBlank()) {
-                                                            Color(bigStep.transitDetails.line.textColor.toColorInt())
-                                                        } else {
-                                                            MaterialTheme.colorScheme.onPrimaryContainer
-                                                        }
-                                                    val backgroundTextColor =
-                                                        if (bigStep.transitDetails.line.color.isNotBlank()) {
-                                                            Color(bigStep.transitDetails.line.color.toColorInt())
-                                                        } else {
-                                                            MaterialTheme.colorScheme.primaryContainer
-                                                        }
-                                                    Text(
-                                                        text = text,
-                                                        style = TextStyle(color = textColor),
-                                                        modifier = Modifier
-                                                            .clip(MaterialTheme.shapes.small)
-                                                            .background(backgroundTextColor)
-                                                            .padding(2.dp)
-                                                    )
-                                                }
-                                            }
-                                            Text(
-                                                text = getTravelTime(bigStep),
-                                                style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
-                                            )
-                                        }
-                                        if (i < leg.steps.lastIndex) {
+                            )
+                        }
+                        LazyRow(
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            for ((i, bigStep: Step) in leg.steps.withIndex()) {
+                                item {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        val travelModeText = getTravelModeText(bigStep)
+                                        Row(
+                                            horizontalArrangement = Arrangement.SpaceEvenly,
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
                                             Icon(
-                                                imageVector = Icons.Rounded.ChevronRight,
-                                                ">",
+                                                imageVector = getTravelModeIcon(
+                                                    travelModeText
+                                                ),
+                                                travelModeText,
                                                 tint = MaterialTheme.colorScheme.onSecondary,
                                             )
-//                                        Spacer(Modifier.size(16.dp))
+                                            if (bigStep.transitDetails?.line != null) {
+                                                val text =
+                                                    if (bigStep.transitDetails.line.shortName.isNotBlank()) {
+                                                        bigStep.transitDetails.line.shortName
+                                                    } else if (bigStep.transitDetails.line.name.isNotBlank()) {
+                                                        bigStep.transitDetails.line.name
+                                                    } else {
+                                                        return@Row
+                                                    }
+                                                val textColor =
+                                                    if (bigStep.transitDetails.line.textColor.isNotBlank()) {
+                                                        Color(bigStep.transitDetails.line.textColor.toColorInt())
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                    }
+                                                val backgroundTextColor =
+                                                    if (bigStep.transitDetails.line.color.isNotBlank()) {
+                                                        Color(bigStep.transitDetails.line.color.toColorInt())
+                                                    } else {
+                                                        MaterialTheme.colorScheme.primaryContainer
+                                                    }
+                                                Text(
+                                                    text = text,
+                                                    style = TextStyle(color = textColor),
+                                                    modifier = Modifier
+                                                        .clip(MaterialTheme.shapes.small)
+                                                        .background(backgroundTextColor)
+                                                        .padding(2.dp)
+                                                )
+                                            }
                                         }
+                                        Text(
+                                            text = getTravelTime(bigStep),
+                                            style = TextStyle(color = MaterialTheme.colorScheme.onSecondary)
+                                        )
+                                    }
+                                    if (i < leg.steps.lastIndex) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.ChevronRight,
+                                            ">",
+                                            tint = MaterialTheme.colorScheme.onSecondary,
+                                        )
+//                                        Spacer(Modifier.size(16.dp))
                                     }
                                 }
                             }
@@ -230,11 +231,11 @@ fun DirectionsWidget(
                     }
                 }
             }
-
-            "Error" -> ShowError(text = "Directions data not available.")
-            "Empty" -> ShowError(text = "Empty response.")
-            else -> {}
         }
+
+        "Error" -> ShowError(text = "Directions data not available.")
+        "Empty" -> ShowError(text = "Empty response.")
+        else -> {}
     }
 }
 
@@ -248,7 +249,13 @@ fun LoadingDirectionsWidgetPreview(
     directionsGenerated: Boolean = false
 ) {
     NextTransitTheme {
-        LoadingDirectionsWidget(directions,source,destination,directionsButtonClicked,directionsGenerated)
+        LoadingDirectionsWidget(
+            directions,
+            source,
+            destination,
+            directionsButtonClicked,
+            directionsGenerated
+        )
     }
 }
 
@@ -260,6 +267,6 @@ private fun DirectionsWidgetPreview(
     destination: String = "Poznań, Piotrowo 2",
 ) {
     NextTransitTheme {
-        DirectionsWidget(directions,source,destination)
+        DirectionsWidget(directions, source, destination)
     }
 }

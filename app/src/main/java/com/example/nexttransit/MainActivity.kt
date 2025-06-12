@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +41,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -62,6 +65,7 @@ import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.work.BackoffPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -85,6 +89,7 @@ import com.example.nexttransit.ui.app.DirectionsWidget
 import com.example.nexttransit.ui.app.DoubleEvent
 import com.example.nexttransit.ui.app.LoadingDirectionsWidget
 import com.example.nexttransit.ui.app.MyCalendarView
+import com.example.nexttransit.ui.app.SwipeableListItem
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import com.example.nexttransit.ui.widget.TransitWidget
 import com.firebase.ui.auth.AuthUI
@@ -155,7 +160,7 @@ class MainActivity : ComponentActivity() {
             }
 
             RESULT_CANCELED -> {
-                Toast.makeText(baseContext, "Anulowano logowanie", Toast.LENGTH_SHORT).show()
+                Toast.makeText(baseContext, "Zalogowano przez google", Toast.LENGTH_SHORT).show()
             }
 
             RESULT_FIRST_USER -> {
@@ -224,7 +229,7 @@ class MainActivity : ComponentActivity() {
 
         val appWidgetId: Int = extractAppWidgetId()
         val resultValue = createResultIntent(appWidgetId)
-//        auth = Firebase.auth
+        auth = Firebase.auth
         setResultBasedOnWidgetId(appWidgetId, resultValue)
 
 
@@ -247,10 +252,10 @@ class MainActivity : ComponentActivity() {
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
-//        val currentUser = auth.currentUser
-//        if (currentUser == null) {
-//            startSignIn()
-//        }
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            startSignIn()
+        }
     }
 
     private fun extractAppWidgetId(): Int {
@@ -320,6 +325,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     fun StartView(stateFlow: StateFlow<DirectionsState>) {
         val state = stateFlow.collectAsState()
+        val scope = rememberCoroutineScope()
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -354,34 +360,58 @@ class MainActivity : ComponentActivity() {
                 }
 
                 itemsIndexed(state.value.directions) { i, v ->
-                    if (i == 0) {
-                        Spacer(
-                            Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth()
-                        )
+                    SwipeableListItem(
+                        content = {
+                            if (i == 0) {
+                                Spacer(
+                                    Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth()
+                                )
 
-                        Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
-                    } else {
-                        val isSameDate =
-                            v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(
-                                TZ
-                            ).date
-                        if (isSameDate) {
-                            Spacer(
-                                Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth()
+                                Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                            } else {
+                                val isSameDate =
+                                    v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(
+                                        TZ
+                                    ).date
+                                if (isSameDate) {
+                                    Spacer(
+                                        Modifier
+                                            .padding(8.dp)
+                                            .fillMaxWidth()
+                                    )
+                                    Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                                }
+                            }
+                            DoubleEvent(v.firstEvent, v.secondEvent)
+                            DirectionsWidget(
+                                directions = v.directionsResponse,
+                                source = v.firstEvent.place,
+                                destination = v.secondEvent.place
                             )
-                            Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                        },
+                        onDelete = {
+                            scope.launch {
+                                Log.d("DirectionsQueryViewModel", "Deleting $v")
+                                db.directionsQueryDao.deleteDirectionsQuery(v)
+                                dropFirebase(firestoreDb, "next-transit", auth.currentUser?.uid!!)
+                                saveListOfObjectsToSubcollectionBatch(
+                                    firestoreDb,
+                                    "next-transit",
+                                    auth.currentUser?.uid!!,
+                                    state.value.directions
+                                )
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Deleted directions",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
-                    }
-                    DoubleEvent(v.firstEvent, v.secondEvent)
-                    DirectionsWidget(
-                        directions = v.directionsResponse,
-                        source = v.firstEvent.place,
-                        destination = v.secondEvent.place
                     )
+
+
                 }
             }
         }
@@ -462,6 +492,15 @@ class MainActivity : ComponentActivity() {
             Log.e("Firestore", "Error saving object to subcollection", e)
             return false
         }
+    }
+
+    suspend fun dropFirebase(
+        fdb: FirebaseFirestore,
+        parentDocumentId: String,
+        collectionId: String
+    ) {
+        fdb.collection(parentDocumentId).document(parentDocumentId)
+            .collection(collectionId).document().delete().await()
     }
 
     suspend fun saveListOfObjectsToSubcollectionBatch(
