@@ -224,10 +224,10 @@ class MainActivity : ComponentActivity() {
 
         val appWidgetId: Int = extractAppWidgetId()
         val resultValue = createResultIntent(appWidgetId)
-        auth = Firebase.auth
+//        auth = Firebase.auth
         setResultBasedOnWidgetId(appWidgetId, resultValue)
 
-        
+
         val workRequest = OneTimeWorkRequestBuilder<NextTransitWorker>()
             .setInitialDelay(java.time.Duration.ofSeconds(15))
             .setBackoffCriteria(
@@ -247,10 +247,10 @@ class MainActivity : ComponentActivity() {
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
-            startSignIn()
-        }
+//        val currentUser = auth.currentUser
+//        if (currentUser == null) {
+//            startSignIn()
+//        }
     }
 
     private fun extractAppWidgetId(): Int {
