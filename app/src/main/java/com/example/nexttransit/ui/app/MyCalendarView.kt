@@ -277,7 +277,7 @@ fun MyCalendarView(
                     SmallFloatingActionButton(
                         onClick = {
                             scope.launch {
-                                if (firstEvent!!.startDateTime < secondEvent!!.startDateTime) {
+                                if (firstEvent!!.startDateTime > secondEvent!!.startDateTime) {
                                     val temp = firstEvent
                                     firstEvent = secondEvent
                                     secondEvent = temp
