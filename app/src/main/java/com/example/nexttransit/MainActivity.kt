@@ -463,6 +463,7 @@ class MainActivity : ComponentActivity() {
                         db.directionsQueryDao.upsertDirectionsQuery(
                             DirectionsQuery(event1, event2, departAtOrArriveBy, directions)
                         )
+                        currentDestination = AppScreen.Start
                     }
                 }
 
