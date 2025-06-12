@@ -238,30 +238,6 @@ fun MyCalendarView(
 
     Scaffold(
         floatingActionButton = {
-            // Nowy przycisk, zawsze widoczny, do dodania eventu w wybranym kalendarzu
-            SmallFloatingActionButton(
-                onClick = {
-                    calendar?.let {
-                        val intent = Intent(Intent.ACTION_INSERT).apply {
-                            data = CalendarContract.Events.CONTENT_URI
-                            putExtra(CalendarContract.Events.CALENDAR_ID, it.id)
-                            // Opcjonalnie można ustawić inne domyślne wartości
-                            putExtra(CalendarContract.Events.TITLE, "Nowe zdarzenie")
-                        }
-                        context.startActivity(intent)
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    painterResource(R.drawable.baseline_event_24),
-                    contentDescription = "Dodaj nowe zdarzenie do kalendarza"
-                )
-            }
             if (firstEvent != null && secondEvent != null) {
                 Column {
                     SmallFloatingActionButton(
@@ -333,6 +309,30 @@ fun MyCalendarView(
                             modifier = Modifier.padding(4.dp)
                         )
                     }
+                }
+            } else {
+                // Nowy przycisk, zawsze widoczny, do dodania eventu w wybranym kalendarzu
+                SmallFloatingActionButton(
+                    onClick = {
+                        calendar?.let {
+                            val intent = Intent(Intent.ACTION_INSERT).apply {
+                                data = CalendarContract.Events.CONTENT_URI
+                                putExtra(CalendarContract.Events.CALENDAR_ID, it.id)
+                                putExtra(CalendarContract.Events.TITLE, "Nowe wydarzenie")
+                            }
+                            context.startActivity(intent)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        painterResource(R.drawable.baseline_event_24),
+                        contentDescription = "Dodaj nowe wydarzenie do kalendarza"
+                    )
                 }
             }
         },
