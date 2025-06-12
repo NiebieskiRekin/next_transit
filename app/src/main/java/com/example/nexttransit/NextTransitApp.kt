@@ -23,37 +23,24 @@ import kotlin.jvm.java
 class NextTransitApp() : Application(),
     Configuration.Provider {
 
-
     @Inject
-    lateinit var hiltWorkerFactory: HiltWorkerFactory
-
-    //
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface HiltWorkerFactoryEntryPoint {
-        fun workerFactory(): HiltWorkerFactory
-    }
-
-//    override val workManagerConfiguration: Configuration = Configuration.Builder()
-//        .setMinimumLoggingLevel(Log.DEBUG).setWorkerFactory(
-//            hiltWorkerFactory
-//        ).build()
+    lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration by lazy {
         Configuration.Builder()
             .setMinimumLoggingLevel(Log.DEBUG)
-            .setWorkerFactory(hiltWorkerFactory)
+            .setWorkerFactory(workerFactory)
             .build()
     }
 }
 
-class NextTransitWorkerFactory @Inject constructor(
-    private val apiCaller: ApiCaller,
-    private val directionsDao: DirectionsDao
-) : WorkerFactory() {
-    override fun createWorker(
-        appContext: Context,
-        workerClassName: String,
-        workerParameters: WorkerParameters
-    ): ListenableWorker? = NextTransitWorker(appContext, workerParameters, apiCaller, directionsDao)
-}
+//class NextTransitWorkerFactory @Inject constructor(
+//    private val apiCaller: ApiCaller,
+//    private val directionsDao: DirectionsDao
+//) : WorkerFactory() {
+//    override fun createWorker(
+//        appContext: Context,
+//        workerClassName: String,
+//        workerParameters: WorkerParameters
+//    ): ListenableWorker? = NextTransitWorker(appContext, workerParameters)
+//}
