@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +42,7 @@ import com.example.nexttransit.getTravelModeText
 import com.example.nexttransit.getTravelTime
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlin.collections.forEach
+import android.net.Uri
 
 
 @Composable
@@ -107,19 +109,21 @@ fun DirectionsWidget(
     NextTransitTheme {
         when (directions.status) {
             "OK" -> {
+
+                val context = LocalContext.current
                 ColumnPill(
-                    modifier = Modifier.padding(8.dp).clickable(true, "Open Google Maps", null, onClick =
-                        {
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
                                 ("https://www.google.com/maps/dir/?api=1" +
-                                        "&origin=${source}" +
-                                        "&destination=${destination}" +
+                                        "&origin=${Uri.encode(source)}" +
+                                        "&destination=${Uri.encode(destination)}" +
                                         "&travelmode=transit").toUri()
                             )
-                            // TODO start main activity
-//                            ContextCompat.startActivity(MainActivity::class, intent, null)
-                        })
+                            context.startActivity(intent)
+                        }
                 ) {
                     if (directions.routes.isEmpty()) {
                         ShowError(text = "No route found.")
