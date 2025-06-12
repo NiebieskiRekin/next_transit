@@ -254,11 +254,11 @@ fun MyCalendarView(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(100.dp)
                     .padding(16.dp)
             ) {
                 Icon(
-                    painterResource(R.drawable.baseline_directions_walk_24_white), // lub użyj Icons.Default.Add z compose.material.icons
+                    painterResource(R.drawable.baseline_event_24),
                     contentDescription = "Dodaj nowe zdarzenie do kalendarza"
                 )
             }
