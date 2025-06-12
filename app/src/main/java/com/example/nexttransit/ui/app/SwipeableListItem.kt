@@ -10,13 +10,12 @@ import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.SwipeToDismiss
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.Card
-import androidx.compose.material3.ListItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,16 +27,14 @@ fun SwipeableListItem(
     content: @Composable () -> Unit,
     onDelete: () -> Unit
 ) {
-    val dismissState = rememberDismissState(
-        confirmStateChange = {
-            if (it == DismissValue.DismissedToStart) {
-                onDelete()
-                true
-            } else {
-                false
-            }
+    val dismissState = rememberDismissState()
+    if (dismissState.isDismissed(DismissDirection.EndToStart)) {
+        // Delete item and reset state
+        LaunchedEffect(key1 = content) {
+            onDelete()
+            dismissState.snapTo(DismissValue.Default)
         }
-    )
+    }
 
     SwipeToDismiss(
         state = dismissState,

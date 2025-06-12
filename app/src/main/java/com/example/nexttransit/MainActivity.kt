@@ -356,7 +356,11 @@ class MainActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
-                    Text("Zapisane trasy:", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "Zapisane trasy:",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(4.dp)
+                    )
                 }
 
                 itemsIndexed(state.value.directions) { i, v ->
@@ -369,7 +373,10 @@ class MainActivity : ComponentActivity() {
                                         .fillMaxWidth()
                                 )
 
-                                Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                                Text(
+                                    "${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}",
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
                             } else {
                                 val isSameDate =
                                     v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(
@@ -395,6 +402,7 @@ class MainActivity : ComponentActivity() {
                             scope.launch {
                                 Log.d("DirectionsQueryViewModel", "Deleting $v")
                                 db.directionsQueryDao.deleteDirectionsQuery(v)
+
                                 dropFirebase(firestoreDb, "next-transit", auth.currentUser?.uid!!)
                                 saveListOfObjectsToSubcollectionBatch(
                                     firestoreDb,
