@@ -1,5 +1,6 @@
 package com.example.nexttransit.ui.app
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,19 +27,33 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.api.ApiCaller.getSampleDirections
 import com.example.nexttransit.api.ApiCaller.trimPolyline
+import com.example.nexttransit.model.database.DirectionsDatabase
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.settings.AppSettings
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun DebugOutput(
     appSettings: AppSettings = AppSettings().getDefault(),
     newDirections: DirectionsResponse = getSampleDirections(),
 ) {
+    lateinit var database: DirectionsDatabase;
+    lateinit var apiService: ApiCaller
+    lateinit var dataStore: DataStore<AppSettings>
+
+    @SuppressLint("StaticFieldLeak")
+    lateinit var firestore: FirebaseFirestore
+    lateinit var auth: FirebaseAuth
+
     var showDebugOutput by remember { mutableStateOf(false) }
     Column {
-        TextButton(onClick = { showDebugOutput = !showDebugOutput }, content = {
+        TextButton(
+            onClick = { showDebugOutput = !showDebugOutput }, content = {
             Text(
                 if (showDebugOutput) {
                     "Hide Debug Output"

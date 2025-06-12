@@ -17,12 +17,9 @@ import kotlinx.datetime.Clock
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 
-@HiltWorker
-class NextTransitWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted workerParams: WorkerParameters,
-    private val apiCaller: ApiCaller,
-    private val directionsDao: DirectionsDao,
+class NextTransitWorker(
+    context: Context,
+    workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
     private val TAG = "NextTransitWorker"
 

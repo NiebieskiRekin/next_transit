@@ -54,8 +54,8 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.nexttransit.MainActivity
-import com.example.nexttransit.MainActivity.Companion.appSettingsDataStore
 import com.example.nexttransit.R
+import com.example.nexttransit.ServiceLocator
 import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.getLocalTime
 import com.example.nexttransit.getTravelModeIconResource
@@ -79,21 +79,25 @@ class TransitWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
-            val appSettings =
-                context.appSettingsDataStore.data.collectAsState(initial = AppSettings())
+            val db = ServiceLocator.provideDatabase(context)
+            val api = ServiceLocator.provideApiService()
+            val firestore = ServiceLocator.provideFirestore()
+            val appSettings = ServiceLocator.provideDataStore(context)
+
+            val settings = appSettings.data.collectAsState(initial = AppSettings())
             Log.d("GlanceWidget", LocalGlanceId.current.toString())
             Column {
                 Content(
-                    appSettings.value.lastDirectionsResponse,
-                    appSettings.value.source.placeId,
-                    appSettings.value.destination.placeId,
+                    settings.value.lastDirectionsResponse,
+                    settings.value.source.placeId,
+                    settings.value.destination.placeId,
                     context
                 )
-                if (LocalSize.current == largeMode){
+                if (LocalSize.current == largeMode) {
                     Content(
-                        directions = appSettings.value.returnResponse,
-                        sourcePlaceId = appSettings.value.secondSource.placeId,
-                        destinationPlaceId = appSettings.value.secondDestination.placeId,
+                        directions = settings.value.returnResponse,
+                        sourcePlaceId = settings.value.secondSource.placeId,
+                        destinationPlaceId = settings.value.secondDestination.placeId,
                         context = context
                     )
                 }
@@ -376,9 +380,10 @@ class RefreshAction : ActionCallback {
         parameters: ActionParameters
     ) {
         Log.d("TransitWidget", glanceId.toString())
+        val appSettings = ServiceLocator.provideDataStore(context)
 
         coroutineScope {
-            context.appSettingsDataStore.updateData {
+            appSettings.updateData {
                 it.copy(
                     lastDirectionsResponse = ApiCaller.getDirectionsByPlaceId(
                         it.source.placeId, it.destination.placeId

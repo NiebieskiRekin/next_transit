@@ -1,5 +1,6 @@
 package com.example.nexttransit.ui.app
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -25,9 +26,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import com.example.nexttransit.api.ApiCaller
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.calendar.getLocalTime
+import com.example.nexttransit.model.database.DirectionsDatabase
+import com.example.nexttransit.model.settings.AppSettings
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeFormat
@@ -40,19 +47,36 @@ import kotlinx.datetime.format.DateTimeFormat
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<LocalTime>, onClick: () -> Unit = {}, onLongClick: () -> Unit = {}, isSelected: Boolean) {
-    var modifier = modifier.combinedClickable(
-        onClick = onClick,
-        onLongClick = onLongClick
-    ).padding(8.dp,0.dp)
+fun EventCard(
+    modifier: Modifier,
+    event: Event,
+    timeFormatter: DateTimeFormat<LocalTime>,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+    isSelected: Boolean
+) {
+    var modifier = modifier
+        .combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
+        .padding(8.dp, 0.dp)
 
-    if (isSelected){
+    if (isSelected) {
         modifier = modifier.border(
             width = 2.dp,
             color = colorScheme.onSecondaryContainer,
             shape = MaterialTheme.shapes.medium
         )
     }
+
+    lateinit var database: DirectionsDatabase;
+    lateinit var apiService: ApiCaller
+    lateinit var dataStore: DataStore<AppSettings>
+
+    @SuppressLint("StaticFieldLeak")
+    lateinit var firestore: FirebaseFirestore
+    lateinit var auth: FirebaseAuth
 
     Card(
         modifier = modifier,
@@ -86,7 +110,9 @@ fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<Loc
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${event.startDateTime.getLocalTime(TZ).format(timeFormatter)} - ${event.endDateTime.getLocalTime(TZ).format(timeFormatter)}",
+                text = "${
+                    event.startDateTime.getLocalTime(TZ).format(timeFormatter)
+                } - ${event.endDateTime.getLocalTime(TZ).format(timeFormatter)}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
@@ -105,17 +131,22 @@ fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<Loc
 fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFormat<LocalTime>) {
 
     val outline = colorScheme.outline
-    val stroke = Stroke(width = 4f,
+    val stroke = Stroke(
+        width = 4f,
         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
     )
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp,0.dp).drawBehind {
-            drawRoundRect(
-                color = outline,
-                style = stroke,
-                cornerRadius = CornerRadius(16.dp.toPx())
-            )
-        }.clip(RoundedCornerShape(16.dp)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp, 0.dp)
+            .drawBehind {
+                drawRoundRect(
+                    color = outline,
+                    style = stroke,
+                    cornerRadius = CornerRadius(16.dp.toPx())
+                )
+            }
+            .clip(RoundedCornerShape(16.dp)),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.background

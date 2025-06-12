@@ -3,7 +3,6 @@ package com.example.nexttransit
 import android.Manifest
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -40,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,8 +57,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -69,7 +67,6 @@ import coil3.compose.AsyncImage
 import com.example.nexttransit.api.NextTransitWorker
 import com.example.nexttransit.model.AppScreen
 import com.example.nexttransit.model.calendar.TZ
-import com.example.nexttransit.model.database.DirectionsDatabase
 import com.example.nexttransit.model.database.DirectionsDatabaseModule
 import com.example.nexttransit.model.database.DirectionsQueryViewModel
 import com.example.nexttransit.model.database.DirectionsState
@@ -77,7 +74,6 @@ import com.example.nexttransit.model.database.classes.DirectionsQuery
 import com.example.nexttransit.model.routes.DirectionsResponse
 import com.example.nexttransit.model.routes.Location
 import com.example.nexttransit.model.settings.AppSettings
-import com.example.nexttransit.model.settings.AppSettingsSerializer
 import com.example.nexttransit.ui.app.CHANNEL_ID
 import com.example.nexttransit.ui.app.DebugOutput
 import com.example.nexttransit.ui.app.DirectionsTextFieldsSettings
@@ -95,31 +91,27 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
-import javax.inject.Inject
 import kotlin.random.Random
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var db: DirectionsDatabase
-
-    private val firestoreDb = Firebase.firestore
 
     @Suppress("UNCHECKED_CAST")
     private val viewModel by viewModels<DirectionsQueryViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return DirectionsQueryViewModel(db.directionsQueryDao) as T
+                    return DirectionsQueryViewModel(
+                        ServiceLocator.provideDatabase(
+                            applicationContext
+                        ).directionsQueryDao
+                    ) as T
                 }
             }
         }
@@ -142,7 +134,6 @@ class MainActivity : ComponentActivity() {
         signInLauncher.launch(signInIntent)
     }
 
-    private lateinit var auth: FirebaseAuth
 
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
         val response = result.idpResponse
@@ -150,7 +141,7 @@ class MainActivity : ComponentActivity() {
         when (result.resultCode) {
             RESULT_OK -> {
                 Toast.makeText(baseContext, "Zalogowano", Toast.LENGTH_SHORT).show()
-                val user = auth.currentUser
+                val user = ServiceLocator.auth.currentUser
                 Log.d("FirebaseAuth", user.toString());
             }
 
@@ -159,7 +150,7 @@ class MainActivity : ComponentActivity() {
             }
 
             RESULT_FIRST_USER -> {
-                val user = auth.currentUser
+                val user = ServiceLocator.auth.currentUser
                 Log.d("FirebaseAuth", user.toString());
             }
 
@@ -199,17 +190,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    companion object {
-        val Context.appSettingsDataStore: DataStore<AppSettings> by dataStore(
-            "app-settings.json",
-            serializer = AppSettingsSerializer,
-        )
-    }
-
     private suspend fun updateSettings(
         sourceName: String, destinationName: String, directions: DirectionsResponse
     ) {
-        appSettingsDataStore.updateData {
+        ServiceLocator.provideDataStore(
+            applicationContext
+        ).updateData {
             it.copy(
                 source = Location(sourceName, directions.geocodedWaypoints[0].placeId),
                 destination = Location(destinationName, directions.geocodedWaypoints[1].placeId),
@@ -221,24 +207,39 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val db = ServiceLocator.provideDatabase(applicationContext)
+        val api = ServiceLocator.provideApiService()
+        val firestore = ServiceLocator.provideFirestore()
+        val appSettingsDataStore = ServiceLocator.provideDataStore(applicationContext)
+        val auth = ServiceLocator.provideAuth();
 
         val appWidgetId: Int = extractAppWidgetId()
         val resultValue = createResultIntent(appWidgetId)
-        auth = Firebase.auth
         setResultBasedOnWidgetId(appWidgetId, resultValue)
 
-        
+
         val workRequest = OneTimeWorkRequestBuilder<NextTransitWorker>()
             .setInitialDelay(java.time.Duration.ofSeconds(15))
             .setBackoffCriteria(
                 backoffPolicy = BackoffPolicy.LINEAR,
-                duration = java.time.Duration.ofSeconds(15)
+                duration = java.time.Duration.ofSeconds(5)
             ).build()
 
         WorkManager.getInstance(applicationContext).enqueue(workRequest)
 
         setContent {
             NextTransitTheme {
+                val appSettings =
+                    appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
+
+                LaunchedEffect("SettingsUpdate") {
+                    updateSettings(
+                        appSettings.source.name,
+                        appSettings.destination.name,
+                        appSettings.lastDirectionsResponse
+                    )
+                }
+
                 MainContent()
             }
         }
@@ -247,7 +248,7 @@ class MainActivity : ComponentActivity() {
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
+        val currentUser = ServiceLocator.auth.currentUser
         if (currentUser == null) {
             startSignIn()
         }
@@ -422,7 +423,9 @@ class MainActivity : ComponentActivity() {
 
                 AppScreen.Calendar -> {
                     MyCalendarView(contentResolver) { event1, event2, directions, departAtOrArriveBy ->
-                        db.directionsQueryDao.upsertDirectionsQuery(
+                        ServiceLocator.provideDatabase(
+                            applicationContext
+                        ).directionsQueryDao.upsertDirectionsQuery(
                             DirectionsQuery(event1, event2, departAtOrArriveBy, directions)
                         )
                     }
@@ -430,7 +433,9 @@ class MainActivity : ComponentActivity() {
 
                 AppScreen.WidgetSettings -> {
                     val appSettings =
-                        appSettingsDataStore.data.collectAsState(initial = AppSettings()).value
+                        ServiceLocator.provideDataStore(
+                            applicationContext
+                        ).data.collectAsState(initial = AppSettings()).value
                     WidgetSettingsView(
                         appSettings = appSettings,
                     )
@@ -517,6 +522,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun NotificationsView() {
         val scope = rememberCoroutineScope()
+        val db = ServiceLocator.provideDatabase(applicationContext)
+        val firestore = ServiceLocator.provideFirestore()
+        val auth = ServiceLocator.provideAuth()
         if (auth.currentUser == null) {
             startSignIn()
         } else {
@@ -551,7 +559,7 @@ class MainActivity : ComponentActivity() {
                         scope.launch {
                             db.directionsQueryDao.getAllDirectionsQueries().collect { mydata ->
                                 val res = saveListOfObjectsToSubcollectionBatch(
-                                    firestoreDb,
+                                    firestore,
                                     "next-transit",
                                     user.uid.toString(),
                                     mydata
@@ -570,7 +578,7 @@ class MainActivity : ComponentActivity() {
                     Button({
                         scope.launch {
                             val mydata = fetchObjectsFromSubcollection(
-                                firestoreDb,
+                                firestore,
                                 "next-transit",
                                 user.uid.toString()
                             )
