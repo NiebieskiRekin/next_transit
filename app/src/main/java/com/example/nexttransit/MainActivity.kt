@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -121,6 +122,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 import androidx.compose.ui.text.TextStyle
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -337,6 +339,7 @@ class MainActivity : ComponentActivity() {
     fun StartView(stateFlow: StateFlow<DirectionsState>) {
         val state = stateFlow.collectAsState()
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -485,7 +488,36 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         addToCalendar = {
+                            if (v.firstEvent.place == v.secondEvent.place) {
+                                return@SwipeableListItem;
+                            }
+                            Log.d("CALENDAR", v.firstEvent.calendarId.toString())
 
+                            val intent = Intent(Intent.ACTION_INSERT).apply {
+                                data = CalendarContract.Events.CONTENT_URI
+                                putExtra(
+                                    CalendarContract.Events.CALENDAR_ID,
+                                    v.firstEvent.calendarId
+                                )
+                                putExtra(
+                                    CalendarContract.Events.TITLE,
+                                    "Podróż do ${v.secondEvent.place}"
+                                )
+                                putExtra(
+                                    CalendarContract.Events.DESCRIPTION,
+                                    "Podróż z ${v.firstEvent.place} do ${v.secondEvent.place}" +
+                                            "${v.directionsResponse.routes.first().legs.first().steps.first().htmlInstructions}"
+                                )
+                                putExtra(
+                                    CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+                                    v.directionsResponse.routes.first().legs.first().departureTime.value
+                                )
+                                putExtra(
+                                    CalendarContract.EXTRA_EVENT_END_TIME,
+                                    v.directionsResponse.routes.first().legs.last().arrivalTime.value
+                                )
+                            }
+                            context.startActivity(intent)
                         }
                     )
 
