@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,9 +29,16 @@ import androidx.compose.ui.unit.dp
 import com.example.nexttransit.model.calendar.Event
 import com.example.nexttransit.model.calendar.TZ
 import com.example.nexttransit.model.calendar.getLocalTime
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toJavaInstant
+import kotlinx.datetime.toLocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * Composable for displaying an individual event.
@@ -40,13 +48,26 @@ import kotlinx.datetime.format.DateTimeFormat
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<LocalTime>, onClick: () -> Unit = {}, onLongClick: () -> Unit = {}, isSelected: Boolean) {
-    var modifier = modifier.combinedClickable(
-        onClick = onClick,
-        onLongClick = onLongClick
-    ).padding(8.dp,0.dp)
+fun EventCard(
+    modifier: Modifier,
+    event: Event,
+    timeFormatter: DateTimeFormat<LocalTime>,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+    isSelected: Boolean
+) {
+    var modifier = modifier
+        .combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
+        .padding(8.dp, 0.dp)
 
-    if (isSelected){
+    val date_formatter = LocalDate.Format {
+        dayOfMonth(); char('-'); monthNumber(); char('-'); year();
+    }
+
+    if (isSelected) {
         modifier = modifier.border(
             width = 2.dp,
             color = colorScheme.onSecondaryContainer,
@@ -75,7 +96,8 @@ fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<Loc
                 text = event.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = colorScheme.onPrimaryContainer
+                color = colorScheme.onPrimaryContainer,
+                maxLines = 1, overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -86,9 +108,12 @@ fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<Loc
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${event.startDateTime.getLocalTime(TZ).format(timeFormatter)} - ${event.endDateTime.getLocalTime(TZ).format(timeFormatter)}",
+                text = "${
+                    event.startDateTime.getLocalTime(TZ).format(timeFormatter)
+                } - ${event.endDateTime.getLocalTime(TZ).format(timeFormatter)}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                color = colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                maxLines = 1, overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -105,17 +130,22 @@ fun EventCard(modifier: Modifier,event: Event, timeFormatter: DateTimeFormat<Loc
 fun GapCard(startTime: LocalTime, endTime: LocalTime, timeFormatter: DateTimeFormat<LocalTime>) {
 
     val outline = colorScheme.outline
-    val stroke = Stroke(width = 4f,
+    val stroke = Stroke(
+        width = 4f,
         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
     )
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp,0.dp).drawBehind {
-            drawRoundRect(
-                color = outline,
-                style = stroke,
-                cornerRadius = CornerRadius(16.dp.toPx())
-            )
-        }.clip(RoundedCornerShape(16.dp)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp, 0.dp)
+            .drawBehind {
+                drawRoundRect(
+                    color = outline,
+                    style = stroke,
+                    cornerRadius = CornerRadius(16.dp.toPx())
+                )
+            }
+            .clip(RoundedCornerShape(16.dp)),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.background

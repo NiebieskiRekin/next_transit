@@ -362,35 +362,35 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(4.dp)
                     )
                 }
-
                 itemsIndexed(state.value.directions) { i, v ->
+                    if (i == 0) {
+                        Spacer(
+                            Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth()
+                        )
+
+                        Text(
+                            "${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}",
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    } else {
+                        val isSameDate =
+                            v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(
+                                TZ
+                            ).date
+                        if (isSameDate) {
+                            Spacer(
+                                Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth()
+                            )
+                            Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
+                        }
+                    }
+
                     SwipeableListItem(
                         content = {
-                            if (i == 0) {
-                                Spacer(
-                                    Modifier
-                                        .padding(8.dp)
-                                        .fillMaxWidth()
-                                )
-
-                                Text(
-                                    "${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}",
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
-                            } else {
-                                val isSameDate =
-                                    v.firstEvent.startDateTime.toLocalDateTime(TZ).date != state.value.directions[i - 1].firstEvent.startDateTime.toLocalDateTime(
-                                        TZ
-                                    ).date
-                                if (isSameDate) {
-                                    Spacer(
-                                        Modifier
-                                            .padding(8.dp)
-                                            .fillMaxWidth()
-                                    )
-                                    Text("${v.firstEvent.startDateTime.toLocalDateTime(TZ).date}")
-                                }
-                            }
                             DoubleEvent(v.firstEvent, v.secondEvent)
                             DirectionsWidget(
                                 directions = v.directionsResponse,
