@@ -473,13 +473,13 @@ class MainActivity : ComponentActivity() {
                                 Log.d("DirectionsQueryViewModel", "Deleting $v")
                                 db.directionsQueryDao.deleteDirectionsQuery(v)
 
-                                dropFirebase(firestoreDb, "next-transit", auth.currentUser?.uid!!)
-                                saveListOfObjectsToSubcollectionBatch(
-                                    firestoreDb,
-                                    "next-transit",
-                                    auth.currentUser?.uid!!,
-                                    state.value.directions
-                                )
+//                                dropFirebase(firestoreDb, "next-transit", auth.currentUser?.uid!!)
+//                                saveListOfObjectsToSubcollectionBatch(
+//                                    firestoreDb,
+//                                    "next-transit",
+//                                    auth.currentUser?.uid!!,
+//                                    state.value.directions
+//                                )
                                 Toast.makeText(
                                     applicationContext,
                                     "Deleted directions",
