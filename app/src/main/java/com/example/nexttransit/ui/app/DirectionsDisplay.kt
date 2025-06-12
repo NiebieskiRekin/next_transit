@@ -43,6 +43,7 @@ import com.example.nexttransit.getTravelTime
 import com.example.nexttransit.ui.theme.NextTransitTheme
 import kotlin.collections.forEach
 import android.net.Uri
+import android.util.Log
 
 
 @Composable
@@ -115,13 +116,29 @@ fun DirectionsWidget(
                     modifier = Modifier
                         .padding(8.dp)
                         .clickable {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                ("https://www.google.com/maps/dir/?api=1" +
-                                        "&origin=${Uri.encode(source)}" +
-                                        "&destination=${Uri.encode(destination)}" +
-                                        "&travelmode=transit").toUri()
-                            )
+                            val originEncoded = Uri.encode(source)
+                            val destinationEncoded = Uri.encode(destination)
+
+                            // Używamy bezpośrednio czasu odjazdu z API
+                            val departureTimestampRaw = directions.routes.firstOrNull()
+                                ?.legs?.firstOrNull()?.departureTime?.value ?: 0L
+
+                            val departureTimestamp = if (departureTimestampRaw > 1000000000000L) {
+                                departureTimestampRaw / 1000
+                            } else {
+                                departureTimestampRaw
+                            }
+
+                            val mapsUrl = "https://www.google.com/maps/dir/?api=1" +
+                                    "&origin=$originEncoded" +
+                                    "&destination=$destinationEncoded" +
+                                    "&travelmode=transit" +
+                                    "&dirflg=r" +
+                                    "&departure_time=$departureTimestamp" // Zmieniono na departureTimestamp
+
+                            Log.d("GOOGLEMAPS", "Generated link: $mapsUrl")
+
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsUrl))
                             context.startActivity(intent)
                         }
                 ) {
