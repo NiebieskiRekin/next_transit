@@ -123,6 +123,7 @@ import kotlin.random.Random
 import androidx.compose.ui.text.TextStyle
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.net.toUri
+import androidx.core.text.HtmlCompat
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -488,40 +489,36 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         addToCalendar = {
-                            if (v.firstEvent.place == v.secondEvent.place) {
-                                return@SwipeableListItem;
-                            }
+                            if (v.firstEvent.place == v.secondEvent.place) return@SwipeableListItem
+
                             Log.d("CALENDAR", v.firstEvent.calendarId.toString())
+
+                            val departure = v.directionsResponse.routes.first().legs.first().departureTime.value
+                            val arrival = v.directionsResponse.routes.first().legs.last().arrivalTime.value
+
+                            // Jeśli API podało sekundy, przeliczamy na milisekundy
+                            val departureMillis = if (departure < 1000000000000L) departure * 1000 else departure
+                            val arrivalMillis = if (arrival < 1000000000000L) arrival * 1000 else arrival
 
                             val intent = Intent(Intent.ACTION_INSERT).apply {
                                 data = CalendarContract.Events.CONTENT_URI
-                                putExtra(
-                                    CalendarContract.Events.CALENDAR_ID,
-                                    v.firstEvent.calendarId
-                                )
-                                putExtra(
-                                    CalendarContract.Events.TITLE,
-                                    "Podróż do ${v.secondEvent.place}"
-                                )
+                                putExtra(CalendarContract.Events.CALENDAR_ID, v.firstEvent.calendarId)
+                                putExtra(CalendarContract.Events.TITLE, "Podróż do ${v.secondEvent.place}")
                                 putExtra(
                                     CalendarContract.Events.DESCRIPTION,
-                                    "Podróż z ${v.firstEvent.place} do ${v.secondEvent.place}" +
-                                            "${v.directionsResponse.routes.first().legs.first().steps.first().htmlInstructions}"
+                                    "Podróż z ${v.firstEvent.place} do ${v.secondEvent.place}.\n" +
+                                            HtmlCompat.fromHtml(
+                                                v.directionsResponse.routes.first().legs.first().steps.first().htmlInstructions,
+                                                HtmlCompat.FROM_HTML_MODE_LEGACY
+                                            )
                                 )
-                                putExtra(
-                                    CalendarContract.EXTRA_EVENT_BEGIN_TIME,
-                                    v.directionsResponse.routes.first().legs.first().departureTime.value
-                                )
-                                putExtra(
-                                    CalendarContract.EXTRA_EVENT_END_TIME,
-                                    v.directionsResponse.routes.first().legs.last().arrivalTime.value
-                                )
+                                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, departureMillis)
+                                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, arrivalMillis)
                             }
+
                             context.startActivity(intent)
                         }
                     )
-
-
                 }
             }
         }
