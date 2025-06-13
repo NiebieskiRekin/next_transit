@@ -11,6 +11,7 @@ import android.graphics.drawable.shapes.Shape
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -249,17 +250,27 @@ fun MyCalendarView(
                                     secondEvent = temp
                                 }
                                 var departureDateTime = firstEvent!!.endDateTime
-                                val directions = ApiCaller.getDirectionsByNameAndDepartAt(
-                                    firstEvent!!.place, secondEvent!!.place, departureDateTime
-                                )
-                                Log.d("CalendarAccess", directions.toString())
+                                try {
+                                    val directions = ApiCaller.getDirectionsByNameAndDepartAt(
+                                        firstEvent!!.place, secondEvent!!.place, departureDateTime
+                                    )
+                                    Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(
-                                    firstEvent!!,
-                                    secondEvent!!,
-                                    directions,
-                                    DepartAtOrArriveBy.DepartAt
-                                )
+                                    createNotification(
+                                        firstEvent!!,
+                                        secondEvent!!,
+                                        directions,
+                                        DepartAtOrArriveBy.DepartAt
+                                    )
+                                } catch (e: Exception) {
+                                    Log.d("CalendarAccess", e.message.toString())
+                                    e.printStackTrace()
+                                    Toast.makeText(
+                                        context,
+                                        "Nie udało się znaleźć trasy",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -284,17 +295,27 @@ fun MyCalendarView(
                                 }
                                 var arrivalDateTime = secondEvent!!.startDateTime
 
-                                val directions = ApiCaller.getDirectionsByNameAndArriveBy(
-                                    firstEvent!!.place, secondEvent!!.place, arrivalDateTime
-                                )
-                                Log.d("CalendarAccess", directions.toString())
+                                try {
+                                    val directions = ApiCaller.getDirectionsByNameAndArriveBy(
+                                        firstEvent!!.place, secondEvent!!.place, arrivalDateTime
+                                    )
+                                    Log.d("CalendarAccess", directions.toString())
 
-                                createNotification(
-                                    firstEvent!!,
-                                    secondEvent!!,
-                                    directions,
-                                    DepartAtOrArriveBy.ArriveBy
-                                )
+                                    createNotification(
+                                        firstEvent!!,
+                                        secondEvent!!,
+                                        directions,
+                                        DepartAtOrArriveBy.ArriveBy
+                                    )
+                                } catch (e: Exception) {
+                                    Log.d("CalendarAccess", e.message.toString())
+                                    e.printStackTrace()
+                                    Toast.makeText(
+                                        context,
+                                        "Nie udało się znaleźć trasy",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
